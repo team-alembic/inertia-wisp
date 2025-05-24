@@ -48,7 +48,7 @@ minimal/
 ├── frontend/
 │   ├── src/
 │   │   ├── main.jsx         # React entry point
-│   │   └── Pages/           # Inertia page components
+│   │   └── pages/           # Inertia page components
 │   │       ├── Home.jsx
 │   │       └── About.jsx
 │   └── package.json
@@ -61,7 +61,7 @@ minimal/
 
 ## How It Works
 
-1. **Frontend**: React components in `frontend/src/Pages/` are bundled by ESBuild into `static/js/main.js`
+1. **Frontend**: React components in `frontend/src/pages/` are bundled by ESBuild into `static/js/` with automatic code splitting
 2. **Backend**: Gleam server serves HTML responses with Inertia page data and includes the bundled JavaScript
 3. **Routing**: Both initial page loads and subsequent navigation are handled by the same Gleam routes
 4. **Static Assets**: The Gleam server serves static files from the `static/` directory
@@ -70,7 +70,7 @@ minimal/
 
 1. **Create React component:**
 ```jsx
-// frontend/src/Pages/Contact.jsx
+// frontend/src/pages/Contact.jsx
 export default function Contact({ email }) {
     return <div>Contact us at: {email}</div>
 }

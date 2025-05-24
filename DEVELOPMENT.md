@@ -6,19 +6,20 @@ This guide explains how to set up the development environment for Inertia Gleam 
 
 1. **Install frontend dependencies:**
 ```bash
-cd frontend
+cd examples/minimal/frontend
 npm install
 ```
 
 2. **Start asset watcher (Terminal 1):**
 ```bash
-cd frontend
+cd examples/minimal/frontend
 npm run watch
 ```
 
 3. **Start Gleam server (Terminal 2):**
 ```bash
-gleam run -m examples/minimal/main
+cd examples/minimal
+gleam run
 ```
 
 4. **Access your app at `http://localhost:8000`**
@@ -26,27 +27,29 @@ gleam run -m examples/minimal/main
 ## How It Works
 
 ### Asset Pipeline
-- ESBuild watches `frontend/src/` and bundles to `static/js/main.js`
+- ESBuild watches `frontend/src/` and bundles to `static/js/` with automatic code splitting
 - The Gleam server serves static files from the `static/` directory
 - Changes require a browser refresh (no hot module replacement)
+- React imports are handled automatically with `--jsx=automatic`
 
 ### Project Structure
 
 ```
 inertia-gleam/
-├── frontend/
-│   ├── src/
-│   │   ├── main.jsx          # Entry point
-│   │   └── Pages/            # Inertia components
-│   │       ├── Home.jsx
-│   │       └── About.jsx
-│   └── package.json
-├── static/
-│   └── js/
-│       └── main.js           # Built assets
 ├── examples/
-│   └── minimal/
-│       └── main.gleam        # Example server
+│   └── minimal/              # Standalone example app
+│       ├── src/
+│       │   └── main.gleam    # Example server
+│       ├── frontend/
+│       │   ├── src/
+│       │   │   ├── main.jsx  # Entry point
+│       │   │   └── pages/    # Inertia components
+│       │   │       ├── Home.jsx
+│       │   │       └── About.jsx
+│       │   └── package.json
+│       ├── static/
+│       │   └── js/           # Built assets
+│       └── gleam.toml        # Example project config
 └── src/
     └── inertia_gleam/        # Library code
 ```
@@ -54,35 +57,31 @@ inertia-gleam/
 ## Development Workflow
 
 ### Frontend Changes
-1. Edit components in `frontend/src/Pages/`
+1. Edit components in `examples/minimal/frontend/src/pages/`
 2. ESBuild automatically rebuilds
 3. Refresh browser to see changes
 
 ### Backend Changes
-1. Edit Gleam code in `src/` or `examples/`
+1. Edit Gleam code in `examples/minimal/src/`
 2. Restart Gleam server (`Ctrl+C` then `gleam run`)
 3. Refresh browser
 
 ### Adding New Pages
-1. Create `frontend/src/Pages/NewPage.jsx`:
+1. Create `examples/minimal/frontend/src/pages/NewPage.jsx`:
 ```jsx
 export default function NewPage({ title }) {
     return <h1>{title}</h1>
 }
 ```
 
-2. Add route in Gleam:
+2. Add route in `examples/minimal/src/main.gleam`:
 ```gleam
-fn handle_request(req: wisp.Request, config: inertia_gleam.Config) -> wisp.Response {
-  use _req <- inertia_gleam.inertia_middleware(req, config)
-  
-  case wisp.path_segments(req) {
-    [] -> home_page(req)
-    ["about"] -> about_page(req)
-    ["new"] -> new_page(req)  // Add this
-    ["static", ..path] -> wisp.serve_static(req, path, from: "./static", under: "/static")
-    _ -> wisp.not_found()
-  }
+case wisp.path_segments(req) {
+  [] -> home_page(req)
+  ["about"] -> about_page(req)
+  ["new"] -> new_page(req)  // Add this
+  ["static", ..path] -> wisp.serve_static(req, path, from: "./static", under: "/static")
+  _ -> wisp.not_found()
 }
 
 fn new_page(req: wisp.Request) -> wisp.Response {
@@ -106,7 +105,7 @@ npm run build    # Build once (production)
 
 ### Frontend Issues
 - Check browser console for errors
-- Verify `static/js/main.js` exists and is recent
+- Verify `examples/minimal/static/js/` contains built assets
 - Check that ESBuild watcher is running
 
 ### Backend Issues
@@ -122,7 +121,7 @@ npm run build    # Build once (production)
 ## Production Build
 
 ```bash
-cd frontend
+cd examples/minimal/frontend
 npm run build
 ```
 

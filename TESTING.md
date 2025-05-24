@@ -4,8 +4,8 @@
 
 1. **Start the Gleam server:**
    ```bash
-   cd inertia-gleam
-   gleam run -m examples/minimal/main
+   cd examples/minimal
+   gleam run
    ```
    Server should start on http://localhost:8000
 
@@ -35,15 +35,22 @@
 
 ## Frontend Integration Test
 
-1. **Open the test frontend:**
-   Open `frontend/index.html` in a browser, or serve it:
+1. **Build and start the frontend:**
    ```bash
-   cd frontend
-   python3 -m http.server 3000
-   # Then visit http://localhost:3000
+   cd examples/minimal/frontend
+   npm install
+   npm run build
    ```
 
-2. **Test scenarios:**
+2. **Start the Gleam server:**
+   ```bash
+   cd examples/minimal
+   gleam run
+   ```
+
+3. **Open http://localhost:8000 in browser**
+
+4. **Test scenarios:**
    - Initial page load should show "Welcome to Inertia Gleam!"
    - Click "Go to About" - should navigate without full page reload
    - Click "Back to Home" - should navigate without full page reload
@@ -95,7 +102,7 @@ Should show:
 ```json
 {
   "message": "Hello from Gleam!",
-  "timestamp": 1234567890
+  "timestamp": "2024-01-01T00:00:00Z"
 }
 ```
 
@@ -131,11 +138,11 @@ Current test coverage:
 
 Once basic functionality works:
 
-1. **Test with real React app** (create-react-app + @inertiajs/inertia-react)
-2. **Add form submission tests**
-3. **Test partial reloads** with `X-Inertia-Partial-Data` header
-4. **Test version mismatches** for asset versioning
-5. **Performance testing** with large prop objects
+1. **Add form submission tests**
+2. **Test partial reloads** with `X-Inertia-Partial-Data` header
+3. **Test version mismatches** for asset versioning
+4. **Performance testing** with large prop objects
+5. **Add CSS asset handling**
 
 ## Troubleshooting
 
@@ -149,8 +156,9 @@ Once basic functionality works:
 
 ### Frontend not working
 - Check browser console for errors
-- Verify CDN scripts are loading
+- Verify frontend assets are built: `ls examples/minimal/static/js/`
 - Check component names match exactly
+- Ensure ESBuild watch is running for development
 
 ### Navigation not working
 - Verify `X-Inertia` header in requests

@@ -184,7 +184,8 @@ gleam test
 Test the example server:
 
 ```sh
-gleam run -m examples/minimal/main
+cd examples/minimal
+gleam run
 # Server starts on http://localhost:8000
 ```
 
@@ -202,8 +203,7 @@ curl -H "X-Inertia: true" http://localhost:8000/
 
 Check out the `/examples` directory for complete working examples:
 
-- **Minimal Example**: Basic setup with two pages
-- **Frontend Test**: React frontend that works with the Gleam backend
+- **Minimal Example**: Complete standalone Gleam app with React frontend and ESBuild setup
 
 ## Development Status
 

@@ -27,7 +27,7 @@ This will bundle the JavaScript and watch for changes, automatically rebuilding 
 ```
 src/
 ├── main.jsx          # Application entry point
-└── Pages/            # Inertia page components
+└── pages/            # Inertia page components
     ├── Home.jsx      # Home page component
     └── About.jsx     # About page component
 ```
@@ -41,7 +41,8 @@ npm run watch
 
 2. **Start the Gleam server:**
 ```bash
-gleam run -m examples/minimal/main
+cd ../..
+gleam run
 ```
 
 3. **Access your app at `http://localhost:8000`**
@@ -49,9 +50,10 @@ gleam run -m examples/minimal/main
 ## How It Works
 
 - ESBuild watches your source files and automatically rebuilds when changes occur
-- Bundled assets are written to `../static/js/main.js`
+- Bundled assets are written to `../static/js/` with automatic code splitting
 - The Gleam server serves static files from the `static/` directory
 - Changes require a browser refresh (no hot module replacement)
+- React imports are handled automatically with `--jsx=automatic`
 
 ## Building for Production
 
@@ -63,8 +65,8 @@ This creates a production-optimized bundle in `../static/js/`.
 
 ## Adding New Pages
 
-1. Create a new component in `src/Pages/` (e.g., `Contact.jsx`)
-2. Export it as the default export
+1. Create a new component in `src/pages/` (e.g., `Contact.jsx`)
+2. Export it as the default export (no React import needed)
 3. ESBuild will automatically include it via `import.meta.glob`
 4. Add the corresponding route in your Gleam server
 
