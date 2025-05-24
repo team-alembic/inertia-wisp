@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inertia Gleam Test</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@inertiajs/inertia@0.11.1/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@inertiajs/inertia-react@0.8.1/dist/index.umd.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { App, Link } = InertiaReact;
+        const { Inertia } = InertiaInertia;
+
+        // Home component
+        function Home({ message, timestamp }) {
+            return (
+                <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+                    <h1>Welcome to Inertia Gleam!</h1>
+                    <p>Message from server: <strong>{message}</strong></p>
+                    <p>Timestamp: {timestamp}</p>
+                    
+                    <nav style={{ marginTop: '20px' }}>
+                        <Link href="/about" style={{ 
+                            marginRight: '10px', 
+                            color: 'blue', 
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                        }}>
+                            Go to About
+                        </Link>
+                    </nav>
+
+                    <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0' }}>
+                        <h3>Test Navigation</h3>
+                        <button 
+                            onClick={() => Inertia.visit('/')}
+                            style={{ marginRight: '10px' }}
+                        >
+                            Reload Home (XHR)
+                        </button>
+                        <button 
+                            onClick={() => window.location.href = '/'}
+                        >
+                            Reload Home (Full)
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // About component
+        function About() {
+            return (
+                <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+                    <h1>About Page</h1>
+                    <p>This is the about page, rendered through Inertia!</p>
+                    
+                    <nav style={{ marginTop: '20px' }}>
+                        <Link href="/" style={{ 
+                            marginRight: '10px', 
+                            color: 'blue', 
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                        }}>
+                            Back to Home
+                        </Link>
+                    </nav>
+
+                    <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0' }}>
+                        <h3>Test Navigation</h3>
+                        <button 
+                            onClick={() => Inertia.visit('/about')}
+                            style={{ marginRight: '10px' }}
+                        >
+                            Reload About (XHR)
+                        </button>
+                        <button 
+                            onClick={() => window.location.href = '/about'}
+                        >
+                            Reload About (Full)
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Component resolver
+        const pages = {
+            Home,
+            About
+        };
+
+        function resolvePageComponent(name) {
+            const component = pages[name];
+            if (!component) {
+                console.error(`Component '${name}' not found`);
+                return () => React.createElement('div', null, `Component '${name}' not found`);
+            }
+            return component;
+        }
+
+        // Initialize Inertia
+        const appElement = document.getElementById('app');
+        
+        ReactDOM.createRoot(appElement).render(
+            React.createElement(App, {
+                initialPage: JSON.parse(appElement.dataset.page || '{}'),
+                resolveComponent: resolvePageComponent
+            })
+        );
+    </script>
+</body>
+</html>

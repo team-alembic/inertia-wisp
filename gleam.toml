@@ -1,0 +1,17 @@
+name = "inertia_gleam"
+version = "0.1.0"
+
+description = "Inertia.js adapter for Gleam and Wisp web framework"
+licences = ["Apache-2.0"]
+repository = { type = "github", user = "your-username", repo = "inertia-gleam" }
+
+[dependencies]
+gleam_stdlib = ">= 0.60.0"
+gleam_http = ">= 4.0.0"
+gleam_json = ">= 3.0.0"
+wisp = ">= 1.7.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
+mist = ">= 2.0.0 and < 5.0.0"
+gleam_erlang = ">= 0.25.0 and < 2.0.0"
