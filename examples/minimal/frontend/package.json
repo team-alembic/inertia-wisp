@@ -1,0 +1,18 @@
+{
+  "name": "inertia-gleam-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.jsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --jsx=automatic",
+    "watch": "esbuild src/main.jsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --watch --jsx=automatic",
+    "dev": "npm run watch"
+  },
+  "dependencies": {
+    "@inertiajs/react": "^1.0.14",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.11"
+  }
+}

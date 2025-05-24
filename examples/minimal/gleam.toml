@@ -1,0 +1,18 @@
+name = "minimal_inertia_example"
+version = "1.0.0"
+description = "Minimal example using inertia-gleam"
+target = "erlang"
+
+application_start_module = "src/main"
+
+[dependencies]
+gleam_stdlib = ">= 0.60.0"
+gleam_http = ">= 4.0.0"
+gleam_json = ">= 3.0.0"
+wisp = ">= 1.7.0"
+inertia_gleam = { path = "../../" }
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0"
+mist = ">= 2.0.0"
+gleam_erlang = ">= 0.25.0"

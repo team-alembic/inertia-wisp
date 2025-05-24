@@ -44,6 +44,8 @@ pub fn render_inertia_with_props(
   controller.render_inertia_with_props(req, component, props)
 }
 
+
+
 pub fn assign_prop(req: Request, key: String, value: json.Json) -> Request {
   controller.assign_prop(req, key, value)
 }

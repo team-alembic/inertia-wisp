@@ -61,6 +61,8 @@ fn render_html_response(page: Page) -> Response {
   wisp.html_response(string_tree.from_string(html_body), 200)
 }
 
+
+
 /// Helper to convert string to JSON for props
 pub fn string_prop(value: String) -> json.Json {
   json.string(value)

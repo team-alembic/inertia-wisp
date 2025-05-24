@@ -16,6 +16,7 @@ pub fn root_template(page: Page, title: String) -> String {
 </head>
 <body>
     <div id=\"app\" data-page=\"" <> escape_html(page_json) <> "\"></div>
+    <script type=\"module\" src=\"/static/js/main.js\"></script>
 </body>
 </html>"
 }
