@@ -1,7 +1,6 @@
 import gleam/dict.{type Dict}
 import gleam/json
 import inertia_gleam/controller
-import inertia_gleam/json as inertia_json
 import inertia_gleam/middleware
 import inertia_gleam/types
 import wisp.{type Request, type Response}
@@ -146,25 +145,4 @@ pub fn props_from_list(
   props: List(#(String, json.Json)),
 ) -> Dict(String, json.Json) {
   controller.props_from_list(props)
-}
-
-// JSON helpers for convenience
-pub fn string_to_json(value: String) -> json.Json {
-  inertia_json.string_to_json(value)
-}
-
-pub fn int_to_json(value: Int) -> json.Json {
-  inertia_json.int_to_json(value)
-}
-
-pub fn bool_to_json(value: Bool) -> json.Json {
-  inertia_json.bool_to_json(value)
-}
-
-pub fn string_list_to_json(values: List(String)) -> json.Json {
-  inertia_json.string_list_to_json(values)
-}
-
-pub fn int_list_to_json(values: List(Int)) -> json.Json {
-  inertia_json.int_list_to_json(values)
 }

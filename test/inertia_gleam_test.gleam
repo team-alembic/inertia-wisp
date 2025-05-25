@@ -134,17 +134,6 @@ pub fn app_template_test() {
   html |> should_not_contain("<!DOCTYPE html>")
 }
 
-// Test JSON helpers
-pub fn string_list_to_json_test() {
-  let json_array = inertia_json.string_list_to_json(["a", "b", "c"])
-  json.to_string(json_array) |> should.equal("[\"a\",\"b\",\"c\"]")
-}
-
-pub fn int_list_to_json_test() {
-  let json_array = inertia_json.int_list_to_json([1, 2, 3])
-  json.to_string(json_array) |> should.equal("[1,2,3]")
-}
-
 // Test initial state
 pub fn initial_state_test() {
   let state = types.initial_state()

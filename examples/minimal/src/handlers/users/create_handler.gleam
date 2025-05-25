@@ -40,16 +40,16 @@ fn handle_valid_user_request(
   req: wisp.Request,
   user_request: CreateUserRequest,
 ) -> wisp.Response {
-  let errors =
+  let validation_result =
     user_validator.validate_user_input(
       user_request.name,
       user_request.email,
       option.None,
     )
 
-  case dict.size(errors) {
-    0 -> handle_successful_creation(req)
-    _ -> handle_validation_errors(req, user_request, errors)
+  case validation_result {
+    Ok(_) -> handle_successful_creation(req)
+    Error(errors) -> handle_validation_errors(req, user_request, errors)
   }
 }
 

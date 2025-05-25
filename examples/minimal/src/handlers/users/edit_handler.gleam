@@ -66,16 +66,17 @@ fn handle_decoded_update(
   found_user: User,
   user_request: CreateUserRequest,
 ) -> wisp.Response {
-  let errors =
+  let validation_result =
     user_validator.validate_user_input(
       user_request.name,
       user_request.email,
       option.Some(id),
     )
 
-  case dict.size(errors) {
-    0 -> handle_successful_update(req, id_str)
-    _ -> handle_update_validation_errors(req, found_user, user_request, errors)
+  case validation_result {
+    Ok(_) -> handle_successful_update(req, id_str)
+    Error(errors) ->
+      handle_update_validation_errors(req, found_user, user_request, errors)
   }
 }
 
