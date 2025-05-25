@@ -1,8 +1,8 @@
+import data/users
 import gleam/dict
 import gleam/list
 import gleam/option
 import gleam/string
-import data/users
 
 pub fn validate_user_input(
   name: String,

@@ -1,7 +1,7 @@
-import inertia_gleam
-import wisp
 import data/users
 import handlers/utils
+import inertia_gleam
+import wisp
 
 pub fn delete_user(req: wisp.Request, id_str: String) -> wisp.Response {
   case utils.parse_user_id(id_str) {
@@ -20,4 +20,3 @@ fn handle_valid_delete_request(req: wisp.Request, id: Int) -> wisp.Response {
 fn handle_successful_deletion(req: wisp.Request) -> wisp.Response {
   inertia_gleam.redirect_after_form(req, "/users")
 }
-

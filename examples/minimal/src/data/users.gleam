@@ -1,5 +1,5 @@
 import gleam/list
-import types/user.{type User, User, type AppState, AppState}
+import types/user.{type AppState, type User, AppState, User}
 
 // Global state for the demo (in a real app, use a proper database)
 pub fn get_initial_state() -> AppState {

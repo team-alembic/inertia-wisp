@@ -2,11 +2,11 @@ import gleam/dict
 import gleam/dynamic/decode
 import gleam/json
 import gleam/option
+import handlers/utils
 import inertia_gleam
-import wisp
 import types/user.{type CreateUserRequest, CreateUserRequest}
 import validators/user_validator
-import handlers/utils
+import wisp
 
 pub fn create_user_page(req: wisp.Request) -> wisp.Response {
   inertia_gleam.context(req)
@@ -23,19 +23,29 @@ pub fn create_user(req: wisp.Request) -> wisp.Response {
   }
 }
 
-fn decode_user_request(json_data) -> Result(CreateUserRequest, List(decode.DecodeError)) {
+fn decode_user_request(
+  json_data,
+) -> Result(CreateUserRequest, List(decode.DecodeError)) {
   let user_decoder = {
     use name <- decode.field("name", decode.string)
     use email <- decode.field("email", decode.string)
     use token <- decode.field("_token", decode.string)
     decode.success(CreateUserRequest(name:, email:, token:))
   }
-  
+
   decode.run(json_data, user_decoder)
 }
 
-fn handle_valid_user_request(req: wisp.Request, user_request: CreateUserRequest) -> wisp.Response {
-  let errors = user_validator.validate_user_input(user_request.name, user_request.email, option.None)
+fn handle_valid_user_request(
+  req: wisp.Request,
+  user_request: CreateUserRequest,
+) -> wisp.Response {
+  let errors =
+    user_validator.validate_user_input(
+      user_request.name,
+      user_request.email,
+      option.None,
+    )
 
   case dict.size(errors) {
     0 -> handle_successful_creation(req)
@@ -47,7 +57,11 @@ fn handle_successful_creation(req: wisp.Request) -> wisp.Response {
   inertia_gleam.redirect_after_form(req, "/users")
 }
 
-fn handle_validation_errors(req: wisp.Request, user_request: CreateUserRequest, errors: dict.Dict(String, String)) -> wisp.Response {
+fn handle_validation_errors(
+  req: wisp.Request,
+  user_request: CreateUserRequest,
+  errors: dict.Dict(String, String),
+) -> wisp.Response {
   inertia_gleam.context(req)
   |> utils.assign_common_props()
   |> inertia_gleam.assign_errors(errors)
@@ -62,6 +76,3 @@ fn handle_validation_errors(req: wisp.Request, user_request: CreateUserRequest, 
   ])
   |> inertia_gleam.render("CreateUser")
 }
-
-
-

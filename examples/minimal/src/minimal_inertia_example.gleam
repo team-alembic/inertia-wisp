@@ -1,13 +1,13 @@
+import data/users as user_data
 import gleam/erlang/process
 import gleam/http
 import gleam/json
 import gleam/list
+import handlers/users
 import inertia_gleam
 import mist
 import wisp
 import wisp/wisp_mist
-import handlers/users
-import data/users as user_data
 
 pub fn main() {
   wisp.configure_logger()
@@ -75,7 +75,3 @@ fn about_page(req: wisp.Request) -> wisp.Response {
   |> inertia_gleam.assign_prop("page_title", json.string("About Us"))
   |> inertia_gleam.render("About")
 }
-
-
-
-
