@@ -63,12 +63,15 @@ request
 - [x] Pipe-friendly API that accumulates props
 - [x] Comprehensive test coverage
 
-#### Step 1.3: Basic Navigation
+#### Step 1.3: Basic Navigation ✅
 **Goal**: Multiple routes working with Inertia
 
-- Router integration with Wisp
-- Multiple components
-- Client-side navigation between pages
+**Status**: ✅ COMPLETE
+- [x] Router integration with Wisp using `case wisp.path_segments(req)`
+- [x] Multiple components (Home, About)
+- [x] Client-side navigation between pages using Inertia Link components
+- [x] Both XHR and full page reload navigation working
+- [x] Static file serving for frontend assets
 
 ### Phase 2: Advanced Props System (Days 6-8)
 
