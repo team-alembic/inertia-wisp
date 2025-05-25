@@ -1,4 +1,6 @@
 import gleam/dict
+import gleam/http
+import gleam/http/request
 import gleam/json
 import gleam/string
 import gleeunit
@@ -7,9 +9,20 @@ import inertia_gleam
 import inertia_gleam/html
 import inertia_gleam/json as inertia_json
 import inertia_gleam/types
+import wisp
 
 pub fn main() {
   gleeunit.main()
+}
+
+// Mock request for testing
+fn mock_request() -> wisp.Request {
+  let body = wisp.create_canned_connection(<<>>, "test_secret_key")
+  let request = request.new()
+    |> request.set_method(http.Get)
+    |> request.set_path("/")
+    |> request.set_body(body)
+  request
 }
 
 fn should_contain(haystack: String, needle: String) {
@@ -140,4 +153,64 @@ pub fn initial_state_test() {
   state.is_inertia |> should.equal(False)
   state.partial_data |> should.equal([])
   dict.size(state.props) |> should.equal(0)
+}
+
+// Test context-based prop assignment
+pub fn context_creation_test() {
+  let req = mock_request()
+  let ctx = inertia_gleam.context(req)
+  
+  dict.size(ctx.props) |> should.equal(0)
+}
+
+pub fn assign_prop_test() {
+  let req = mock_request()
+  let ctx = inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
+    
+  dict.size(ctx.props) |> should.equal(1)
+  dict.has_key(ctx.props, "name") |> should.equal(True)
+}
+
+pub fn assign_multiple_props_test() {
+  let req = mock_request()
+  let ctx = inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
+    |> inertia_gleam.assign_prop("age", inertia_gleam.int_prop(30))
+    |> inertia_gleam.assign_prop("active", inertia_gleam.bool_prop(True))
+    
+  dict.size(ctx.props) |> should.equal(3)
+  dict.has_key(ctx.props, "name") |> should.equal(True)
+  dict.has_key(ctx.props, "age") |> should.equal(True)
+  dict.has_key(ctx.props, "active") |> should.equal(True)
+}
+
+pub fn assign_props_list_test() {
+  let req = mock_request()
+  let props_list = [
+    #("title", inertia_gleam.string_prop("Test Page")),
+    #("count", inertia_gleam.int_prop(42)),
+  ]
+  
+  let ctx = inertia_gleam.context(req)
+    |> inertia_gleam.assign_props(props_list)
+    
+  dict.size(ctx.props) |> should.equal(2)
+  dict.has_key(ctx.props, "title") |> should.equal(True)
+  dict.has_key(ctx.props, "count") |> should.equal(True)
+}
+
+pub fn context_prop_override_test() {
+  let req = mock_request()
+  let ctx = inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
+    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Bob"))
+    
+  dict.size(ctx.props) |> should.equal(1)
+  
+  let prop = dict.get(ctx.props, "name")
+  case prop {
+    Ok(value) -> json.to_string(value) |> should.equal("\"Bob\"")
+    Error(_) -> should.fail()
+  }
 }

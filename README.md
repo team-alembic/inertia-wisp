@@ -65,6 +65,15 @@ fn home_page(req: wisp.Request) -> wisp.Response {
   inertia_gleam.render_inertia_with_props(req, "Home", props)
 }
 
+// Alternative: Pipe-friendly context API
+fn home_page_alt(req: wisp.Request) -> wisp.Response {
+  inertia_gleam.context(req)
+  |> inertia_gleam.assign_prop("message", inertia_gleam.string_prop("Hello from Gleam!"))
+  |> inertia_gleam.assign_prop("user", inertia_gleam.string_prop("Alice"))
+  |> inertia_gleam.assign_prop("count", inertia_gleam.int_prop(42))
+  |> inertia_gleam.render("Home")
+}
+
 fn about_page(req: wisp.Request) -> wisp.Response {
   inertia_gleam.render_inertia(req, "About")
 }
@@ -105,6 +114,7 @@ export default function About() {
 - **Basic Inertia Protocol**: Handles initial page loads (HTML) and navigation (JSON)
 - **Component Rendering**: `render_inertia(req, "ComponentName")`
 - **Props Support**: Type-safe prop helpers for strings, integers, booleans, and lists
+- **Pipe-friendly API**: Context-based prop assignment for clean, readable code
 - **Middleware**: Automatic detection of Inertia requests via `X-Inertia` header
 - **Multiple Routes**: Support for multiple pages and components
 - **Response Headers**: Proper `X-Inertia` and `Vary` headers
@@ -136,12 +146,19 @@ let config = inertia_gleam.config("2.0", True) // version, ssr
 // Simple component without props
 inertia_gleam.render_inertia(req, "Dashboard")
 
-// Component with props
+// Component with props (traditional approach)
 let props = inertia_gleam.props_from_list([
   #("title", inertia_gleam.string_prop("My App")),
   #("items", inertia_gleam.int_list_to_json([1, 2, 3])),
 ])
 inertia_gleam.render_inertia_with_props(req, "Dashboard", props)
+
+// Component with props (pipe-friendly context approach)
+inertia_gleam.context(req)
+|> inertia_gleam.assign_prop("title", inertia_gleam.string_prop("My App"))
+|> inertia_gleam.assign_prop("items", inertia_gleam.int_list_to_json([1, 2, 3]))
+|> inertia_gleam.assign_prop("user_count", inertia_gleam.int_prop(42))
+|> inertia_gleam.render("Dashboard")
 ```
 
 ### Prop Helpers
@@ -161,6 +178,12 @@ inertia_gleam.props_from_list([
   #("name", inertia_gleam.string_prop("Alice")),
   #("age", inertia_gleam.int_prop(30)),
 ])
+
+// Pipe-friendly context API
+inertia_gleam.context(req)
+|> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
+|> inertia_gleam.assign_prop("age", inertia_gleam.int_prop(30))
+|> inertia_gleam.render("UserProfile")
 ```
 
 ### Middleware

@@ -1,4 +1,5 @@
 import gleam/erlang/process
+import gleam/json
 import inertia_gleam
 import mist
 import wisp
@@ -33,14 +34,25 @@ fn handle_request(
   }
 }
 
-fn home_page(req: wisp.Request) -> wisp.Response {
-  let props =
-    inertia_gleam.props_from_list([
-      #("message", inertia_gleam.string_prop("Hello from Gleam!")),
-      #("timestamp", inertia_gleam.string_prop("2024-01-01T00:00:00Z")),
-    ])
+// fn home_page(req: wisp.Request) -> wisp.Response {
+//   // Traditional approach
+//   let props =
+//     inertia_gleam.props_from_list([
+//       #("message", inertia_gleam.string_prop("Hello from Gleam!")),
+//       #("timestamp", inertia_gleam.string_prop("2024-01-01T00:00:00Z")),
+//     ])
 
-  inertia_gleam.render_inertia_with_props(req, "Home", props)
+//   inertia_gleam.render_inertia_with_props(req, "Home", props)
+// }
+
+fn home_page(req: wisp.Request) -> wisp.Response {
+  inertia_gleam.context(req)
+  |> inertia_gleam.assign_props([
+    #("message", json.string("Hello from Gleam!")),
+    #("timestamp", json.string("2024-01-01T00:00:00Z")),
+    #("user_id", json.int(42)),
+  ])
+  |> inertia_gleam.render("Home")
 }
 
 fn about_page(req: wisp.Request) -> wisp.Response {

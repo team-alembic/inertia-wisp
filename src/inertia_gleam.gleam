@@ -13,6 +13,9 @@ pub type Config =
 pub type Page =
   types.Page
 
+pub type InertiaContext =
+  controller.InertiaContext
+
 // Configuration
 pub fn default_config() -> Config {
   types.default_config()
@@ -44,10 +47,21 @@ pub fn render_inertia_with_props(
   controller.render_inertia_with_props(req, component, props)
 }
 
+// Context-based API for pipe-friendly prop assignment
+pub fn context(req: Request) -> InertiaContext {
+  controller.context(req)
+}
 
+pub fn assign_prop(ctx: InertiaContext, key: String, value: json.Json) -> InertiaContext {
+  controller.assign_prop(ctx, key, value)
+}
 
-pub fn assign_prop(req: Request, key: String, value: json.Json) -> Request {
-  controller.assign_prop(req, key, value)
+pub fn assign_props(ctx: InertiaContext, props: List(#(String, json.Json))) -> InertiaContext {
+  controller.assign_props(ctx, props)
+}
+
+pub fn render(ctx: InertiaContext, component: String) -> Response {
+  controller.render(ctx, component)
 }
 
 pub fn is_inertia_request(req: Request) -> Bool {

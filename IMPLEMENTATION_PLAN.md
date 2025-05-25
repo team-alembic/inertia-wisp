@@ -44,7 +44,7 @@ Port the inertia-phoenix package to Gleam and the Wisp web framework, providing 
 - JSON serialization for props
 - Props in both HTML data-page and XHR responses
 
-#### Step 1.2: Assign Props Pattern
+#### Step 1.2: Assign Props Pattern ✅
 **Goal**: Pipe-friendly prop assignment
 
 ```gleam
@@ -53,6 +53,15 @@ request
 |> assign_prop("posts", posts_data)
 |> render_inertia("Dashboard")
 ```
+
+**Status**: ✅ COMPLETE
+- [x] `InertiaContext` wrapper type for request + props
+- [x] `context(request)` to create context
+- [x] `assign_prop(ctx, key, value)` for single props
+- [x] `assign_props(ctx, props_list)` for multiple props
+- [x] `render(ctx, component)` to render with context
+- [x] Pipe-friendly API that accumulates props
+- [x] Comprehensive test coverage
 
 #### Step 1.3: Basic Navigation
 **Goal**: Multiple routes working with Inertia

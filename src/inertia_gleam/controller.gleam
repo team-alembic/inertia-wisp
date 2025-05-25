@@ -8,6 +8,11 @@ import inertia_gleam/middleware
 import inertia_gleam/types.{type Page}
 import wisp.{type Request, type Response}
 
+/// Context wrapper for building up props before rendering
+pub type InertiaContext {
+  InertiaContext(request: Request, props: Dict(String, json.Json))
+}
+
 /// Render an Inertia response with component name only
 pub fn render_inertia(req: Request, component: String) -> Response {
   render_inertia_with_props(req, component, dict.new())
@@ -38,11 +43,25 @@ pub fn render_inertia_with_props(
   }
 }
 
-/// Add a prop to the request context (simplified version)
-pub fn assign_prop(req: Request, _key: String, _value: json.Json) -> Request {
-  // In a full implementation, this would store props in request context
-  // For now, we'll handle this in render_inertia_with_props directly
-  req
+/// Create an Inertia context from a request
+pub fn context(req: Request) -> InertiaContext {
+  InertiaContext(request: req, props: dict.new())
+}
+
+/// Add a prop to the context in a pipe-friendly way
+pub fn assign_prop(ctx: InertiaContext, key: String, value: json.Json) -> InertiaContext {
+  InertiaContext(..ctx, props: dict.insert(ctx.props, key, value))
+}
+
+/// Add multiple props to the context
+pub fn assign_props(ctx: InertiaContext, props: List(#(String, json.Json))) -> InertiaContext {
+  let new_props = dict.merge(ctx.props, dict.from_list(props))
+  InertiaContext(..ctx, props: new_props)
+}
+
+/// Render an Inertia response from context
+pub fn render(ctx: InertiaContext, component: String) -> Response {
+  render_inertia_with_props(ctx.request, component, ctx.props)
 }
 
 /// Render JSON response for Inertia XHR requests
