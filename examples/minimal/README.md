@@ -27,10 +27,29 @@ gleam run
 - **Navigation**: Seamless SPA navigation using Inertia.js
 - **Props System**: Server-side data passing to React components
 - **Forms & Validation**: User creation and editing with validation
+- **File Uploads**: Complete file upload system with drag & drop support
 - **Error Handling**: Form validation errors with field-level feedback
 - **Redirects**: Proper redirect handling after form submissions
 - **CRUD Operations**: Complete user management (Create, Read, Update, Delete)
 - **Always Props**: Authentication and CSRF tokens on every request
+
+## Available Pages
+
+- **Home** (`/`) - Overview with navigation links
+- **About** (`/about`) - Simple about page
+- **Users** (`/users`) - User listing and CRUD operations
+- **File Upload** (`/upload`) - File upload with validation and drag & drop
+
+## File Upload Features
+
+The upload system demonstrates:
+- **Drag & Drop Interface** - Modern file selection experience
+- **File Validation** - Size, type, and count restrictions
+- **Progress Indicators** - Visual feedback during uploads
+- **Error Handling** - Clear validation error messages
+- **Type Safety** - Full TypeScript integration
+
+See `UPLOAD_UI_GUIDE.md` for detailed upload functionality documentation.
 
 ## Development Workflow
 

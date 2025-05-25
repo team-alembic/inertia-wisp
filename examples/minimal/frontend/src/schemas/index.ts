@@ -61,6 +61,23 @@ export const EditUserPagePropsSchema = BasePagePropsSchema.extend({
   user: UserSchema,
 });
 
+export const UploadedFileSchema = z.object({
+  filename: z.string(),
+  content_type: z.string(),
+  size: z.number(),
+});
+
+export const UploadFormPagePropsSchema = BasePagePropsSchema.extend({
+  max_files: z.number(),
+  max_size_mb: z.number(),
+  allowed_types: z.array(z.string()).optional(),
+});
+
+export const UploadSuccessPagePropsSchema = BasePagePropsSchema.extend({
+  success: z.string(),
+  uploaded_files: z.record(UploadedFileSchema),
+});
+
 // Form data schemas for client-side validation
 export const CreateUserFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -114,6 +131,9 @@ export type UsersPageProps = z.infer<typeof UsersPagePropsSchema>;
 export type ShowUserPageProps = z.infer<typeof ShowUserPagePropsSchema>;
 export type CreateUserPageProps = z.infer<typeof CreateUserPagePropsSchema>;
 export type EditUserPageProps = z.infer<typeof EditUserPagePropsSchema>;
+export type UploadedFile = z.infer<typeof UploadedFileSchema>;
+export type UploadFormPageProps = z.infer<typeof UploadFormPagePropsSchema>;
+export type UploadSuccessPageProps = z.infer<typeof UploadSuccessPagePropsSchema>;
 
 export type CreateUserFormData = z.infer<typeof CreateUserFormSchema>;
 export type EditUserFormData = z.infer<typeof EditUserFormSchema>;

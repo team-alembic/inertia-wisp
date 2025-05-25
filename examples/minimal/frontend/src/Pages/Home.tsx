@@ -53,6 +53,17 @@ function Home({ message, timestamp, user_count, auth, csrf_token }: HomePageProp
         >
           Users (Forms Demo)
         </Link>
+        <Link
+          href="/upload"
+          style={{
+            marginRight: "10px",
+            color: "blue",
+            textDecoration: "underline",
+            cursor: "pointer",
+          }}
+        >
+          File Upload Demo
+        </Link>
       </nav>
 
       <div
@@ -72,6 +83,9 @@ function Home({ message, timestamp, user_count, auth, csrf_token }: HomePageProp
         </div>
         <div style={{ marginBottom: "15px" }}>
           <strong>✅ Forms & Validation:</strong> Check out the <Link href="/users" style={{ color: "blue" }}>Users section</Link>
+        </div>
+        <div style={{ marginBottom: "15px" }}>
+          <strong>✅ File Uploads:</strong> Try the <Link href="/upload" style={{ color: "blue" }}>File Upload demo</Link>
         </div>
         <div style={{ marginBottom: "15px" }}>
           <strong>✅ Redirects:</strong> Form submissions redirect properly

@@ -7,6 +7,7 @@ import inertia_gleam/html
 import inertia_gleam/json as inertia_json
 import inertia_gleam/middleware
 import inertia_gleam/types.{type Page, type PropValue}
+import inertia_gleam/uploads.{type UploadedFile, type UploadConfig}
 import wisp.{type Request, type Response}
 
 /// Context wrapper for building up props before rendering
@@ -273,4 +274,61 @@ pub fn redirect(_req: Request, to url: String) -> Response {
 pub fn external_redirect(to url: String) -> Response {
   wisp.response(409)
   |> wisp.set_header("x-inertia-location", url)
+}
+
+/// Add uploaded files to the context
+/// Files are validated according to the provided configuration
+pub fn assign_files(
+  ctx: InertiaContext,
+  config: UploadConfig,
+) -> InertiaContext {
+  case uploads.extract_files(ctx.request, config) {
+    Ok(files) -> {
+      // Add files as JSON representation for frontend
+      assign_prop(ctx, "files", uploads.files_to_json(files))
+    }
+    Error(errors) -> {
+      // Add file upload errors
+      assign_errors(ctx, errors)
+    }
+  }
+}
+
+/// Add uploaded files with default configuration
+pub fn assign_files_default(ctx: InertiaContext) -> InertiaContext {
+  assign_files(ctx, uploads.default_upload_config())
+}
+
+/// Extract and validate uploaded files from request
+pub fn get_uploaded_files(
+  req: Request,
+  config: UploadConfig,
+) -> Result(Dict(String, UploadedFile), Dict(String, String)) {
+  uploads.extract_files(req, config)
+}
+
+/// Extract uploaded files with default configuration
+pub fn get_uploaded_files_default(
+  req: Request,
+) -> Result(Dict(String, UploadedFile), Dict(String, String)) {
+  uploads.extract_files(req, uploads.default_upload_config())
+}
+
+/// Create upload configuration helper
+pub fn upload_config(
+  max_file_size max_size: Int,
+  allowed_types types: List(String),
+  max_files max: Int,
+) -> UploadConfig {
+  uploads.upload_config(max_size, types, max)
+}
+
+/// Helper to create file info JSON from uploaded file
+pub fn file_to_json(file: UploadedFile) -> json.Json {
+  uploads.file_to_json(file)
+}
+
+/// Helper to create JSON from multiple uploaded files
+pub fn files_to_json(files: Dict(String, UploadedFile)) -> json.Json {
+  uploads.files_to_json(files)
 }

@@ -3,6 +3,7 @@ import gleam/erlang/process
 import gleam/http
 import gleam/json
 import gleam/list
+import handlers/uploads
 import handlers/users
 import inertia_gleam
 import mist
@@ -36,6 +37,9 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
     ["users", id, "edit"], http.Get -> users.edit_user_page(req, id)
     ["users", id], http.Post -> users.update_user(req, id)
     ["users", id, "delete"], http.Post -> users.delete_user(req, id)
+    ["upload"], http.Get -> uploads.upload_form_page(req)
+    ["upload"], http.Post -> uploads.handle_file_upload(req)
+    ["upload", "progress"], http.Get -> uploads.progress_endpoint(req)
     _, _ -> wisp.not_found()
   }
 }

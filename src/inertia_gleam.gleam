@@ -3,6 +3,7 @@ import gleam/json
 import inertia_gleam/controller
 import inertia_gleam/middleware
 import inertia_gleam/types
+import inertia_gleam/uploads
 import wisp.{type Request, type Response}
 
 // Re-export main types
@@ -14,6 +15,12 @@ pub type Page =
 
 pub type InertiaContext =
   controller.InertiaContext
+
+pub type UploadedFile =
+  uploads.UploadedFile
+
+pub type UploadConfig =
+  uploads.UploadConfig
 
 // Configuration
 pub fn default_config() -> Config {
@@ -145,4 +152,49 @@ pub fn props_from_list(
   props: List(#(String, json.Json)),
 ) -> Dict(String, json.Json) {
   controller.props_from_list(props)
+}
+
+// File upload functions
+pub fn assign_files(
+  ctx: InertiaContext,
+  config: UploadConfig,
+) -> InertiaContext {
+  controller.assign_files(ctx, config)
+}
+
+pub fn assign_files_default(ctx: InertiaContext) -> InertiaContext {
+  controller.assign_files_default(ctx)
+}
+
+pub fn get_uploaded_files(
+  req: Request,
+  config: UploadConfig,
+) -> Result(Dict(String, UploadedFile), Dict(String, String)) {
+  controller.get_uploaded_files(req, config)
+}
+
+pub fn get_uploaded_files_default(
+  req: Request,
+) -> Result(Dict(String, UploadedFile), Dict(String, String)) {
+  controller.get_uploaded_files_default(req)
+}
+
+pub fn upload_config(
+  max_file_size max_size: Int,
+  allowed_types types: List(String),
+  max_files max: Int,
+) -> UploadConfig {
+  controller.upload_config(max_size, types, max)
+}
+
+pub fn default_upload_config() -> UploadConfig {
+  uploads.default_upload_config()
+}
+
+pub fn file_to_json(file: UploadedFile) -> json.Json {
+  controller.file_to_json(file)
+}
+
+pub fn files_to_json(files: Dict(String, UploadedFile)) -> json.Json {
+  controller.files_to_json(files)
 }
