@@ -1,7 +1,7 @@
-import React from "react";
 import { Link, router } from "@inertiajs/react";
+import { HomePageProps } from "../types";
 
-export default function Home({ message, timestamp }) {
+export default function Home({ message, timestamp, user_count, auth, csrf_token }: HomePageProps) {
   return (
     <div
       style={{
@@ -14,6 +14,21 @@ export default function Home({ message, timestamp }) {
         Message from server: <strong>{message}</strong>
       </p>
       <p>Timestamp: {timestamp}</p>
+      <p>User count: {user_count}</p>
+
+      {auth?.authenticated && (
+        <div
+          style={{
+            backgroundColor: "#e8f5e8",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "4px",
+            fontSize: "14px",
+          }}
+        >
+          Logged in as: {auth.user}
+        </div>
+      )}
 
       <nav style={{ marginTop: "20px" }}>
         <Link

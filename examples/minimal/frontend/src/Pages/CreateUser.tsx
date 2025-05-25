@@ -1,14 +1,20 @@
-import React, { useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { Link, router } from "@inertiajs/react";
+import { CreateUserPageProps } from "../types";
 
-export default function CreateUser({ errors, old, csrf_token }) {
-  const [formData, setFormData] = useState({
+interface CreateUserFormData {
+  name: string;
+  email: string;
+}
+
+export default function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
+  const [formData, setFormData] = useState<CreateUserFormData>({
     name: old?.name || "",
     email: old?.email || "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -20,7 +26,7 @@ export default function CreateUser({ errors, old, csrf_token }) {
     });
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -51,6 +57,20 @@ export default function CreateUser({ errors, old, csrf_token }) {
           ← Back to Users
         </Link>
       </nav>
+
+      {auth?.authenticated && (
+        <div
+          style={{
+            backgroundColor: "#e8f5e8",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "4px",
+            fontSize: "14px",
+          }}
+        >
+          Logged in as: {auth.user}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "20px" }}>

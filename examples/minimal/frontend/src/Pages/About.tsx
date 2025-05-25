@@ -1,7 +1,7 @@
-import React from "react";
 import { Link, router } from "@inertiajs/react";
+import { AboutPageProps } from "../types";
 
-export default function About() {
+export default function About({ page_title, auth, csrf_token }: AboutPageProps) {
   return (
     <div
       style={{
@@ -9,8 +9,22 @@ export default function About() {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <h1>About Page</h1>
+      <h1>{page_title}</h1>
       <p>This is the about page, rendered through Inertia!</p>
+
+      {auth?.authenticated && (
+        <div
+          style={{
+            backgroundColor: "#e8f5e8",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "4px",
+            fontSize: "14px",
+          }}
+        >
+          Logged in as: {auth.user}
+        </div>
+      )}
 
       <nav style={{ marginBottom: "20px" }}>
         <Link

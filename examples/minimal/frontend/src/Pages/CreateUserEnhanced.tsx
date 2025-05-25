@@ -1,32 +1,61 @@
-import React, { useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { Link, router } from "@inertiajs/react";
+import { CreateUserFormSchema, validateFormData, validatePageProps, CreateUserPagePropsSchema } from "../schemas";
 
-export default function EditUser({ user, errors, csrf_token }) {
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
+interface CreateUserFormData {
+  name: string;
+  email: string;
+}
+
+export default function CreateUserEnhanced(props: unknown) {
+  // Validate props at runtime to ensure they match expected schema
+  const { errors, old, csrf_token, auth } = validatePageProps(CreateUserPagePropsSchema, props);
+  
+  const [formData, setFormData] = useState<CreateUserFormData>({
+    name: old?.name || "",
+    email: old?.email || "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Client-side validation with Zod
+    const validation = validateFormData(CreateUserFormSchema, formData);
+    
+    if (!validation.success) {
+      setClientErrors(validation.errors);
+      return;
+    }
+    
+    // Clear client errors if validation passes
+    setClientErrors({});
     setIsSubmitting(true);
 
-    router.post(`/users/${user.id}`, {
-      ...formData,
+    router.post("/users", {
+      ...validation.data,
       _token: csrf_token,
     }, {
       onFinish: () => setIsSubmitting(false),
     });
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (clientErrors[name]) {
+      setClientErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
+
+  // Merge server errors and client errors, preferring server errors
+  const allErrors = { ...clientErrors, ...errors };
 
   return (
     <div
@@ -37,20 +66,9 @@ export default function EditUser({ user, errors, csrf_token }) {
         margin: "0 auto",
       }}
     >
-      <h1>Edit User</h1>
+      <h1>Create New User (Enhanced with Zod)</h1>
 
       <nav style={{ marginBottom: "20px" }}>
-        <Link
-          href={`/users/${user.id}`}
-          style={{
-            color: "blue",
-            textDecoration: "underline",
-            cursor: "pointer",
-            marginRight: "15px",
-          }}
-        >
-          ← Back to User Details
-        </Link>
         <Link
           href="/users"
           style={{
@@ -59,9 +77,37 @@ export default function EditUser({ user, errors, csrf_token }) {
             cursor: "pointer",
           }}
         >
-          Back to Users List
+          ← Back to Users
         </Link>
       </nav>
+
+      {auth?.authenticated && (
+        <div
+          style={{
+            backgroundColor: "#e8f5e8",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "4px",
+            fontSize: "14px",
+          }}
+        >
+          Logged in as: {auth.user}
+        </div>
+      )}
+
+      <div
+        style={{
+          backgroundColor: "#fff3cd",
+          padding: "10px",
+          marginBottom: "20px",
+          borderRadius: "4px",
+          fontSize: "14px",
+          border: "1px solid #ffeaa7",
+        }}
+      >
+        <strong>Enhanced Version:</strong> This form includes client-side Zod validation 
+        that matches the backend schema validation.
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "20px" }}>
@@ -84,14 +130,14 @@ export default function EditUser({ user, errors, csrf_token }) {
             style={{
               width: "100%",
               padding: "10px",
-              border: errors?.name ? "2px solid red" : "1px solid #ddd",
+              border: allErrors?.name ? "2px solid red" : "1px solid #ddd",
               borderRadius: "4px",
               fontSize: "16px",
               boxSizing: "border-box",
             }}
             disabled={isSubmitting}
           />
-          {errors?.name && (
+          {allErrors?.name && (
             <div
               style={{
                 color: "red",
@@ -99,7 +145,7 @@ export default function EditUser({ user, errors, csrf_token }) {
                 marginTop: "5px",
               }}
             >
-              {errors.name}
+              {allErrors.name}
             </div>
           )}
         </div>
@@ -124,14 +170,14 @@ export default function EditUser({ user, errors, csrf_token }) {
             style={{
               width: "100%",
               padding: "10px",
-              border: errors?.email ? "2px solid red" : "1px solid #ddd",
+              border: allErrors?.email ? "2px solid red" : "1px solid #ddd",
               borderRadius: "4px",
               fontSize: "16px",
               boxSizing: "border-box",
             }}
             disabled={isSubmitting}
           />
-          {errors?.email && (
+          {allErrors?.email && (
             <div
               style={{
                 color: "red",
@@ -139,7 +185,7 @@ export default function EditUser({ user, errors, csrf_token }) {
                 marginTop: "5px",
               }}
             >
-              {errors.email}
+              {allErrors.email}
             </div>
           )}
         </div>
@@ -149,7 +195,7 @@ export default function EditUser({ user, errors, csrf_token }) {
             type="submit"
             disabled={isSubmitting}
             style={{
-              backgroundColor: isSubmitting ? "#ccc" : "#28a745",
+              backgroundColor: isSubmitting ? "#ccc" : "#007bff",
               color: "white",
               padding: "12px 20px",
               border: "none",
@@ -159,11 +205,11 @@ export default function EditUser({ user, errors, csrf_token }) {
               marginRight: "10px",
             }}
           >
-            {isSubmitting ? "Updating..." : "Update User"}
+            {isSubmitting ? "Creating..." : "Create User"}
           </button>
 
           <Link
-            href={`/users/${user.id}`}
+            href="/users"
             style={{
               backgroundColor: "#6c757d",
               color: "white",
@@ -186,13 +232,13 @@ export default function EditUser({ user, errors, csrf_token }) {
           borderRadius: "4px",
         }}
       >
-        <h3>Edit Form Demo</h3>
+        <h3>Enhanced Form Validation</h3>
         <ul style={{ marginLeft: "20px" }}>
-          <li>Form is pre-populated with existing user data</li>
-          <li>Same validation rules apply as create form</li>
-          <li>Email uniqueness check excludes current user</li>
-          <li>Successful update redirects to user detail page</li>
-          <li>Validation errors preserve form state</li>
+          <li><strong>Runtime Schema Validation:</strong> Props are validated against Zod schema</li>
+          <li><strong>Client-side Validation:</strong> Form data validated before submission</li>
+          <li><strong>Type Safety:</strong> Both compile-time and runtime type checking</li>
+          <li><strong>Error Merging:</strong> Client errors shown immediately, server errors on submission</li>
+          <li><strong>Schema Consistency:</strong> Same validation rules as backend</li>
         </ul>
       </div>
     </div>

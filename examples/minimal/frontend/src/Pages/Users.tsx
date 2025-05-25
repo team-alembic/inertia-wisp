@@ -1,8 +1,8 @@
-import React from "react";
 import { Link, router } from "@inertiajs/react";
+import { UsersPageProps } from "../types";
 
-export default function Users({ users, auth, csrf_token }) {
-  const handleDelete = (userId) => {
+export default function Users({ users, auth, csrf_token }: UsersPageProps) {
+  const handleDelete = (userId: number) => {
     if (confirm("Are you sure you want to delete this user?")) {
       router.post(`/users/${userId}/delete`, {
         _token: csrf_token,

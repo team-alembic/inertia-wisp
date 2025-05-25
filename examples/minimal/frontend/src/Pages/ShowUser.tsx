@@ -1,7 +1,7 @@
-import React from "react";
 import { Link } from "@inertiajs/react";
+import { ShowUserPageProps } from "../types";
 
-export default function ShowUser({ user, auth }) {
+export default function ShowUser({ user, auth, csrf_token }: ShowUserPageProps) {
   return (
     <div
       style={{
