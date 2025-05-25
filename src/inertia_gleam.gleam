@@ -129,10 +129,6 @@ pub fn external_redirect(to url: String) -> Response {
   controller.external_redirect(url)
 }
 
-pub fn redirect_after_form(req: Request, to url: String) -> Response {
-  controller.redirect_after_form(req, url)
-}
-
 // Prop helpers
 pub fn string_prop(value: String) -> json.Json {
   controller.string_prop(value)

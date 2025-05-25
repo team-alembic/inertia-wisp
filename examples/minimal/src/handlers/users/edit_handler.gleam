@@ -102,7 +102,7 @@ fn render_edit_page(req: wisp.Request, user: User) -> wisp.Response {
 }
 
 fn handle_successful_update(req: wisp.Request, id_str: String) -> wisp.Response {
-  inertia_gleam.redirect_after_form(req, "/users/" <> id_str)
+  inertia_gleam.redirect(req, "/users/" <> id_str)
 }
 
 fn handle_update_validation_errors(

@@ -24,7 +24,7 @@ pub fn create_user(req: wisp.Request) -> wisp.Response {
 }
 
 fn decode_user_request(
-  json_data,
+  json_data: decode.Dynamic,
 ) -> Result(CreateUserRequest, List(decode.DecodeError)) {
   let user_decoder = {
     use name <- decode.field("name", decode.string)
@@ -54,7 +54,7 @@ fn handle_valid_user_request(
 }
 
 fn handle_successful_creation(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.redirect_after_form(req, "/users")
+  inertia_gleam.redirect(req, "/users")
 }
 
 fn handle_validation_errors(

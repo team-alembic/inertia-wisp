@@ -553,11 +553,11 @@ pub fn external_redirect_test() {
   location_header |> should.equal(Ok("https://external.com"))
 }
 
-pub fn redirect_after_form_test() {
+pub fn redirect_test() {
   let req =
     testing.inertia_request()
     |> request.set_method(http.Post)
-  let response = inertia_gleam.redirect_after_form(req, "/success")
+  let response = inertia_gleam.redirect(req, "/success")
 
   response.status |> should.equal(303)
 
@@ -578,7 +578,7 @@ pub fn form_submission_success_workflow_test() {
     |> request.set_method(http.Post)
 
   // Simulate successful form submission
-  let response = inertia_gleam.redirect_after_form(req, "/users")
+  let response = inertia_gleam.redirect(req, "/users")
 
   response.status |> should.equal(303)
 

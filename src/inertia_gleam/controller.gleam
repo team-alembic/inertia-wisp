@@ -12,9 +12,9 @@ import wisp.{type Request, type Response}
 /// Context wrapper for building up props before rendering
 pub type InertiaContext {
   InertiaContext(
-    request: Request, 
+    request: Request,
     props: Dict(String, PropValue),
-    always_props: Dict(String, PropValue)
+    always_props: Dict(String, PropValue),
   )
 }
 
@@ -54,36 +54,73 @@ pub fn context(req: Request) -> InertiaContext {
 }
 
 /// Add a prop to the context in a pipe-friendly way
-pub fn assign_prop(ctx: InertiaContext, key: String, value: json.Json) -> InertiaContext {
-  InertiaContext(..ctx, props: dict.insert(ctx.props, key, types.EagerProp(value)))
+pub fn assign_prop(
+  ctx: InertiaContext,
+  key: String,
+  value: json.Json,
+) -> InertiaContext {
+  InertiaContext(
+    ..ctx,
+    props: dict.insert(ctx.props, key, types.EagerProp(value)),
+  )
 }
 
 /// Add an always prop to the context that will be included in every response
-pub fn assign_always_prop(ctx: InertiaContext, key: String, value: json.Json) -> InertiaContext {
-  InertiaContext(..ctx, always_props: dict.insert(ctx.always_props, key, types.EagerProp(value)))
+pub fn assign_always_prop(
+  ctx: InertiaContext,
+  key: String,
+  value: json.Json,
+) -> InertiaContext {
+  InertiaContext(
+    ..ctx,
+    always_props: dict.insert(ctx.always_props, key, types.EagerProp(value)),
+  )
 }
 
 /// Add a lazy always prop to the context that will be included in every response
-pub fn assign_always_lazy_prop(ctx: InertiaContext, key: String, evaluator: fn() -> json.Json) -> InertiaContext {
-  InertiaContext(..ctx, always_props: dict.insert(ctx.always_props, key, types.LazyProp(evaluator)))
+pub fn assign_always_lazy_prop(
+  ctx: InertiaContext,
+  key: String,
+  evaluator: fn() -> json.Json,
+) -> InertiaContext {
+  InertiaContext(
+    ..ctx,
+    always_props: dict.insert(ctx.always_props, key, types.LazyProp(evaluator)),
+  )
 }
 
 /// Add a lazy prop to the context that will only be evaluated when requested
-pub fn assign_lazy_prop(ctx: InertiaContext, key: String, evaluator: fn() -> json.Json) -> InertiaContext {
-  InertiaContext(..ctx, props: dict.insert(ctx.props, key, types.LazyProp(evaluator)))
+pub fn assign_lazy_prop(
+  ctx: InertiaContext,
+  key: String,
+  evaluator: fn() -> json.Json,
+) -> InertiaContext {
+  InertiaContext(
+    ..ctx,
+    props: dict.insert(ctx.props, key, types.LazyProp(evaluator)),
+  )
 }
 
 /// Add multiple props to the context
-pub fn assign_props(ctx: InertiaContext, props: List(#(String, json.Json))) -> InertiaContext {
-  let prop_values = list.map(props, fn(pair) { #(pair.0, types.EagerProp(pair.1)) })
+pub fn assign_props(
+  ctx: InertiaContext,
+  props: List(#(String, json.Json)),
+) -> InertiaContext {
+  let prop_values =
+    list.map(props, fn(pair) { #(pair.0, types.EagerProp(pair.1)) })
   let new_props = dict.merge(ctx.props, dict.from_list(prop_values))
   InertiaContext(..ctx, props: new_props)
 }
 
 /// Add multiple always props to the context
-pub fn assign_always_props(ctx: InertiaContext, props: List(#(String, json.Json))) -> InertiaContext {
-  let prop_values = list.map(props, fn(pair) { #(pair.0, types.EagerProp(pair.1)) })
-  let new_always_props = dict.merge(ctx.always_props, dict.from_list(prop_values))
+pub fn assign_always_props(
+  ctx: InertiaContext,
+  props: List(#(String, json.Json)),
+) -> InertiaContext {
+  let prop_values =
+    list.map(props, fn(pair) { #(pair.0, types.EagerProp(pair.1)) })
+  let new_always_props =
+    dict.merge(ctx.always_props, dict.from_list(prop_values))
   InertiaContext(..ctx, always_props: new_always_props)
 }
 
@@ -91,10 +128,16 @@ pub fn assign_always_props(ctx: InertiaContext, props: List(#(String, json.Json)
 pub fn render(ctx: InertiaContext, component: String) -> Response {
   let is_inertia = middleware.is_inertia_request(ctx.request)
   let partial_data = middleware.get_partial_data(ctx.request)
-  
+
   // Evaluate props based on whether it's a partial request
-  let evaluated_props = evaluate_props_with_always(ctx.props, ctx.always_props, is_inertia, partial_data)
-  
+  let evaluated_props =
+    evaluate_props_with_always(
+      ctx.props,
+      ctx.always_props,
+      is_inertia,
+      partial_data,
+    )
+
   render_inertia_with_props(ctx.request, component, evaluated_props)
 }
 
@@ -109,31 +152,35 @@ fn evaluate_props_with_always(
     // Partial request - evaluate always props + only requested regular props
     True -> {
       // Always evaluate all always_props
-      let evaluated_always = dict.fold(always_props, dict.new(), fn(acc, key, prop_value) {
-        dict.insert(acc, key, evaluate_prop_value(prop_value))
-      })
-      
+      let evaluated_always =
+        dict.fold(always_props, dict.new(), fn(acc, key, prop_value) {
+          dict.insert(acc, key, evaluate_prop_value(prop_value))
+        })
+
       // Only evaluate requested regular props (but regular props override always props)
-      let evaluated_partial = dict.fold(props, dict.new(), fn(acc, key, prop_value) {
-        case list.contains(partial_data, key) {
-          True -> dict.insert(acc, key, evaluate_prop_value(prop_value))
-          False -> acc
-        }
-      })
-      
+      let evaluated_partial =
+        dict.fold(props, dict.new(), fn(acc, key, prop_value) {
+          case list.contains(partial_data, key) {
+            True -> dict.insert(acc, key, evaluate_prop_value(prop_value))
+            False -> acc
+          }
+        })
+
       // Merge with regular props taking precedence
       dict.merge(evaluated_always, evaluated_partial)
     }
     // Full request - evaluate all props with regular props taking precedence
     False -> {
-      let evaluated_always = dict.fold(always_props, dict.new(), fn(acc, key, prop_value) {
-        dict.insert(acc, key, evaluate_prop_value(prop_value))
-      })
-      
-      let evaluated_regular = dict.fold(props, dict.new(), fn(acc, key, prop_value) {
-        dict.insert(acc, key, evaluate_prop_value(prop_value))
-      })
-      
+      let evaluated_always =
+        dict.fold(always_props, dict.new(), fn(acc, key, prop_value) {
+          dict.insert(acc, key, evaluate_prop_value(prop_value))
+        })
+
+      let evaluated_regular =
+        dict.fold(props, dict.new(), fn(acc, key, prop_value) {
+          dict.insert(acc, key, evaluate_prop_value(prop_value))
+        })
+
       // Merge with regular props taking precedence
       dict.merge(evaluated_always, evaluated_regular)
     }
@@ -163,8 +210,6 @@ fn render_html_response(page: Page) -> Response {
 
   wisp.html_response(string_tree.from_string(html_body), 200)
 }
-
-
 
 /// Helper to convert string to JSON for props
 pub fn string_prop(value: String) -> json.Json {
@@ -199,10 +244,11 @@ pub fn assign_errors(
   ctx: InertiaContext,
   errors: Dict(String, String),
 ) -> InertiaContext {
-  let errors_list = dict.fold(errors, [], fn(acc, key, value) {
-    [#(key, json.string(value)), ..acc]
-  })
-  
+  let errors_list =
+    dict.fold(errors, [], fn(acc, key, value) {
+      [#(key, json.string(value)), ..acc]
+    })
+
   assign_prop(ctx, "errors", json.object(errors_list))
 }
 
@@ -218,7 +264,8 @@ pub fn assign_error(
 
 /// Create a redirect response that works with both regular browsers and Inertia XHR requests
 pub fn redirect(_req: Request, to url: String) -> Response {
-  browser_redirect(url)
+  wisp.response(303)
+  |> wisp.set_header("location", url)
   |> wisp.set_header("vary", "X-Inertia")
 }
 
@@ -226,18 +273,4 @@ pub fn redirect(_req: Request, to url: String) -> Response {
 pub fn external_redirect(to url: String) -> Response {
   wisp.response(409)
   |> wisp.set_header("x-inertia-location", url)
-}
-
-
-
-/// Helper to create standard browser redirect
-fn browser_redirect(url: String) -> Response {
-  wisp.response(303)
-  |> wisp.set_header("location", url)
-}
-
-/// Create a redirect after a successful form submission
-pub fn redirect_after_form(req: Request, to url: String) -> Response {
-  redirect(req, url)
-  |> wisp.set_header("vary", "X-Inertia")
 }

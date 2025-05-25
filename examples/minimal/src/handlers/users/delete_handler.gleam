@@ -18,5 +18,5 @@ fn handle_valid_delete_request(req: wisp.Request, id: Int) -> wisp.Response {
 }
 
 fn handle_successful_deletion(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.redirect_after_form(req, "/users")
+  inertia_gleam.redirect(req, "/users")
 }

@@ -84,7 +84,7 @@ minimal/
 ## Available Routes
 
 - `GET /` - Home page
-- `GET /about` - About page  
+- `GET /about` - About page
 - `GET /users` - List all users
 - `GET /users/create` - User creation form
 - `POST /users` - Create new user (with validation)
@@ -101,15 +101,15 @@ The user management system demonstrates complete form handling:
 ```gleam
 fn create_user(req: wisp.Request) -> wisp.Response {
   use form_data <- wisp.require_form(req)
-  
+
   let name = wisp.get_form_value(form_data, "name") |> result.unwrap("")
   let email = wisp.get_form_value(form_data, "email") |> result.unwrap("")
-  
+
   let errors = validate_user_input(name, email, None)
-  
+
   case dict.size(errors) {
-    0 -> inertia_gleam.redirect_after_form(req, "/users")
-    _ -> 
+    0 -> inertia_gleam.redirect(req, "/users")
+    _ ->
       inertia_gleam.context(req)
       |> inertia_gleam.assign_errors(errors)
       |> inertia_gleam.assign_prop("old", json.object([
@@ -176,7 +176,7 @@ This example demonstrates the full capabilities of the `inertia-gleam` library:
 ### Form Features
 - **Validation error handling** with `assign_errors()`
 - **Form data preservation** on validation failures
-- **Redirect after successful submissions** with `redirect_after_form()`
+- **Redirect after successful submissions** with `redirect()`
 - **CSRF token support** via always props
 
 ### Advanced Props
@@ -226,7 +226,7 @@ curl http://localhost:8000/users/1
 
 ### Expected Behaviors
 
-- **Full page loads**: Initial visits return HTML with `<div id="app" data-page="...">` 
+- **Full page loads**: Initial visits return HTML with `<div id="app" data-page="...">`
 - **XHR navigation**: Subsequent clicks return JSON `{"component": "...", "props": {...}, ...}`
 - **Form validation**: Invalid submissions return to form with errors preserved
 - **Successful forms**: Valid submissions redirect to success page
