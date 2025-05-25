@@ -517,25 +517,25 @@ pub fn redirect_inertia_request_test() {
     |> request.set_method(http.Post)
   let response = inertia_gleam.redirect(req, "/dashboard")
 
-  response.status |> should.equal(409)
+  response.status |> should.equal(303)
 
   let location_header =
     list.find_map(response.headers, fn(header) {
       case header {
-        #("x-inertia-location", value) -> Ok(value)
+        #("location", value) -> Ok(value)
         _ -> Error(Nil)
       }
     })
   location_header |> should.equal(Ok("/dashboard"))
 
-  let inertia_header =
+  let vary_header =
     list.find_map(response.headers, fn(header) {
       case header {
-        #("x-inertia", value) -> Ok(value)
+        #("vary", value) -> Ok(value)
         _ -> Error(Nil)
       }
     })
-  inertia_header |> should.equal(Ok("true"))
+  vary_header |> should.equal(Ok("X-Inertia"))
 }
 
 pub fn external_redirect_test() {
@@ -559,7 +559,7 @@ pub fn redirect_after_form_test() {
     |> request.set_method(http.Post)
   let response = inertia_gleam.redirect_after_form(req, "/success")
 
-  response.status |> should.equal(409)
+  response.status |> should.equal(303)
 
   let vary_header =
     list.find_map(response.headers, fn(header) {
@@ -580,12 +580,12 @@ pub fn form_submission_success_workflow_test() {
   // Simulate successful form submission
   let response = inertia_gleam.redirect_after_form(req, "/users")
 
-  response.status |> should.equal(409)
+  response.status |> should.equal(303)
 
   let location_header =
     list.find_map(response.headers, fn(header) {
       case header {
-        #("x-inertia-location", value) -> Ok(value)
+        #("location", value) -> Ok(value)
         _ -> Error(Nil)
       }
     })

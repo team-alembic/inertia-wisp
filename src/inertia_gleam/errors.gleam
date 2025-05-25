@@ -72,7 +72,7 @@ pub fn clear() -> ValidationErrors {
 /// Create a redirect response with validation errors
 /// The errors will be preserved across the redirect for display on the target page
 pub fn redirect_with_errors(
-  req: Request,
+  _req: Request,
   url: String,
   errors: ValidationErrors,
 ) -> Response {

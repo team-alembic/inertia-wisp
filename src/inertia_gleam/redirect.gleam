@@ -1,16 +1,12 @@
-import inertia_gleam/middleware
 import wisp.{type Request, type Response}
 
 /// Create a redirect response that works with both regular browsers and Inertia XHR requests.
 /// 
-/// For regular browser requests, this returns a standard 303 redirect.
-/// For Inertia XHR requests, this returns a 409 Conflict with X-Inertia-Location header,
-/// which tells the Inertia client to perform a client-side redirect.
-pub fn redirect(req: Request, to url: String) -> Response {
-  case middleware.is_inertia_request(req) {
-    True -> inertia_redirect(url)
-    False -> browser_redirect(url)
-  }
+/// For both regular browser requests and Inertia XHR requests, this returns a standard 303 redirect
+/// with Location header, as per the Inertia.js specification.
+pub fn redirect(_req: Request, to url: String) -> Response {
+  browser_redirect(url)
+  |> wisp.set_header("vary", "X-Inertia")
 }
 
 /// Create an external redirect that forces a full page reload.
@@ -22,13 +18,7 @@ pub fn external_redirect(to url: String) -> Response {
   |> wisp.set_header("x-inertia-location", url)
 }
 
-/// Create a redirect for Inertia XHR requests.
-/// Returns 409 Conflict with X-Inertia-Location header.
-fn inertia_redirect(url: String) -> Response {
-  wisp.response(409)
-  |> wisp.set_header("x-inertia-location", url)
-  |> wisp.set_header("x-inertia", "true")
-}
+
 
 /// Create a standard browser redirect.
 /// Returns 303 See Other with Location header.
@@ -38,10 +28,9 @@ fn browser_redirect(url: String) -> Response {
 }
 
 /// Create a redirect after a successful form submission.
-/// This is a convenience function that adds appropriate headers for form submissions.
+/// This is a convenience function that uses the standard redirect behavior.
 pub fn redirect_after_form(req: Request, to url: String) -> Response {
   redirect(req, url)
-  |> wisp.set_header("vary", "X-Inertia")
 }
 
 /// Create a redirect with a success flash message.

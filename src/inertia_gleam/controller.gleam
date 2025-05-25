@@ -217,11 +217,9 @@ pub fn assign_error(
 }
 
 /// Create a redirect response that works with both regular browsers and Inertia XHR requests
-pub fn redirect(req: Request, to url: String) -> Response {
-  case middleware.is_inertia_request(req) {
-    True -> inertia_redirect(url)
-    False -> browser_redirect(url)
-  }
+pub fn redirect(_req: Request, to url: String) -> Response {
+  browser_redirect(url)
+  |> wisp.set_header("vary", "X-Inertia")
 }
 
 /// Create an external redirect that forces a full page reload
@@ -230,12 +228,7 @@ pub fn external_redirect(to url: String) -> Response {
   |> wisp.set_header("x-inertia-location", url)
 }
 
-/// Helper to create redirect for Inertia XHR requests
-fn inertia_redirect(url: String) -> Response {
-  wisp.response(409)
-  |> wisp.set_header("x-inertia-location", url)
-  |> wisp.set_header("x-inertia", "true")
-}
+
 
 /// Helper to create standard browser redirect
 fn browser_redirect(url: String) -> Response {
