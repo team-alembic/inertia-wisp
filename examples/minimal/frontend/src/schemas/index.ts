@@ -106,6 +106,7 @@ export type Auth = z.infer<typeof AuthSchema>;
 export type ValidationErrors = z.infer<typeof ValidationErrorsSchema>;
 export type FormOldValues = z.infer<typeof FormOldValuesSchema>;
 
+export type BasePageProps = z.infer<typeof BasePagePropsSchema>;
 export type HomePageProps = z.infer<typeof HomePagePropsSchema>;
 export type AboutPageProps = z.infer<typeof AboutPagePropsSchema>;
 export type UsersPageProps = z.infer<typeof UsersPagePropsSchema>;
