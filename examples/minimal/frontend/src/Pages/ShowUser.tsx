@@ -1,7 +1,7 @@
 import { Link } from "@inertiajs/react";
-import { ShowUserPageProps } from "../types";
+import { ShowUserPageProps, ShowUserPagePropsSchema, withValidatedProps } from "../schemas";
 
-export default function ShowUser({ user, auth, csrf_token }: ShowUserPageProps) {
+function ShowUser({ user, auth, csrf_token }: ShowUserPageProps) {
   return (
     <div
       style={{
@@ -118,3 +118,5 @@ export default function ShowUser({ user, auth, csrf_token }: ShowUserPageProps) 
     </div>
   );
 }
+
+export default withValidatedProps(ShowUserPagePropsSchema, ShowUser);

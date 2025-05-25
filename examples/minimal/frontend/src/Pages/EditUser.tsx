@@ -1,13 +1,13 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Link, router } from "@inertiajs/react";
-import { EditUserPageProps } from "../types";
+import { EditUserPageProps, EditUserPagePropsSchema, withValidatedProps } from "../schemas";
 
 interface EditUserFormData {
   name: string;
   email: string;
 }
 
-export default function EditUser({ user, errors, csrf_token, auth }: EditUserPageProps) {
+function EditUser({ user, errors, csrf_token, auth }: EditUserPageProps) {
   const [formData, setFormData] = useState<EditUserFormData>({
     name: user?.name || "",
     email: user?.email || "",
@@ -218,3 +218,5 @@ export default function EditUser({ user, errors, csrf_token, auth }: EditUserPag
     </div>
   );
 }
+
+export default withValidatedProps(EditUserPagePropsSchema, EditUser);

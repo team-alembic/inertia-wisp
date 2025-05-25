@@ -1,7 +1,7 @@
 import { Link, router } from "@inertiajs/react";
-import { AboutPageProps } from "../types";
+import { AboutPageProps, AboutPagePropsSchema, withValidatedProps } from "../schemas";
 
-export default function About({ page_title, auth, csrf_token }: AboutPageProps) {
+function About({ page_title, auth, csrf_token }: AboutPageProps) {
   return (
     <div
       style={{
@@ -86,3 +86,5 @@ export default function About({ page_title, auth, csrf_token }: AboutPageProps) 
     </div>
   );
 }
+
+export default withValidatedProps(AboutPagePropsSchema, About);

@@ -1,7 +1,7 @@
 import { Link, router } from "@inertiajs/react";
-import { UsersPageProps } from "../types";
+import { UsersPageProps, UsersPagePropsSchema, withValidatedProps } from "../schemas";
 
-export default function Users({ users, auth, csrf_token }: UsersPageProps) {
+function Users({ users, auth, csrf_token }: UsersPageProps) {
   const handleDelete = (userId: number) => {
     if (confirm("Are you sure you want to delete this user?")) {
       router.post(`/users/${userId}/delete`, {
@@ -234,3 +234,5 @@ export default function Users({ users, auth, csrf_token }: UsersPageProps) {
     </div>
   );
 }
+
+export default withValidatedProps(UsersPagePropsSchema, Users);

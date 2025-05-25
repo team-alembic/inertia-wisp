@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Link, router } from "@inertiajs/react";
-import { CreateUserPageProps, CreateUserPagePropsSchema, withValidatedProps } from "../schemas";
+import { CreateUserPageProps, CreateUserPagePropsSchema, CreateUserFormSchema, validateFormData, withValidatedProps } from "../schemas";
 
 interface CreateUserFormData {
   name: string;
@@ -13,13 +13,25 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
     email: old?.email || "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Client-side validation with Zod
+    const validation = validateFormData(CreateUserFormSchema, formData);
+    
+    if (!validation.success) {
+      setClientErrors(validation.errors);
+      return;
+    }
+    
+    // Clear client errors if validation passes
+    setClientErrors({});
     setIsSubmitting(true);
 
     router.post("/users", {
-      ...formData,
+      ...validation.data,
       _token: csrf_token,
     }, {
       onFinish: () => setIsSubmitting(false),
@@ -32,7 +44,15 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (clientErrors[name]) {
+      setClientErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
+
+  // Merge server errors and client errors, preferring server errors
+  const allErrors = { ...clientErrors, ...errors };
 
   return (
     <div
@@ -43,7 +63,7 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
         margin: "0 auto",
       }}
     >
-      <h1>Create New User</h1>
+      <h1>Create New User (Improved)</h1>
 
       <nav style={{ marginBottom: "20px" }}>
         <Link
@@ -72,6 +92,20 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
         </div>
       )}
 
+      <div
+        style={{
+          backgroundColor: "#d1ecf1",
+          padding: "10px",
+          marginBottom: "20px",
+          borderRadius: "4px",
+          fontSize: "14px",
+          border: "1px solid #bee5eb",
+        }}
+      >
+        <strong>Improved Version:</strong> This component uses the withValidatedProps HOC 
+        for clean type-safe prop validation without sacrificing readability.
+      </div>
+
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "20px" }}>
           <label
@@ -93,14 +127,14 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
             style={{
               width: "100%",
               padding: "10px",
-              border: errors?.name ? "2px solid red" : "1px solid #ddd",
+              border: allErrors?.name ? "2px solid red" : "1px solid #ddd",
               borderRadius: "4px",
               fontSize: "16px",
               boxSizing: "border-box",
             }}
             disabled={isSubmitting}
           />
-          {errors?.name && (
+          {allErrors?.name && (
             <div
               style={{
                 color: "red",
@@ -108,7 +142,7 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
                 marginTop: "5px",
               }}
             >
-              {errors.name}
+              {allErrors.name}
             </div>
           )}
         </div>
@@ -133,14 +167,14 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
             style={{
               width: "100%",
               padding: "10px",
-              border: errors?.email ? "2px solid red" : "1px solid #ddd",
+              border: allErrors?.email ? "2px solid red" : "1px solid #ddd",
               borderRadius: "4px",
               fontSize: "16px",
               boxSizing: "border-box",
             }}
             disabled={isSubmitting}
           />
-          {errors?.email && (
+          {allErrors?.email && (
             <div
               style={{
                 color: "red",
@@ -148,7 +182,7 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
                 marginTop: "5px",
               }}
             >
-              {errors.email}
+              {allErrors.email}
             </div>
           )}
         </div>
@@ -195,17 +229,18 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
           borderRadius: "4px",
         }}
       >
-        <h3>Form Validation Demo</h3>
+        <h3>Improved HOC Pattern Benefits</h3>
         <ul style={{ marginLeft: "20px" }}>
-          <li>Name is required and must be at least 2 characters</li>
-          <li>Email is required and must contain @</li>
-          <li>Email must be unique (try using alice@example.com)</li>
-          <li>Validation errors are preserved when form submission fails</li>
-          <li>Form data is preserved on validation errors</li>
+          <li><strong>Clean Function Signature:</strong> Component accepts properly typed props</li>
+          <li><strong>Runtime Validation:</strong> Props validated automatically by HOC</li>
+          <li><strong>Better DX:</strong> Type errors shown at component definition, not usage</li>
+          <li><strong>Reusable Pattern:</strong> Same HOC works for all page components</li>
+          <li><strong>Error Boundaries:</strong> Validation errors caught at component boundary</li>
         </ul>
       </div>
     </div>
   );
 }
 
+// Export component wrapped with validation HOC
 export default withValidatedProps(CreateUserPagePropsSchema, CreateUser);

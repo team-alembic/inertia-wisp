@@ -1,7 +1,7 @@
 import { Link, router } from "@inertiajs/react";
-import { HomePageProps } from "../types";
+import { HomePageProps, HomePagePropsSchema, withValidatedProps } from "../schemas";
 
-export default function Home({ message, timestamp, user_count, auth, csrf_token }: HomePageProps) {
+function Home({ message, timestamp, user_count, auth, csrf_token }: HomePageProps) {
   return (
     <div
       style={{
@@ -94,3 +94,5 @@ export default function Home({ message, timestamp, user_count, auth, csrf_token 
     </div>
   );
 }
+
+export default withValidatedProps(HomePagePropsSchema, Home);

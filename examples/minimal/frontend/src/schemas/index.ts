@@ -1,4 +1,5 @@
 import { z } from "zod";
+import React from "react";
 
 // Zod schemas that match our TypeScript types and Gleam backend types
 
@@ -116,3 +117,113 @@ export type EditUserPageProps = z.infer<typeof EditUserPagePropsSchema>;
 
 export type CreateUserFormData = z.infer<typeof CreateUserFormSchema>;
 export type EditUserFormData = z.infer<typeof EditUserFormSchema>;
+
+// Error boundary component for validation failures
+export interface ValidationErrorFallbackProps {
+  error: Error;
+  reset: () => void;
+}
+
+export function DefaultValidationErrorFallback({ error, reset }: ValidationErrorFallbackProps) {
+  return React.createElement('div', {
+    style: {
+      padding: '20px',
+      border: '2px solid red',
+      borderRadius: '4px',
+      backgroundColor: '#fff5f5',
+      color: '#c53030',
+      fontFamily: 'monospace'
+    }
+  }, [
+    React.createElement('h2', { key: 'title' }, 'Page Props Validation Error'),
+    React.createElement('p', { key: 'message' }, error.message),
+    React.createElement('button', { 
+      key: 'retry',
+      onClick: reset,
+      style: {
+        padding: '8px 16px',
+        backgroundColor: '#c53030',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
+      }
+    }, 'Retry')
+  ]);
+}
+
+// Configuration options for the HOC
+export interface WithValidatedPropsOptions {
+  // Custom error boundary component to show when validation fails
+  ErrorFallback?: React.ComponentType<ValidationErrorFallbackProps>;
+  // Whether to log validation errors to console (default: true in dev)
+  logErrors?: boolean;
+  // Custom error handler (called before showing error boundary)
+  onError?: (error: Error, props: unknown) => void;
+}
+
+// Higher-order component for validating page props
+export function withValidatedProps<T>(
+  schema: z.ZodSchema<T>,
+  Component: React.ComponentType<T>,
+  options: WithValidatedPropsOptions = {}
+): React.ComponentType<any> {
+  const {
+    ErrorFallback = DefaultValidationErrorFallback,
+    logErrors = false, // Default to false, can be overridden in options
+    onError
+  } = options;
+
+  const WrappedComponent = function ValidatedComponent(props: unknown) {
+    const [error, setError] = React.useState<Error | null>(null);
+
+    const handleReset = React.useCallback(() => {
+      setError(null);
+    }, []);
+
+    React.useEffect(() => {
+      try {
+        validatePageProps(schema, props);
+        setError(null);
+      } catch (validationError) {
+        const error = validationError instanceof Error ? validationError : new Error('Validation failed');
+        
+        if (logErrors) {
+          console.error('Page props validation failed:', error, { props });
+        }
+        
+        if (onError) {
+          onError(error, props);
+        }
+        
+        setError(error);
+      }
+    }, [props, logErrors, onError]);
+
+    if (error) {
+      return React.createElement(ErrorFallback, { error, reset: handleReset });
+    }
+
+    try {
+      const validatedProps = validatePageProps(schema, props);
+      return React.createElement(Component as any, validatedProps as any);
+    } catch (validationError) {
+      // This shouldn't happen due to the useEffect, but handle it as fallback
+      const error = validationError instanceof Error ? validationError : new Error('Validation failed');
+      return React.createElement(ErrorFallback, { error, reset: handleReset });
+    }
+  };
+
+  // Set display name for better debugging
+  WrappedComponent.displayName = `withValidatedProps(${Component.displayName || Component.name || 'Component'})`;
+
+  return WrappedComponent;
+}
+
+// Simplified version for common use case
+export function validateProps<T>(
+  schema: z.ZodSchema<T>,
+  Component: React.ComponentType<T>
+): React.ComponentType<any> {
+  return withValidatedProps(schema, Component);
+}

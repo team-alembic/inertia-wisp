@@ -1,15 +1,13 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Link, router } from "@inertiajs/react";
-import { CreateUserFormSchema, validateFormData, validatePageProps, CreateUserPagePropsSchema } from "../schemas";
+import { CreateUserPageProps, CreateUserFormSchema, validateFormData, CreateUserPagePropsSchema, withValidatedProps } from "../schemas";
 
 interface CreateUserFormData {
   name: string;
   email: string;
 }
 
-export default function CreateUserEnhanced(props: unknown) {
-  // Validate props at runtime to ensure they match expected schema
-  const { errors, old, csrf_token, auth } = validatePageProps(CreateUserPagePropsSchema, props);
+function CreateUserEnhanced({ errors, old, csrf_token, auth }: CreateUserPageProps) {
   
   const [formData, setFormData] = useState<CreateUserFormData>({
     name: old?.name || "",
@@ -244,3 +242,5 @@ export default function CreateUserEnhanced(props: unknown) {
     </div>
   );
 }
+
+export default withValidatedProps(CreateUserPagePropsSchema, CreateUserEnhanced);
