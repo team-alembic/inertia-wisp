@@ -105,6 +105,34 @@ pub fn is_inertia_request(req: Request) -> Bool {
   controller.is_inertia_request(req)
 }
 
+// Form handling and redirects
+pub fn assign_errors(
+  ctx: InertiaContext,
+  errors: Dict(String, String),
+) -> InertiaContext {
+  controller.assign_errors(ctx, errors)
+}
+
+pub fn assign_error(
+  ctx: InertiaContext,
+  field: String,
+  message: String,
+) -> InertiaContext {
+  controller.assign_error(ctx, field, message)
+}
+
+pub fn redirect(req: Request, to url: String) -> Response {
+  controller.redirect(req, url)
+}
+
+pub fn external_redirect(to url: String) -> Response {
+  controller.external_redirect(url)
+}
+
+pub fn redirect_after_form(req: Request, to url: String) -> Response {
+  controller.redirect_after_form(req, url)
+}
+
 // Prop helpers
 pub fn string_prop(value: String) -> json.Json {
   controller.string_prop(value)

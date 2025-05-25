@@ -3,6 +3,7 @@ import gleam/dynamic/decode
 import gleam/http
 import gleam/http/request
 import gleam/json
+import gleam/list
 import gleam/string
 import gleeunit
 import gleeunit/should
@@ -13,6 +14,7 @@ import inertia_gleam/testing
 import inertia_gleam/types.{EagerProp}
 
 import wisp
+import wisp/testing as wisp_testing
 
 pub fn main() {
   gleeunit.main()
@@ -20,16 +22,7 @@ pub fn main() {
 
 // Mock request for testing
 fn mock_request() -> wisp.Request {
-  let body = wisp.create_canned_connection(<<>>, "test_secret_key")
-  let request =
-    request.new()
-    |> request.set_header("x-inertia", "true")
-    |> request.set_header("Content-Type", "application/json")
-    |> request.set_method(http.Get)
-    |> request.set_path("/")
-    |> request.set_body(body)
-
-  request
+  testing.inertia_request()
 }
 
 fn should_contain(haystack: String, needle: String) {
@@ -453,4 +446,178 @@ pub fn testing_no_prop_test() {
 
   // Should not find non-existing prop
   testing.prop(response, "non_existing", decode.string) |> should.be_error
+}
+
+// Test form handling and validation errors
+pub fn assign_errors_test() {
+  let req = mock_request()
+  let errors =
+    dict.from_list([
+      #("email", "Email is required"),
+      #("password", "Password must be at least 8 characters"),
+    ])
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_errors(errors)
+    |> inertia_gleam.render("LoginForm")
+
+  // Should have errors prop
+  testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  |> should.be_ok
+}
+
+pub fn assign_single_error_test() {
+  let req = mock_request()
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_error("username", "Username is taken")
+    |> inertia_gleam.render("SignupForm")
+
+  // Should have errors prop with single error
+  testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  |> should.be_ok
+}
+
+pub fn multiple_errors_test() {
+  let req = mock_request()
+  let initial_errors = dict.from_list([#("email", "Email is required")])
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_errors(initial_errors)
+    |> inertia_gleam.assign_error("password", "Password is required")
+    |> inertia_gleam.render("LoginForm")
+
+  // Should have both errors
+  testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  |> should.be_ok
+}
+
+// Test redirect functionality
+pub fn redirect_browser_request_test() {
+  let req = wisp_testing.request(http.Post, "/submit", [], <<>>)
+  let response = inertia_gleam.redirect(req, "/success")
+
+  response.status |> should.equal(303)
+
+  let location_header =
+    list.find_map(response.headers, fn(header) {
+      case header {
+        #("location", value) -> Ok(value)
+        _ -> Error(Nil)
+      }
+    })
+  location_header |> should.equal(Ok("/success"))
+}
+
+pub fn redirect_inertia_request_test() {
+  let req =
+    testing.inertia_request()
+    |> request.set_method(http.Post)
+  let response = inertia_gleam.redirect(req, "/dashboard")
+
+  response.status |> should.equal(409)
+
+  let location_header =
+    list.find_map(response.headers, fn(header) {
+      case header {
+        #("x-inertia-location", value) -> Ok(value)
+        _ -> Error(Nil)
+      }
+    })
+  location_header |> should.equal(Ok("/dashboard"))
+
+  let inertia_header =
+    list.find_map(response.headers, fn(header) {
+      case header {
+        #("x-inertia", value) -> Ok(value)
+        _ -> Error(Nil)
+      }
+    })
+  inertia_header |> should.equal(Ok("true"))
+}
+
+pub fn external_redirect_test() {
+  let response = inertia_gleam.external_redirect("https://external.com")
+
+  response.status |> should.equal(409)
+
+  let location_header =
+    list.find_map(response.headers, fn(header) {
+      case header {
+        #("x-inertia-location", value) -> Ok(value)
+        _ -> Error(Nil)
+      }
+    })
+  location_header |> should.equal(Ok("https://external.com"))
+}
+
+pub fn redirect_after_form_test() {
+  let req =
+    testing.inertia_request()
+    |> request.set_method(http.Post)
+  let response = inertia_gleam.redirect_after_form(req, "/success")
+
+  response.status |> should.equal(409)
+
+  let vary_header =
+    list.find_map(response.headers, fn(header) {
+      case header {
+        #("vary", value) -> Ok(value)
+        _ -> Error(Nil)
+      }
+    })
+  vary_header |> should.equal(Ok("X-Inertia"))
+}
+
+// Test complete form submission workflow
+pub fn form_submission_success_workflow_test() {
+  let req =
+    testing.inertia_request()
+    |> request.set_method(http.Post)
+
+  // Simulate successful form submission
+  let response = inertia_gleam.redirect_after_form(req, "/users")
+
+  response.status |> should.equal(409)
+
+  let location_header =
+    list.find_map(response.headers, fn(header) {
+      case header {
+        #("x-inertia-location", value) -> Ok(value)
+        _ -> Error(Nil)
+      }
+    })
+  location_header |> should.equal(Ok("/users"))
+}
+
+pub fn form_submission_with_errors_workflow_test() {
+  let req =
+    testing.inertia_request()
+    |> request.set_method(http.Post)
+
+  let validation_errors =
+    dict.from_list([
+      #("name", "Name is required"),
+      #("email", "Email format is invalid"),
+    ])
+
+  // Simulate form submission with validation errors
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_errors(validation_errors)
+    |> inertia_gleam.assign_prop("name", json.string(""))
+    |> inertia_gleam.assign_prop("email", json.string("invalid-email"))
+    |> inertia_gleam.render("CreateUserForm")
+
+  // Should contain the form data and errors
+  testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  |> should.be_ok
+
+  testing.prop(response, "name", decode.string)
+  |> should.equal(Ok(""))
+
+  testing.prop(response, "email", decode.string)
+  |> should.equal(Ok("invalid-email"))
 }

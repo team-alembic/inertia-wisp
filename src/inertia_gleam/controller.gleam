@@ -192,3 +192,59 @@ pub fn props_from_list(
 pub fn is_inertia_request(req: Request) -> Bool {
   middleware.is_inertia_request(req)
 }
+
+/// Add validation errors to the context
+/// These errors will be included in the response under the "errors" prop
+pub fn assign_errors(
+  ctx: InertiaContext,
+  errors: Dict(String, String),
+) -> InertiaContext {
+  let errors_list = dict.fold(errors, [], fn(acc, key, value) {
+    [#(key, json.string(value)), ..acc]
+  })
+  
+  assign_prop(ctx, "errors", json.object(errors_list))
+}
+
+/// Add a single validation error
+pub fn assign_error(
+  ctx: InertiaContext,
+  field: String,
+  message: String,
+) -> InertiaContext {
+  let errors = dict.from_list([#(field, message)])
+  assign_errors(ctx, errors)
+}
+
+/// Create a redirect response that works with both regular browsers and Inertia XHR requests
+pub fn redirect(req: Request, to url: String) -> Response {
+  case middleware.is_inertia_request(req) {
+    True -> inertia_redirect(url)
+    False -> browser_redirect(url)
+  }
+}
+
+/// Create an external redirect that forces a full page reload
+pub fn external_redirect(to url: String) -> Response {
+  wisp.response(409)
+  |> wisp.set_header("x-inertia-location", url)
+}
+
+/// Helper to create redirect for Inertia XHR requests
+fn inertia_redirect(url: String) -> Response {
+  wisp.response(409)
+  |> wisp.set_header("x-inertia-location", url)
+  |> wisp.set_header("x-inertia", "true")
+}
+
+/// Helper to create standard browser redirect
+fn browser_redirect(url: String) -> Response {
+  wisp.response(303)
+  |> wisp.set_header("location", url)
+}
+
+/// Create a redirect after a successful form submission
+pub fn redirect_after_form(req: Request, to url: String) -> Response {
+  redirect(req, url)
+  |> wisp.set_header("vary", "X-Inertia")
+}
