@@ -22,7 +22,7 @@ pub fn default_config() -> Config {
 }
 
 pub fn config(version: String, ssr: Bool) -> Config {
-  types.Config(version: version, ssr: ssr)
+  types.Config(version: version, ssr: ssr, always_props: dict.new())
 }
 
 // Middleware
@@ -72,6 +72,29 @@ pub fn assign_lazy_prop(
   evaluator: fn() -> json.Json,
 ) -> InertiaContext {
   controller.assign_lazy_prop(ctx, key, evaluator)
+}
+
+pub fn assign_always_prop(
+  ctx: InertiaContext,
+  key: String,
+  value: json.Json,
+) -> InertiaContext {
+  controller.assign_always_prop(ctx, key, value)
+}
+
+pub fn assign_always_props(
+  ctx: InertiaContext,
+  props: List(#(String, json.Json)),
+) -> InertiaContext {
+  controller.assign_always_props(ctx, props)
+}
+
+pub fn assign_always_lazy_prop(
+  ctx: InertiaContext,
+  key: String,
+  evaluator: fn() -> json.Json,
+) -> InertiaContext {
+  controller.assign_always_lazy_prop(ctx, key, evaluator)
 }
 
 pub fn render(ctx: InertiaContext, component: String) -> Response {

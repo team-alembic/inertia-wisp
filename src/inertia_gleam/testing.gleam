@@ -1,54 +1,153 @@
+import gleam/bit_array
+import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/http
 import gleam/http/request
-import gleam/int
+import gleam/json.{UnableToDecode}
 import gleam/list
 import gleam/result
 import gleam/string
-import gleam/string_tree
-import wisp.{type Response}
+import wisp.{type Request, type Response}
+import wisp/testing
 
-/// Test helpers for Inertia.js applications
-///
-/// This module provides utilities for testing Inertia responses,
-/// making it easy to verify that your handlers return the correct
-/// components and props.
-/// Create a mock request for testing
-pub fn mock_request() -> wisp.Request {
-  let body = wisp.create_canned_connection(<<>>, "test_secret_key_base")
-  request.new()
-  |> request.set_method(http.Get)
-  |> request.set_path("/")
-  |> request.set_body(body)
+/// Create a mock Inertia XHR request for testing.
+/// 
+/// This creates a request with the necessary Inertia headers:
+/// - `x-inertia: true` to indicate this is an Inertia request
+/// - `x-inertia-version: 1` for version matching
+/// - `accept: application/json` for JSON responses
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// let req = testing.inertia_request()
+/// let response = my_handler(req)
+/// testing.component(response) |> should.equal(Ok("HomePage"))
+/// ```
+pub fn inertia_request() -> Request {
+  testing.request(
+    http.Get,
+    "/",
+    [
+      #("accept", "application/json"),
+      #("x-inertia", "true"),
+      #("x-inertia-version", "1"),
+    ],
+    bit_array.from_string(""),
+  )
 }
 
-/// Create a mock Inertia XHR request for testing
-pub fn mock_inertia_request() -> wisp.Request {
-  mock_request()
-  |> request.set_header("x-inertia", "true")
-  |> request.set_header("x-inertia-version", "1")
-}
-
-/// Create a mock request with specific path
-pub fn mock_request_with_path(path: String) -> wisp.Request {
-  mock_request()
-  |> request.set_path(path)
-}
-
-/// Create a mock Inertia request with specific path
-pub fn mock_inertia_request_with_path(path: String) -> wisp.Request {
-  mock_inertia_request()
-  |> request.set_path(path)
-}
-
-/// Create a mock request with partial data header
-pub fn mock_partial_request(props: List(String)) -> wisp.Request {
+/// Add partial data headers to a request for testing partial reloads.
+/// 
+/// This modifies an existing request to include the `x-inertia-partial-data`
+/// header, which tells Inertia to only return the specified props.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// let req = testing.inertia_request()
+///   |> testing.partial_data(["posts", "comments"])
+/// let response = my_handler(req)
+/// // Only "posts" and "comments" props will be included
+/// ```
+pub fn partial_data(req: Request, props: List(String)) -> Request {
   let partial_data = string.join(props, ",")
-  mock_inertia_request()
+  req
   |> request.set_header("x-inertia-partial-data", partial_data)
 }
 
+/// Extract the component name from an Inertia response.
+/// 
+/// This works for both JSON responses (XHR requests) and HTML responses
+/// (initial page loads) by parsing the appropriate format.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// let response = my_handler(req)
+/// testing.component(response) |> should.equal(Ok("HomePage"))
+/// ```
+pub fn component(response: Response) {
+  response
+  |> inertia_data(decode.at(["component"], decode.string))
+}
+
+/// Extract a specific prop value from an Inertia response.
+/// 
+/// This function allows you to retrieve and decode any prop from the response
+/// using Gleam's dynamic decoders. Works for both JSON and HTML responses.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// // Test a string prop
+/// testing.prop(response, "title", decode.string) 
+/// |> should.equal(Ok("My Title"))
+/// 
+/// // Test an integer prop
+/// testing.prop(response, "count", decode.int) 
+/// |> should.equal(Ok(42))
+/// 
+/// // Test a complex object
+/// testing.prop(response, "user", decode.field("name", decode.string))
+/// |> should.equal(Ok("John"))
+/// ```
+pub fn prop(resp: Response, key: String, decoder: decode.Decoder(a)) {
+  resp
+  |> inertia_data(decode.at(["props", key], decoder))
+}
+
+/// Extract the URL from an Inertia response.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// testing.url(response) |> should.equal(Ok("/dashboard"))
+/// ```
+pub fn url(response: Response) {
+  response
+  |> inertia_data(decode.at(["url"], decode.string))
+}
+
+/// Extract the version from an Inertia response.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// testing.version(response) |> should.equal(Ok("1"))
+/// ```
+pub fn version(response: Response) {
+  response
+  |> inertia_data(decode.at(["version"], decode.string))
+}
+
+// Private helper functions below this line
+
+/// Extract and decode Inertia data from either JSON or HTML responses
+fn inertia_data(
+  response: Response,
+  decoder: decode.Decoder(a),
+) -> Result(a, json.DecodeError) {
+  case is_json_response(response) {
+    True -> Ok(testing.string_body(response))
+    False -> {
+      extract_json_from_html(testing.string_body(response))
+    }
+  }
+  |> result.map_error(fn(x) {
+    UnableToDecode(decode.decode_error("JSON in response", dynamic.string(x)))
+  })
+  |> result.then(fn(x) { json.parse(x, decoder) })
+}
+
+/// Check if response has JSON content type
+fn is_json_response(response: Response) -> Bool {
+  let content_type = get_content_type(response)
+  string.contains(content_type, "application/json")
+}
+
 /// Extract JSON string from HTML data-page attribute
-pub fn extract_json_from_html(html: String) -> Result(String, String) {
+fn extract_json_from_html(html: String) -> Result(String, String) {
   case string.split_once(html, "data-page=\"") {
     Error(_) -> Error("No data-page attribute found in HTML")
     Ok(#(_, after_start)) -> {
@@ -62,177 +161,8 @@ pub fn extract_json_from_html(html: String) -> Result(String, String) {
   }
 }
 
-/// Get response body as string
-pub fn get_response_body(response: wisp.Response) -> String {
-  case response.body {
-    wisp.Text(body) -> string_tree.to_string(body)
-    _ -> ""
-  }
-}
-
-/// Check if response is JSON
-pub fn is_json_response(response: wisp.Response) -> Bool {
-  let content_type = get_content_type(response)
-  string.contains(content_type, "application/json")
-}
-
-pub fn assert_component(
-  response: wisp.Response,
-  expected_component: String,
-) -> Result(Nil, String) {
-  assert_component_in_json(get_response_body(response), expected_component)
-}
-
-/// Assert that a response contains the expected component name
-pub fn assert_component_in_json(
-  json_string: String,
-  expected_component: String,
-) -> Result(Nil, String) {
-  case
-    string.contains(
-      json_string,
-      "\"component\":\"" <> expected_component <> "\"",
-    )
-  {
-    True -> Ok(Nil)
-    False ->
-      Error(
-        "Expected component '" <> expected_component <> "' not found in JSON",
-      )
-  }
-}
-
-/// Assert that a response contains the expected prop value
-fn assert_prop_in_json(
-  json_string: String,
-  key: String,
-  expected_value: String,
-) -> Result(Nil, String) {
-  let prop_pattern = "\"" <> key <> "\":" <> expected_value
-  case string.contains(json_string, prop_pattern) {
-    True -> Ok(Nil)
-    False ->
-      Error(
-        "Expected prop '"
-        <> key
-        <> "' with value "
-        <> expected_value
-        <> " not found in JSON",
-      )
-  }
-}
-
-pub fn assert_string_prop(
-  resp: Response,
-  key: String,
-  expected_value: String,
-) -> Result(Nil, String) {
-  assert_string_prop_in_json(get_response_body(resp), key, expected_value)
-}
-
-pub fn assert_int_prop(
-  resp: Response,
-  key: String,
-  expected_value: Int,
-) -> Result(Nil, String) {
-  assert_int_prop_in_json(get_response_body(resp), key, expected_value)
-}
-
-pub fn assert_no_prop(resp: Response, key: String) -> Result(Nil, String) {
-  let prop_pattern = "\"" <> key <> "\":"
-  case string.contains(get_response_body(resp), prop_pattern) {
-    True -> Error("Unexpected prop '" <> key <> " found in JSON")
-    False -> Ok(Nil)
-  }
-}
-
-/// Assert that a response contains the expected string prop
-pub fn assert_string_prop_in_json(
-  json_string: String,
-  key: String,
-  expected_value: String,
-) -> Result(Nil, String) {
-  assert_prop_in_json(json_string, key, "\"" <> expected_value <> "\"")
-}
-
-/// Assert that a response contains the expected int prop
-pub fn assert_int_prop_in_json(
-  json_string: String,
-  key: String,
-  expected_value: Int,
-) -> Result(Nil, String) {
-  assert_prop_in_json(json_string, key, int.to_string(expected_value))
-}
-
-/// Assert that a response contains the expected bool prop
-pub fn assert_bool_prop_in_json(
-  json_string: String,
-  key: String,
-  expected_value: Bool,
-) -> Result(Nil, String) {
-  let value_str = case expected_value {
-    True -> "true"
-    False -> "false"
-  }
-  assert_prop_in_json(json_string, key, value_str)
-}
-
-/// Assert that a response has the expected URL
-pub fn assert_url_in_json(
-  json_string: String,
-  expected_url: String,
-) -> Result(Nil, String) {
-  case string.contains(json_string, "\"url\":\"" <> expected_url <> "\"") {
-    True -> Ok(Nil)
-    False -> Error("Expected URL '" <> expected_url <> "' not found in JSON")
-  }
-}
-
-/// Assert that a response has the expected version
-pub fn assert_version_in_json(
-  json_string: String,
-  expected_version: String,
-) -> Result(Nil, String) {
-  case
-    string.contains(json_string, "\"version\":\"" <> expected_version <> "\"")
-  {
-    True -> Ok(Nil)
-    False ->
-      Error("Expected version '" <> expected_version <> "' not found in JSON")
-  }
-}
-
-/// Convenience function to test Inertia response
-pub fn assert_inertia_response(
-  response: wisp.Response,
-  expected_component: String,
-) -> Result(String, String) {
-  let body = get_response_body(response)
-
-  case response.status {
-    200 -> {
-      case is_json_response(response) {
-        True -> {
-          use _ <- result.try(assert_component_in_json(body, expected_component))
-          Ok(body)
-        }
-        False -> {
-          use json_string <- result.try(extract_json_from_html(body))
-          use _ <- result.try(assert_component_in_json(
-            json_string,
-            expected_component,
-          ))
-          Ok(json_string)
-        }
-      }
-    }
-    _ ->
-      Error("Expected 200 status code, got " <> int.to_string(response.status))
-  }
-}
-
-/// Helper functions
-fn get_content_type(response: wisp.Response) -> String {
+/// Get content type header from response
+fn get_content_type(response: Response) -> String {
   list.find_map(response.headers, fn(header) {
     case header {
       #("content-type", value) -> Ok(value)
@@ -242,6 +172,7 @@ fn get_content_type(response: wisp.Response) -> String {
   |> result.unwrap("")
 }
 
+/// Unescape HTML entities in JSON string
 fn unescape_html(text: String) -> String {
   text
   |> string.replace("&quot;", "\"")

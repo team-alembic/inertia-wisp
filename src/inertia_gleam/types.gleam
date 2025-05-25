@@ -23,6 +23,7 @@ pub type Config {
   Config(
     version: String,
     ssr: Bool,
+    always_props: Dict(String, PropValue),
   )
 }
 
@@ -38,7 +39,7 @@ pub type InertiaState {
 
 /// Default configuration
 pub fn default_config() -> Config {
-  Config(version: "1", ssr: False)
+  Config(version: "1", ssr: False, always_props: dict.new())
 }
 
 /// Create a new page object

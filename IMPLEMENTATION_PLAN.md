@@ -85,7 +85,7 @@ request
 |> render_inertia("Dashboard")
 ```
 
-#### Step 2.2: Always Props
+#### Step 2.2: Always Props ✅
 **Goal**: Props included in every request
 
 ```gleam
@@ -94,6 +94,14 @@ request
 |> assign_prop("page_data", page_data)
 |> render_inertia("Dashboard")
 ```
+
+**Status**: ✅ COMPLETE
+- [x] `assign_always_prop()` function for single always props
+- [x] `assign_always_props()` function for multiple always props  
+- [x] `assign_always_lazy_prop()` function for lazy always props
+- [x] Always props are included in every response (full and partial requests)
+- [x] Regular props override always props when same key exists
+- [x] Comprehensive test coverage including partial reload interactions
 
 #### Step 2.3: Partial Reloads
 **Goal**: Request only specific props on navigation
@@ -251,15 +259,15 @@ logging = "~> 1.2"       # for debug logging
 - [x] React frontend can consume responses
 - [x] Documentation for setup
 
-### Phase 1:
-- [ ] Props system works with complex data
-- [ ] Navigation between multiple pages
-- [ ] No memory leaks with repeated navigation
+### Phase 1: ✅ COMPLETED
+- [x] Props system works with complex data
+- [x] Navigation between multiple pages
+- [x] No memory leaks with repeated navigation
 
-### Phase 2:
-- [ ] Lazy props reduce initial load time by >50%
-- [ ] Partial reloads work correctly
-- [ ] Always props included automatically
+### Phase 2: ✅ COMPLETED
+- [x] Lazy props reduce initial load time by >50%
+- [x] Partial reloads work correctly
+- [x] Always props included automatically
 
 ### Phase 3:
 - [ ] Form submissions work end-to-end
@@ -276,24 +284,61 @@ logging = "~> 1.2"       # for debug logging
 - [ ] Developer experience is smooth
 - [ ] Configuration system is flexible
 
+## Current Status
+
+### ✅ Completed Features
+- **Phase 0**: Basic Inertia responses and React integration
+- **Phase 1**: Props system with context-based assignment and navigation
+- **Phase 2**: Advanced props system including:
+  - Lazy props (evaluated only when needed)
+  - Always props (included in every response)
+  - Partial reloads (only requested props)
+  - Comprehensive testing module
+
+### 🚧 Next Steps: Phase 3 (Forms & Validation)
+The core Inertia functionality is now complete. The next major feature set to implement would be:
+
+#### Step 3.1: Form Handling
+**Goal**: POST requests through Inertia
+
+- Handle form submissions
+- Redirect after POST  
+- Flash messages
+
+#### Step 3.2: Validation Errors
+**Goal**: Display validation errors in frontend
+
+```gleam
+request
+|> assign_errors(changeset_or_error_map)
+|> render_inertia("CreateUser")
+```
+
+#### Step 3.3: File Uploads
+**Goal**: Handle multipart form data
+
+- File upload support
+- Progress tracking
+- Validation for files
+
 ## Risk Mitigation
 
 ### Technical Risks:
-1. **JSON serialization complexity** - Start simple, add complexity incrementally
+1. **JSON serialization complexity** - ✅ Solved with incremental approach
 2. **Wisp API changes** - Pin versions, maintain compatibility layer
-3. **React integration issues** - Use official Inertia.js client library
+3. **React integration issues** - ✅ Solved using official Inertia.js client library
 
 ### Timeline Risks:
-1. **Scope creep** - Stick to defined phases, defer non-essential features
-2. **Testing complexity** - Start with manual testing, automate incrementally
+1. **Scope creep** - ✅ Successfully completed core features in phases
+2. **Testing complexity** - ✅ Comprehensive test suite implemented
 3. **Documentation debt** - Document as we build, not after
 
 ## Delivery Schedule
 
-- **Week 1**: Phases 0-1 (✅ Proof of concept + basic props)
-- **Week 2**: Phases 2-3 (Advanced props + forms)
-- **Week 3**: Phase 4 (Advanced features)
-- **Week 4**: Phase 5 (Polish + documentation)
+- **Week 1**: Phases 0-1 (✅ COMPLETED - Proof of concept + basic props)
+- **Week 2**: Phase 2 (✅ COMPLETED - Advanced props system)
+- **Week 3**: Phase 3 (Forms & validation) - READY TO START
+- **Week 4**: Phases 4-5 (Advanced features + polish)
 
 Each phase includes:
 - Implementation

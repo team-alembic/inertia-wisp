@@ -1,7 +1,7 @@
 import gleam/dict
+import gleam/dynamic/decode
 import gleam/http
 import gleam/http/request
-import gleam/io
 import gleam/json
 import gleam/string
 import gleeunit
@@ -250,12 +250,9 @@ pub fn lazy_prop_evaluation_test() {
     |> inertia_gleam.assign_lazy_prop("expensive_data", expensive_calculation)
     |> inertia_gleam.render("TestComponent")
 
-  let body = testing.get_response_body(response)
-  io.debug(body)
-
   // The lazy prop should be evaluated in the response
-  testing.assert_string_prop(response, "expensive_data", "calculated_value")
-  |> should.be_ok
+  testing.prop(response, "expensive_data", decode.string)
+  |> should.equal(Ok("calculated_value"))
 }
 
 pub fn lazy_and_eager_props_test() {
@@ -269,8 +266,161 @@ pub fn lazy_and_eager_props_test() {
     |> inertia_gleam.render("TestComponent")
 
   // Both props should be present
-  testing.assert_string_prop(response, "eager", "eager_value") |> should.be_ok
-  testing.assert_string_prop(response, "lazy", "lazy_value") |> should.be_ok
+  testing.prop(response, "eager", decode.string)
+  |> should.equal(Ok("eager_value"))
+  testing.prop(response, "lazy", decode.string)
+  |> should.equal(Ok("lazy_value"))
+}
+
+// Test always props
+pub fn assign_always_prop_test() {
+  let req = mock_request()
+  let ctx =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_prop(
+      "auth",
+      inertia_gleam.string_prop("authenticated"),
+    )
+
+  dict.size(ctx.always_props) |> should.equal(1)
+  dict.has_key(ctx.always_props, "auth") |> should.equal(True)
+}
+
+pub fn assign_always_props_test() {
+  let req = mock_request()
+  let always_props_list = [
+    #("auth", inertia_gleam.string_prop("authenticated")),
+    #("csrf_token", inertia_gleam.string_prop("abc123")),
+  ]
+
+  let ctx =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_props(always_props_list)
+
+  dict.size(ctx.always_props) |> should.equal(2)
+  dict.has_key(ctx.always_props, "auth") |> should.equal(True)
+  dict.has_key(ctx.always_props, "csrf_token") |> should.equal(True)
+}
+
+pub fn assign_always_lazy_prop_test() {
+  let req = mock_request()
+  let auth_check = fn() { json.string("user_authenticated") }
+
+  let ctx =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_lazy_prop("auth_status", auth_check)
+
+  dict.size(ctx.always_props) |> should.equal(1)
+  dict.has_key(ctx.always_props, "auth_status") |> should.equal(True)
+}
+
+pub fn always_props_in_response_test() {
+  let req = mock_request()
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_prop("auth", json.string("authenticated"))
+    |> inertia_gleam.assign_prop("page_data", json.string("some_data"))
+    |> inertia_gleam.render("TestComponent")
+
+  // Both always props and regular props should be present
+  testing.prop(response, "auth", decode.string)
+  |> should.equal(Ok("authenticated"))
+  testing.prop(response, "page_data", decode.string)
+  |> should.equal(Ok("some_data"))
+}
+
+pub fn always_props_override_test() {
+  let req = mock_request()
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_prop("title", json.string("Default Title"))
+    |> inertia_gleam.assign_prop("title", json.string("Page Title"))
+    |> inertia_gleam.render("TestComponent")
+
+  // Regular props should override always props
+  testing.prop(response, "title", decode.string)
+  |> should.equal(Ok("Page Title"))
+}
+
+pub fn mixed_always_props_test() {
+  let req = mock_request()
+  let auth_calculation = fn() { json.string("lazy_auth_result") }
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_prop("csrf", json.string("token123"))
+    |> inertia_gleam.assign_always_lazy_prop("auth", auth_calculation)
+    |> inertia_gleam.assign_prop("content", json.string("page_content"))
+    |> inertia_gleam.render("TestComponent")
+
+  // All props should be present
+  testing.prop(response, "csrf", decode.string)
+  |> should.equal(Ok("token123"))
+  testing.prop(response, "auth", decode.string)
+  |> should.equal(Ok("lazy_auth_result"))
+  testing.prop(response, "content", decode.string)
+  |> should.equal(Ok("page_content"))
+}
+
+pub fn partial_reload_with_always_props_test() {
+  // Create a mock partial request that only wants "content" prop
+  let body = wisp.create_canned_connection(<<>>, "test_secret_key")
+  let req =
+    request.new()
+    |> request.set_header("x-inertia", "true")
+    |> request.set_header("x-inertia-partial-data", "content")
+    |> request.set_method(http.Get)
+    |> request.set_path("/")
+    |> request.set_body(body)
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_always_prop("csrf", json.string("always_token"))
+    |> inertia_gleam.assign_prop("content", json.string("requested_content"))
+    |> inertia_gleam.assign_prop("sidebar", json.string("not_requested"))
+    |> inertia_gleam.render("TestComponent")
+
+  // Should only contain the requested "content" prop, not the "sidebar" prop
+  // But always props should still be included even in partial requests
+  testing.prop(response, "content", decode.string)
+  |> should.equal(Ok("requested_content"))
+
+  testing.prop(response, "sidebar", decode.string) |> should.be_error
+
+  // Always props should still be present in partial requests
+  testing.prop(response, "csrf", decode.string)
+  |> should.equal(Ok("always_token"))
+}
+
+pub fn basic_partial_reload_test() {
+  // Create a mock partial request for only "title" and "count" props
+  let body = wisp.create_canned_connection(<<>>, "test_secret_key")
+  let req =
+    request.new()
+    |> request.set_header("x-inertia", "true")
+    |> request.set_header("x-inertia-partial-data", "title,count")
+    |> request.set_method(http.Get)
+    |> request.set_path("/")
+    |> request.set_body(body)
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("title", json.string("Page Title"))
+    |> inertia_gleam.assign_prop("count", json.int(42))
+    |> inertia_gleam.assign_prop(
+      "description",
+      json.string("Should not be included"),
+    )
+    |> inertia_gleam.assign_prop("metadata", json.string("Also excluded"))
+    |> inertia_gleam.render("TestComponent")
+
+  // Should only contain the requested props
+  testing.prop(response, "title", decode.string)
+  |> should.equal(Ok("Page Title"))
+  testing.prop(response, "count", decode.int) |> should.equal(Ok(42))
+
+  // Should not contain non-requested props
+  testing.prop(response, "description", decode.string) |> should.be_error
 }
 
 // Test testing helpers
@@ -283,11 +433,12 @@ pub fn testing_helpers_test() {
     |> inertia_gleam.render("TestComponent")
 
   // Test component assertion
-  testing.assert_component(response, "TestComponent") |> should.be_ok
+  testing.component(response) |> should.equal(Ok("TestComponent"))
 
   // Test prop assertions
-  testing.assert_string_prop(response, "title", "Test Page") |> should.be_ok
-  testing.assert_int_prop(response, "count", 42) |> should.be_ok
+  testing.prop(response, "title", decode.string)
+  |> should.equal(Ok("Test Page"))
+  testing.prop(response, "count", decode.int) |> should.equal(Ok(42))
 }
 
 pub fn testing_no_prop_test() {
@@ -298,8 +449,8 @@ pub fn testing_no_prop_test() {
     |> inertia_gleam.render("TestComponent")
 
   // Should find existing prop
-  let assert Ok(_) = testing.assert_string_prop(response, "existing", "value")
+  testing.prop(response, "existing", decode.string) |> should.equal(Ok("value"))
 
   // Should not find non-existing prop
-  let assert Ok(_) = testing.assert_no_prop(response, "non_existing")
+  testing.prop(response, "non_existing", decode.string) |> should.be_error
 }

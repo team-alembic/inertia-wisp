@@ -42,6 +42,10 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 
 fn home_page(req: wisp.Request) -> wisp.Response {
   inertia_gleam.context(req)
+  |> inertia_gleam.assign_always_props([
+    #("auth", json.string("authenticated")),
+    #("csrf_token", json.string("abc123xyz")),
+  ])
   |> inertia_gleam.assign_props([
     #("message", json.string("Hello from Gleam!")),
     #("timestamp", json.string("2024-01-01T00:00:00Z")),
@@ -51,5 +55,11 @@ fn home_page(req: wisp.Request) -> wisp.Response {
 }
 
 fn about_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.render_inertia(req, "About")
+  inertia_gleam.context(req)
+  |> inertia_gleam.assign_always_props([
+    #("auth", json.string("authenticated")),
+    #("csrf_token", json.string("abc123xyz")),
+  ])
+  |> inertia_gleam.assign_prop("page_title", json.string("About Us"))
+  |> inertia_gleam.render("About")
 }
