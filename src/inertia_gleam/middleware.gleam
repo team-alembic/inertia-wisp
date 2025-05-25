@@ -1,19 +1,16 @@
 import gleam/dict
+import gleam/http/request
 import gleam/list
 import gleam/string
-import gleam/http/request
-import inertia_gleam/types.{type Config, type InertiaState}
+import inertia_gleam/types.{type InertiaState}
 import wisp.{type Request, type Response}
-
-
 
 /// Middleware to detect and process Inertia requests
 pub fn inertia_middleware(
   req: Request,
-  config: Config,
   handler: fn(Request) -> Response,
 ) -> Response {
-  let inertia_state = detect_inertia_request(req, config)
+  let inertia_state = detect_inertia_request(req)
   let updated_req = set_inertia_state(req, inertia_state)
 
   let response = handler(updated_req)
@@ -25,7 +22,7 @@ pub fn inertia_middleware(
 }
 
 /// Detect if this is an Inertia request and extract relevant headers
-fn detect_inertia_request(req: Request, config: Config) -> InertiaState {
+fn detect_inertia_request(req: Request) -> InertiaState {
   let headers = request.get_header(req, "x-inertia")
   let is_inertia = case headers {
     Ok("true") -> True
@@ -41,7 +38,6 @@ fn detect_inertia_request(req: Request, config: Config) -> InertiaState {
     is_inertia: is_inertia,
     partial_data: partial_data,
     props: dict.new(),
-    config: config,
   )
 }
 

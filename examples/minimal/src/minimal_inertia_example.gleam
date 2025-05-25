@@ -8,10 +8,8 @@ import wisp/wisp_mist
 pub fn main() {
   wisp.configure_logger()
 
-  let config = inertia_gleam.default_config()
-
   let assert Ok(_) =
-    fn(req) { handle_request(req, config) }
+    fn(req) { handle_request(req) }
     |> wisp_mist.handler("secret_key_change_me")
     |> mist.new
     |> mist.port(8000)
@@ -20,12 +18,9 @@ pub fn main() {
   process.sleep_forever()
 }
 
-fn handle_request(
-  req: wisp.Request,
-  config: inertia_gleam.Config,
-) -> wisp.Response {
+fn handle_request(req: wisp.Request) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use req <- inertia_gleam.inertia_middleware(req, config)
+  use req <- inertia_gleam.inertia_middleware(req)
 
   case wisp.path_segments(req) {
     [] -> home_page(req)

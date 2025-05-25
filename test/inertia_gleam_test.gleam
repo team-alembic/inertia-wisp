@@ -1,6 +1,7 @@
 import gleam/dict
 import gleam/http
 import gleam/http/request
+import gleam/io
 import gleam/json
 import gleam/string
 import gleeunit
@@ -8,7 +9,9 @@ import gleeunit/should
 import inertia_gleam
 import inertia_gleam/html
 import inertia_gleam/json as inertia_json
-import inertia_gleam/types
+import inertia_gleam/testing
+import inertia_gleam/types.{EagerProp}
+
 import wisp
 
 pub fn main() {
@@ -18,10 +21,14 @@ pub fn main() {
 // Mock request for testing
 fn mock_request() -> wisp.Request {
   let body = wisp.create_canned_connection(<<>>, "test_secret_key")
-  let request = request.new()
+  let request =
+    request.new()
+    |> request.set_header("x-inertia", "true")
+    |> request.set_header("Content-Type", "application/json")
     |> request.set_method(http.Get)
     |> request.set_path("/")
     |> request.set_body(body)
+
   request
 }
 
@@ -147,8 +154,7 @@ pub fn int_list_to_json_test() {
 
 // Test initial state
 pub fn initial_state_test() {
-  let config = types.default_config()
-  let state = types.initial_state(config)
+  let state = types.initial_state()
 
   state.is_inertia |> should.equal(False)
   state.partial_data |> should.equal([])
@@ -159,26 +165,28 @@ pub fn initial_state_test() {
 pub fn context_creation_test() {
   let req = mock_request()
   let ctx = inertia_gleam.context(req)
-  
+
   dict.size(ctx.props) |> should.equal(0)
 }
 
 pub fn assign_prop_test() {
   let req = mock_request()
-  let ctx = inertia_gleam.context(req)
+  let ctx =
+    inertia_gleam.context(req)
     |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
-    
+
   dict.size(ctx.props) |> should.equal(1)
   dict.has_key(ctx.props, "name") |> should.equal(True)
 }
 
 pub fn assign_multiple_props_test() {
   let req = mock_request()
-  let ctx = inertia_gleam.context(req)
+  let ctx =
+    inertia_gleam.context(req)
     |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
     |> inertia_gleam.assign_prop("age", inertia_gleam.int_prop(30))
     |> inertia_gleam.assign_prop("active", inertia_gleam.bool_prop(True))
-    
+
   dict.size(ctx.props) |> should.equal(3)
   dict.has_key(ctx.props, "name") |> should.equal(True)
   dict.has_key(ctx.props, "age") |> should.equal(True)
@@ -191,10 +199,11 @@ pub fn assign_props_list_test() {
     #("title", inertia_gleam.string_prop("Test Page")),
     #("count", inertia_gleam.int_prop(42)),
   ]
-  
-  let ctx = inertia_gleam.context(req)
+
+  let ctx =
+    inertia_gleam.context(req)
     |> inertia_gleam.assign_props(props_list)
-    
+
   dict.size(ctx.props) |> should.equal(2)
   dict.has_key(ctx.props, "title") |> should.equal(True)
   dict.has_key(ctx.props, "count") |> should.equal(True)
@@ -202,15 +211,95 @@ pub fn assign_props_list_test() {
 
 pub fn context_prop_override_test() {
   let req = mock_request()
-  let ctx = inertia_gleam.context(req)
+  let ctx =
+    inertia_gleam.context(req)
     |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
     |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Bob"))
-    
+
   dict.size(ctx.props) |> should.equal(1)
-  
+
   let prop = dict.get(ctx.props, "name")
   case prop {
-    Ok(value) -> json.to_string(value) |> should.equal("\"Bob\"")
-    Error(_) -> should.fail()
+    Ok(EagerProp(value)) -> json.to_string(value) |> should.equal("\"Bob\"")
+    _ -> should.fail()
   }
+}
+
+// Test lazy props
+pub fn assign_lazy_prop_test() {
+  let req = mock_request()
+  let expensive_calculation = fn() { json.string("expensive_result") }
+
+  let ctx =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_lazy_prop("expensive_data", expensive_calculation)
+
+  dict.size(ctx.props) |> should.equal(1)
+  dict.has_key(ctx.props, "expensive_data") |> should.equal(True)
+}
+
+pub fn lazy_prop_evaluation_test() {
+  let req = mock_request()
+  let expensive_calculation = fn() {
+    // Simulate expensive calculation
+    json.string("calculated_value")
+  }
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_lazy_prop("expensive_data", expensive_calculation)
+    |> inertia_gleam.render("TestComponent")
+
+  let body = testing.get_response_body(response)
+  io.debug(body)
+
+  // The lazy prop should be evaluated in the response
+  testing.assert_string_prop(response, "expensive_data", "calculated_value")
+  |> should.be_ok
+}
+
+pub fn lazy_and_eager_props_test() {
+  let req = mock_request()
+  let expensive_calculation = fn() { json.string("lazy_value") }
+
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("eager", json.string("eager_value"))
+    |> inertia_gleam.assign_lazy_prop("lazy", expensive_calculation)
+    |> inertia_gleam.render("TestComponent")
+
+  // Both props should be present
+  testing.assert_string_prop(response, "eager", "eager_value") |> should.be_ok
+  testing.assert_string_prop(response, "lazy", "lazy_value") |> should.be_ok
+}
+
+// Test testing helpers
+pub fn testing_helpers_test() {
+  let req = mock_request()
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("title", json.string("Test Page"))
+    |> inertia_gleam.assign_prop("count", json.int(42))
+    |> inertia_gleam.render("TestComponent")
+
+  // Test component assertion
+  testing.assert_component(response, "TestComponent") |> should.be_ok
+
+  // Test prop assertions
+  testing.assert_string_prop(response, "title", "Test Page") |> should.be_ok
+  testing.assert_int_prop(response, "count", 42) |> should.be_ok
+}
+
+pub fn testing_no_prop_test() {
+  let req = mock_request()
+  let response =
+    inertia_gleam.context(req)
+    |> inertia_gleam.assign_prop("existing", json.string("value"))
+    |> inertia_gleam.render("TestComponent")
+
+  // Should find existing prop
+  let assert Ok(_) = testing.assert_string_prop(response, "existing", "value")
+
+  // Should not find non-existing prop
+  let assert Ok(_) = testing.assert_no_prop(response, "non_existing")
 }

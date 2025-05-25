@@ -1,16 +1,17 @@
 import gleam/dict.{type Dict}
 import gleam/json
+import gleam/list
 import gleam/string
 import gleam/string_tree
 import inertia_gleam/html
 import inertia_gleam/json as inertia_json
 import inertia_gleam/middleware
-import inertia_gleam/types.{type Page}
+import inertia_gleam/types.{type Page, type PropValue}
 import wisp.{type Request, type Response}
 
 /// Context wrapper for building up props before rendering
 pub type InertiaContext {
-  InertiaContext(request: Request, props: Dict(String, json.Json))
+  InertiaContext(request: Request, props: Dict(String, PropValue))
 }
 
 /// Render an Inertia response with component name only
@@ -50,18 +51,63 @@ pub fn context(req: Request) -> InertiaContext {
 
 /// Add a prop to the context in a pipe-friendly way
 pub fn assign_prop(ctx: InertiaContext, key: String, value: json.Json) -> InertiaContext {
-  InertiaContext(..ctx, props: dict.insert(ctx.props, key, value))
+  InertiaContext(..ctx, props: dict.insert(ctx.props, key, types.EagerProp(value)))
+}
+
+/// Add a lazy prop to the context that will only be evaluated when requested
+pub fn assign_lazy_prop(ctx: InertiaContext, key: String, evaluator: fn() -> json.Json) -> InertiaContext {
+  InertiaContext(..ctx, props: dict.insert(ctx.props, key, types.LazyProp(evaluator)))
 }
 
 /// Add multiple props to the context
 pub fn assign_props(ctx: InertiaContext, props: List(#(String, json.Json))) -> InertiaContext {
-  let new_props = dict.merge(ctx.props, dict.from_list(props))
+  let prop_values = list.map(props, fn(pair) { #(pair.0, types.EagerProp(pair.1)) })
+  let new_props = dict.merge(ctx.props, dict.from_list(prop_values))
   InertiaContext(..ctx, props: new_props)
 }
 
 /// Render an Inertia response from context
 pub fn render(ctx: InertiaContext, component: String) -> Response {
-  render_inertia_with_props(ctx.request, component, ctx.props)
+  let is_inertia = middleware.is_inertia_request(ctx.request)
+  let partial_data = middleware.get_partial_data(ctx.request)
+  
+  // Evaluate props based on whether it's a partial request
+  let evaluated_props = evaluate_props(ctx.props, is_inertia, partial_data)
+  
+  render_inertia_with_props(ctx.request, component, evaluated_props)
+}
+
+/// Evaluate props based on request type and partial data requirements
+fn evaluate_props(
+  props: Dict(String, PropValue),
+  is_inertia: Bool,
+  partial_data: List(String),
+) -> Dict(String, json.Json) {
+  case is_inertia && list.length(partial_data) > 0 {
+    // Partial request - only evaluate requested props
+    True -> {
+      dict.fold(props, dict.new(), fn(acc, key, prop_value) {
+        case list.contains(partial_data, key) {
+          True -> dict.insert(acc, key, evaluate_prop_value(prop_value))
+          False -> acc
+        }
+      })
+    }
+    // Full request - evaluate all props
+    False -> {
+      dict.fold(props, dict.new(), fn(acc, key, prop_value) {
+        dict.insert(acc, key, evaluate_prop_value(prop_value))
+      })
+    }
+  }
+}
+
+/// Evaluate a single prop value
+fn evaluate_prop_value(prop_value: PropValue) -> json.Json {
+  case prop_value {
+    types.EagerProp(value) -> value
+    types.LazyProp(evaluator) -> evaluator()
+  }
 }
 
 /// Render JSON response for Inertia XHR requests

@@ -2,6 +2,7 @@ import gleam/json
 import gleam/dict.{type Dict}
 
 /// Represents an Inertia.js page object
+/// Page data to be sent to the client
 pub type Page {
   Page(
     component: String,
@@ -9,6 +10,12 @@ pub type Page {
     url: String,
     version: String,
   )
+}
+
+/// Prop value that can be either eager or lazy
+pub type PropValue {
+  EagerProp(value: json.Json)
+  LazyProp(evaluate: fn() -> json.Json)
 }
 
 /// Configuration for the Inertia adapter
@@ -20,12 +27,12 @@ pub type Config {
 }
 
 /// Internal request state for Inertia processing
+/// State to track Inertia request information
 pub type InertiaState {
   InertiaState(
     is_inertia: Bool,
     partial_data: List(String),
-    props: Dict(String, json.Json),
-    config: Config,
+    props: Dict(String, PropValue),
   )
 }
 
@@ -40,11 +47,11 @@ pub fn new_page(component: String, props: Dict(String, json.Json), url: String, 
 }
 
 /// Create initial Inertia state
-pub fn initial_state(config: Config) -> InertiaState {
+/// Create initial state for Inertia processing
+pub fn initial_state() -> InertiaState {
   InertiaState(
     is_inertia: False,
     partial_data: [],
     props: dict.new(),
-    config: config,
   )
 }

@@ -28,10 +28,9 @@ pub fn config(version: String, ssr: Bool) -> Config {
 // Middleware
 pub fn inertia_middleware(
   req: Request,
-  config: Config,
   handler: fn(Request) -> Response,
 ) -> Response {
-  middleware.inertia_middleware(req, config, handler)
+  middleware.inertia_middleware(req, handler)
 }
 
 // Controller functions
@@ -52,12 +51,27 @@ pub fn context(req: Request) -> InertiaContext {
   controller.context(req)
 }
 
-pub fn assign_prop(ctx: InertiaContext, key: String, value: json.Json) -> InertiaContext {
+pub fn assign_prop(
+  ctx: InertiaContext,
+  key: String,
+  value: json.Json,
+) -> InertiaContext {
   controller.assign_prop(ctx, key, value)
 }
 
-pub fn assign_props(ctx: InertiaContext, props: List(#(String, json.Json))) -> InertiaContext {
+pub fn assign_props(
+  ctx: InertiaContext,
+  props: List(#(String, json.Json)),
+) -> InertiaContext {
   controller.assign_props(ctx, props)
+}
+
+pub fn assign_lazy_prop(
+  ctx: InertiaContext,
+  key: String,
+  evaluator: fn() -> json.Json,
+) -> InertiaContext {
+  controller.assign_lazy_prop(ctx, key, evaluator)
 }
 
 pub fn render(ctx: InertiaContext, component: String) -> Response {
