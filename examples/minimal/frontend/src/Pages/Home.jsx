@@ -25,25 +25,54 @@ export default function Home({ message, timestamp }) {
             cursor: "pointer",
           }}
         >
-          Go to About
+          About
+        </Link>
+        <Link
+          href="/users"
+          style={{
+            marginRight: "10px",
+            color: "blue",
+            textDecoration: "underline",
+            cursor: "pointer",
+          }}
+        >
+          Users (Forms Demo)
         </Link>
       </nav>
 
       <div
         style={{
           marginTop: "20px",
-          padding: "10px",
+          padding: "15px",
           backgroundColor: "#f0f0f0",
+          borderRadius: "4px",
         }}
       >
-        <h3>Test Navigation</h3>
+        <h3>Demo Features</h3>
+        <div style={{ marginBottom: "15px" }}>
+          <strong>✅ Navigation:</strong> All page transitions use Inertia XHR requests
+        </div>
+        <div style={{ marginBottom: "15px" }}>
+          <strong>✅ Props System:</strong> Server-side data passed to React components
+        </div>
+        <div style={{ marginBottom: "15px" }}>
+          <strong>✅ Forms & Validation:</strong> Check out the <Link href="/users" style={{ color: "blue" }}>Users section</Link>
+        </div>
+        <div style={{ marginBottom: "15px" }}>
+          <strong>✅ Redirects:</strong> Form submissions redirect properly
+        </div>
+        
+        <h4 style={{ marginTop: "20px", marginBottom: "10px" }}>Test Navigation</h4>
         <button
           onClick={() => router.visit("/")}
-          style={{ marginRight: "10px" }}
+          style={{ marginRight: "10px", padding: "5px 10px" }}
         >
           Reload Home (XHR)
         </button>
-        <button onClick={() => (window.location.href = "/")}>
+        <button 
+          onClick={() => (window.location.href = "/")}
+          style={{ padding: "5px 10px" }}
+        >
           Reload Home (Full)
         </button>
       </div>

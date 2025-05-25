@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 
 createInertiaApp({
   resolve: async (name) => {
-    const component = await import(`./pages/${name}.jsx`);
+    const component = await import(`./Pages/${name}.jsx`);
     console.log("Found component:", component);
 
     if (!component) {
