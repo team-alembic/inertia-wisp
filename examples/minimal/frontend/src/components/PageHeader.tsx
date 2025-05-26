@@ -1,5 +1,4 @@
 import { LinkButton } from './LinkButton';
-import { IconContainer } from './IconContainer';
 import { ArrowLeftIcon } from './icons';
 
 interface PageHeaderProps {
