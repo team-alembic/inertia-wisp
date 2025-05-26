@@ -614,7 +614,7 @@ pub fn form_submission_with_errors_workflow_test() {
 
 pub fn default_upload_config_test() {
   let config = inertia_gleam.default_upload_config()
-  
+
   // Just test that we can create a default config
   case config {
     uploads.UploadConfig(_, _, _) -> should.be_true(True)
@@ -622,12 +622,13 @@ pub fn default_upload_config_test() {
 }
 
 pub fn custom_upload_config_test() {
-  let config = inertia_gleam.upload_config(
-    max_file_size: 5_000_000,
-    allowed_types: ["image/jpeg", "image/png"],
-    max_files: 3
-  )
-  
+  let config =
+    inertia_gleam.upload_config(
+      max_file_size: 5_000_000,
+      allowed_types: ["image/jpeg", "image/png"],
+      max_files: 3,
+    )
+
   // Just test that we can create a custom config
   case config {
     uploads.UploadConfig(_, _, _) -> should.be_true(True)
@@ -636,17 +637,17 @@ pub fn custom_upload_config_test() {
 
 pub fn assign_files_default_workflow_test() {
   let req = testing.inertia_request()
-  
+
   // Test assigning files with default config
   let response =
     inertia_gleam.context(req)
     |> inertia_gleam.assign_files_default()
     |> inertia_gleam.assign_prop("title", json.string("Upload Form"))
     |> inertia_gleam.render("UploadForm")
-  
+
   // Should be a valid response
   response.status |> should.equal(200)
-  
+
   // Should contain the title prop
   testing.prop(response, "title", decode.string)
   |> should.equal(Ok("Upload Form"))
@@ -654,10 +655,10 @@ pub fn assign_files_default_workflow_test() {
 
 pub fn get_uploaded_files_empty_test() {
   let req = testing.inertia_request()
-  
+
   // Test getting files from a non-multipart request
   let result = inertia_gleam.get_uploaded_files_default(req)
-  
+
   // Should return an error since it's not multipart
   result |> should.be_error()
 }

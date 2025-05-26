@@ -37,10 +37,8 @@ pub fn validate_field_multiple_errors_test() {
       validate.validation_valid("test")
     })
 
-  let expected_errors = dict.from_list([
-    #("name", "is required"),
-    #("email", "is required"),
-  ])
+  let expected_errors =
+    dict.from_list([#("name", "is required"), #("email", "is required")])
   should.equal(result, Error(expected_errors))
 }
 
@@ -48,7 +46,11 @@ pub fn validate_field_multiple_errors_test() {
 pub fn validate_optional_field_none_test() {
   let result =
     validate.validation_pipeline(fn() {
-      use <- validate.validate_optional_field("nickname", option.None, validate.non_empty_string)
+      use <- validate.validate_optional_field(
+        "nickname",
+        option.None,
+        validate.non_empty_string,
+      )
       validate.validation_valid("success")
     })
 
@@ -58,7 +60,11 @@ pub fn validate_optional_field_none_test() {
 pub fn validate_optional_field_some_valid_test() {
   let result =
     validate.validation_pipeline(fn() {
-      use <- validate.validate_optional_field("nickname", option.Some("Johnny"), validate.non_empty_string)
+      use <- validate.validate_optional_field(
+        "nickname",
+        option.Some("Johnny"),
+        validate.non_empty_string,
+      )
       validate.validation_valid("success")
     })
 
@@ -68,7 +74,11 @@ pub fn validate_optional_field_some_valid_test() {
 pub fn validate_optional_field_some_invalid_test() {
   let result =
     validate.validation_pipeline(fn() {
-      use <- validate.validate_optional_field("nickname", option.Some(""), validate.non_empty_string)
+      use <- validate.validate_optional_field(
+        "nickname",
+        option.Some(""),
+        validate.non_empty_string,
+      )
       validate.validation_valid("test")
     })
 
@@ -77,9 +87,8 @@ pub fn validate_optional_field_some_invalid_test() {
 
 // Pipeline tests
 pub fn validation_pipeline_empty_test() {
-  let result = validate.validation_pipeline(fn() {
-    validate.validation_valid(42)
-  })
+  let result =
+    validate.validation_pipeline(fn() { validate.validation_valid(42) })
 
   should.equal(result, Ok(42))
 }
@@ -87,9 +96,21 @@ pub fn validation_pipeline_empty_test() {
 pub fn validation_pipeline_complex_test() {
   let result =
     validate.validation_pipeline(fn() {
-      use <- validate.validate_field("username", "john_doe", validate.non_empty_string)
-      use <- validate.validate_field("password", "secret123", validate.min_length(8))
-      use <- validate.validate_optional_field("email", option.Some("john@example.com"), validate.contains("@"))
+      use <- validate.validate_field(
+        "username",
+        "john_doe",
+        validate.non_empty_string,
+      )
+      use <- validate.validate_field(
+        "password",
+        "secret123",
+        validate.min_length(8),
+      )
+      use <- validate.validate_optional_field(
+        "email",
+        option.Some("john@example.com"),
+        validate.contains("@"),
+      )
       validate.validation_valid(#("john_doe", "secret123", "john@example.com"))
     })
 
@@ -117,10 +138,8 @@ pub fn accumulate_errors_mixed_test() {
   ]
 
   let result = validate.accumulate_errors(results)
-  let expected_errors = dict.from_list([
-    #("field1", "error1"),
-    #("field2", "error2"),
-  ])
+  let expected_errors =
+    dict.from_list([#("field1", "error1"), #("field2", "error2")])
   should.equal(result, validate.Invalid(expected_errors))
 }
 
@@ -179,27 +198,24 @@ pub fn contains_invalid_test() {
 }
 
 pub fn combine_validators_all_pass_test() {
-  let validator = validate.combine([
-    validate.non_empty_string,
-    validate.min_length(3),
-    validate.max_length(10),
-  ])
+  let validator =
+    validate.combine([
+      validate.non_empty_string,
+      validate.min_length(3),
+      validate.max_length(10),
+    ])
   should.equal(validator("hello"), Ok("hello"))
 }
 
 pub fn combine_validators_first_fails_test() {
-  let validator = validate.combine([
-    validate.non_empty_string,
-    validate.min_length(3),
-  ])
+  let validator =
+    validate.combine([validate.non_empty_string, validate.min_length(3)])
   should.equal(validator(""), Error("is required"))
 }
 
 pub fn combine_validators_second_fails_test() {
-  let validator = validate.combine([
-    validate.non_empty_string,
-    validate.min_length(10),
-  ])
+  let validator =
+    validate.combine([validate.non_empty_string, validate.min_length(10)])
   should.equal(validator("hello"), Error("must be at least 10 characters"))
 }
 
@@ -212,40 +228,63 @@ pub fn combine_validators_empty_list_test() {
 pub fn user_registration_validation_success_test() {
   let result =
     validate.validation_pipeline(fn() {
-      use <- validate.validate_field("username", "john_doe", validate.combine([
+      use <- validate.validate_field(
+        "username",
+        "john_doe",
+        validate.combine([
+          validate.non_empty_string,
+          validate.min_length(3),
+          validate.max_length(20),
+        ]),
+      )
+      use <- validate.validate_field(
+        "email",
+        "john@example.com",
+        validate.combine([validate.non_empty_string, validate.contains("@")]),
+      )
+      use <- validate.validate_field(
+        "password",
+        "secret123!",
+        validate.combine([validate.non_empty_string, validate.min_length(8)]),
+      )
+      use <- validate.validate_optional_field(
+        "full_name",
+        option.Some("John Doe"),
         validate.non_empty_string,
-        validate.min_length(3),
-        validate.max_length(20),
-      ]))
-      use <- validate.validate_field("email", "john@example.com", validate.combine([
-        validate.non_empty_string,
-        validate.contains("@"),
-      ]))
-      use <- validate.validate_field("password", "secret123!", validate.combine([
-        validate.non_empty_string,
-        validate.min_length(8),
-      ]))
-      use <- validate.validate_optional_field("full_name", option.Some("John Doe"), validate.non_empty_string)
-      validate.validation_valid(#("john_doe", "john@example.com", "secret123!", "John Doe"))
+      )
+      validate.validation_valid(#(
+        "john_doe",
+        "john@example.com",
+        "secret123!",
+        "John Doe",
+      ))
     })
 
-  should.equal(result, Ok(#("john_doe", "john@example.com", "secret123!", "John Doe")))
+  should.equal(
+    result,
+    Ok(#("john_doe", "john@example.com", "secret123!", "John Doe")),
+  )
 }
 
 pub fn user_registration_validation_multiple_errors_test() {
   let result =
     validate.validation_pipeline(fn() {
       use <- validate.validate_field("username", "", validate.non_empty_string)
-      use <- validate.validate_field("email", "invalid-email", validate.contains("@"))
+      use <- validate.validate_field(
+        "email",
+        "invalid-email",
+        validate.contains("@"),
+      )
       use <- validate.validate_field("password", "123", validate.min_length(8))
       validate.validation_valid("user")
     })
 
-  let expected_errors = dict.from_list([
-    #("username", "is required"),
-    #("email", "must contain '@'"),
-    #("password", "must be at least 8 characters"),
-  ])
+  let expected_errors =
+    dict.from_list([
+      #("username", "is required"),
+      #("email", "must contain '@'"),
+      #("password", "must be at least 8 characters"),
+    ])
   should.equal(result, Error(expected_errors))
 }
 

@@ -155,10 +155,7 @@ pub fn props_from_list(
 }
 
 // File upload functions
-pub fn assign_files(
-  ctx: InertiaContext,
-  config: UploadConfig,
-) -> InertiaContext {
+pub fn assign_files(ctx: InertiaContext, config: UploadConfig) -> InertiaContext {
   controller.assign_files(ctx, config)
 }
 

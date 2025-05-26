@@ -21,11 +21,7 @@ pub type UploadedFile {
 
 /// Configuration for file upload validation
 pub type UploadConfig {
-  UploadConfig(
-    max_file_size: Int,
-    allowed_types: List(String),
-    max_files: Int,
-  )
+  UploadConfig(max_file_size: Int, allowed_types: List(String), max_files: Int)
 }
 
 /// Result of file upload processing
@@ -54,11 +50,7 @@ pub fn upload_config(
   allowed_types types: List(String),
   max_files max: Int,
 ) -> UploadConfig {
-  UploadConfig(
-    max_file_size: max_size,
-    allowed_types: types,
-    max_files: max,
-  )
+  UploadConfig(max_file_size: max_size, allowed_types: types, max_files: max)
 }
 
 /// Extract uploaded files from a multipart form request
@@ -70,10 +62,14 @@ pub fn extract_files(
     Some(content_type) -> {
       case string.starts_with(content_type, "multipart/form-data") {
         True -> parse_multipart_files(req, config)
-        False -> Error(dict.from_list([#("_form", "Request is not multipart/form-data")]))
+        False ->
+          Error(
+            dict.from_list([#("_form", "Request is not multipart/form-data")]),
+          )
       }
     }
-    None -> Error(dict.from_list([#("_form", "Request is not multipart/form-data")]))
+    None ->
+      Error(dict.from_list([#("_form", "Request is not multipart/form-data")]))
   }
 }
 
@@ -97,7 +93,12 @@ pub fn validate_files(
     True ->
       Error(
         dict.from_list([
-          #("_files", "Too many files uploaded. Maximum " <> int.to_string(config.max_files) <> " allowed"),
+          #(
+            "_files",
+            "Too many files uploaded. Maximum "
+              <> int.to_string(config.max_files)
+              <> " allowed",
+          ),
         ]),
       )
     False -> {
@@ -110,8 +111,7 @@ pub fn validate_files(
               case validate_file(file, config) {
                 Ok(valid_file) ->
                   Ok(dict.insert(valid_files, field_name, valid_file))
-                Error(error) ->
-                  Error(dict.from_list([#(field_name, error)]))
+                Error(error) -> Error(dict.from_list([#(field_name, error)]))
               }
             }
           }
@@ -202,7 +202,7 @@ fn parse_multipart_files(
   // 2. Split the request body by boundary
   // 3. Parse each part to extract field name, filename, content-type, and content
   // 4. Create UploadedFile instances
-  
+
   // For now, return empty result
   Ok(dict.new())
 }
@@ -225,8 +225,8 @@ fn validate_file_type(
     True -> Ok(Nil)
     False ->
       Error(
-        "File type not allowed. Allowed types: " <> string.join(allowed_types, ", "),
+        "File type not allowed. Allowed types: "
+        <> string.join(allowed_types, ", "),
       )
   }
 }
-

@@ -7,7 +7,7 @@ import inertia_gleam/html
 import inertia_gleam/json as inertia_json
 import inertia_gleam/middleware
 import inertia_gleam/types.{type Page, type PropValue}
-import inertia_gleam/uploads.{type UploadedFile, type UploadConfig}
+import inertia_gleam/uploads.{type UploadConfig, type UploadedFile}
 import wisp.{type Request, type Response}
 
 /// Context wrapper for building up props before rendering
@@ -278,10 +278,7 @@ pub fn external_redirect(to url: String) -> Response {
 
 /// Add uploaded files to the context
 /// Files are validated according to the provided configuration
-pub fn assign_files(
-  ctx: InertiaContext,
-  config: UploadConfig,
-) -> InertiaContext {
+pub fn assign_files(ctx: InertiaContext, config: UploadConfig) -> InertiaContext {
   case uploads.extract_files(ctx.request, config) {
     Ok(files) -> {
       // Add files as JSON representation for frontend

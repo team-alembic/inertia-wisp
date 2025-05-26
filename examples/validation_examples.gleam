@@ -12,10 +12,9 @@ pub fn name_validator(name: String) -> Result(String, String) {
 }
 
 pub fn email_validator(email: String) -> Result(String, String) {
-  validation.combine([
-    validation.non_empty_string,
-    validation.contains("@"),
-  ])(email)
+  validation.combine([validation.non_empty_string, validation.contains("@")])(
+    email,
+  )
 }
 
 pub fn age_validator(age: String) -> Result(String, String) {
@@ -43,7 +42,10 @@ pub fn password_validator(password: String) -> Result(String, String) {
                 Error(_) -> {
                   case validation.contains("#")(valid_p) {
                     Ok(_) -> Ok(valid_p)
-                    Error(_) -> Error("must contain at least one special character (@, !, or #)")
+                    Error(_) ->
+                      Error(
+                        "must contain at least one special character (@, !, or #)",
+                      )
                   }
                 }
               }
@@ -58,11 +60,21 @@ pub fn password_validator(password: String) -> Result(String, String) {
 }
 
 // Example 3: Simple validation with exact syntax requested
-pub fn validate(value: a, validator: validation.Validator(a), field_name: String, continue: fn() -> validation.ValidationResult(b)) -> validation.ValidationResult(b) {
+pub fn validate(
+  value: a,
+  validator: validation.Validator(a),
+  field_name: String,
+  continue: fn() -> validation.ValidationResult(b),
+) -> validation.ValidationResult(b) {
   validation.validate_as(value, validator, field_name, continue)
 }
 
-pub fn validate_id(value: option.Option(a), validator: validation.Validator(a), field_name: String, continue: fn() -> validation.ValidationResult(b)) -> validation.ValidationResult(b) {
+pub fn validate_id(
+  value: option.Option(a),
+  validator: validation.Validator(a),
+  field_name: String,
+  continue: fn() -> validation.ValidationResult(b),
+) -> validation.ValidationResult(b) {
   validation.validate_optional_field(value, validator, field_name, continue)
 }
 
@@ -90,7 +102,11 @@ pub fn validate_user_profile(
   validation.validation_pipeline(fn() {
     use <- validation.validate_as(name, name_validator, "name")
     use <- validation.validate_as(email, email_validator, "email")
-    use <- validation.validate_optional_field(bio, validation.max_length(500), "bio")
+    use <- validation.validate_optional_field(
+      bio,
+      validation.max_length(500),
+      "bio",
+    )
     validation.validation_valid(Nil)
   })
 }
@@ -121,7 +137,11 @@ pub fn validate_account_creation(
     use <- validation.validate_as(username, username_validator, "username")
     use <- validation.validate_as(email, email_validator, "email")
     use <- validation.validate_as(password, password_validator, "password")
-    use <- validation.validate_as(confirm_password, password_match_validator, "confirm_password")
+    use <- validation.validate_as(
+      confirm_password,
+      password_match_validator,
+      "confirm_password",
+    )
     validation.validation_valid(Nil)
   })
 }
@@ -136,7 +156,9 @@ pub type UserData {
   )
 }
 
-pub fn validate_user_data(user: UserData) -> Result(UserData, dict.Dict(String, String)) {
+pub fn validate_user_data(
+  user: UserData,
+) -> Result(UserData, dict.Dict(String, String)) {
   let age_string_validator = fn(age: Int) -> Result(Int, String) {
     case age >= 13 && age <= 120 {
       True -> Ok(age)
@@ -147,8 +169,16 @@ pub fn validate_user_data(user: UserData) -> Result(UserData, dict.Dict(String, 
   validation.validation_pipeline(fn() {
     use <- validation.validate_as(user.name, name_validator, "name")
     use <- validation.validate_as(user.email, email_validator, "email")
-    use <- validation.validate_optional_field(user.age, age_string_validator, "age")
-    use <- validation.validate_optional_field(user.preferences, validation.max_length(1000), "preferences")
+    use <- validation.validate_optional_field(
+      user.age,
+      age_string_validator,
+      "age",
+    )
+    use <- validation.validate_optional_field(
+      user.preferences,
+      validation.max_length(1000),
+      "preferences",
+    )
     validation.validation_valid(user)
   })
 }
@@ -156,45 +186,53 @@ pub fn validate_user_data(user: UserData) -> Result(UserData, dict.Dict(String, 
 // Example 7: Usage examples
 
 pub fn example_successful_validation() {
-  let result = validate_user_signup(
-    "John Doe",
-    "john@example.com", 
-    "password123!",
-    option.Some("25")
-  )
+  let result =
+    validate_user_signup(
+      "John Doe",
+      "john@example.com",
+      "password123!",
+      option.Some("25"),
+    )
   // Result: Ok(Nil)
   result
 }
 
 pub fn example_validation_with_errors() {
-  let result = validate_user_signup(
-    "",  // Empty name
-    "invalid-email",  // Invalid email
-    "123",  // Too short password
-    option.Some("")  // Empty age
-  )
+  let result =
+    validate_user_signup(
+      "",
+      // Empty name
+      "invalid-email",
+      // Invalid email
+      "123",
+      // Too short password
+      option.Some(""),
+      // Empty age
+    )
   // Result: Error with multiple field errors
   result
 }
 
 pub fn example_account_creation() {
-  let result = validate_account_creation(
-    "johndoe",
-    "john@example.com",
-    "mypassword123!",
-    "mypassword123!"
-  )
+  let result =
+    validate_account_creation(
+      "johndoe",
+      "john@example.com",
+      "mypassword123!",
+      "mypassword123!",
+    )
   // Result: Ok(Nil)
   result
 }
 
 pub fn example_mismatched_passwords() {
-  let result = validate_account_creation(
-    "johndoe",
-    "john@example.com",
-    "mypassword123!",
-    "differentpassword123!"
-  )
+  let result =
+    validate_account_creation(
+      "johndoe",
+      "john@example.com",
+      "mypassword123!",
+      "differentpassword123!",
+    )
   // Result: Error with password mismatch
   result
 }

@@ -1,5 +1,5 @@
-import gleam/json
 import gleam/dict.{type Dict}
+import gleam/json
 
 /// Represents an Inertia.js page object
 /// Page data to be sent to the client
@@ -20,11 +20,7 @@ pub type PropValue {
 
 /// Configuration for the Inertia adapter
 pub type Config {
-  Config(
-    version: String,
-    ssr: Bool,
-    always_props: Dict(String, PropValue),
-  )
+  Config(version: String, ssr: Bool, always_props: Dict(String, PropValue))
 }
 
 /// Internal request state for Inertia processing
@@ -43,16 +39,17 @@ pub fn default_config() -> Config {
 }
 
 /// Create a new page object
-pub fn new_page(component: String, props: Dict(String, json.Json), url: String, version: String) -> Page {
+pub fn new_page(
+  component: String,
+  props: Dict(String, json.Json),
+  url: String,
+  version: String,
+) -> Page {
   Page(component: component, props: props, url: url, version: version)
 }
 
 /// Create initial Inertia state
 /// Create initial state for Inertia processing
 pub fn initial_state() -> InertiaState {
-  InertiaState(
-    is_inertia: False,
-    partial_data: [],
-    props: dict.new(),
-  )
+  InertiaState(is_inertia: False, partial_data: [], props: dict.new())
 }

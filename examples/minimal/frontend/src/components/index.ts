@@ -24,3 +24,6 @@ export { LoadingButton } from "./LoadingButton";
 export { FeatureList } from "./FeatureList";
 export { ValidationErrors } from "./ValidationErrors";
 export { CreateUserForm } from "./CreateUserForm";
+export { EditUserForm } from "./EditUserForm";
+export { EditUserPageHeader } from "./EditUserPageHeader";
+export { EditUserDemoNotes } from "./EditUserDemoNotes";

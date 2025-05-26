@@ -14,11 +14,13 @@ pub fn upload_form_page(req: wisp.Request) -> wisp.Response {
 }
 
 pub fn handle_file_upload(req: wisp.Request) -> wisp.Response {
-  let upload_config = inertia_gleam.upload_config(
-    max_file_size: 5_000_000,  // 5MB
-    allowed_types: ["image/jpeg", "image/png", "image/gif", "application/pdf"],
-    max_files: 3
-  )
+  let upload_config =
+    inertia_gleam.upload_config(
+      max_file_size: 5_000_000,
+      // 5MB
+      allowed_types: ["image/jpeg", "image/png", "image/gif", "application/pdf"],
+      max_files: 3,
+    )
 
   case inertia_gleam.get_uploaded_files(req, upload_config) {
     Ok(files) -> handle_successful_upload(req, files)
@@ -44,7 +46,10 @@ fn handle_successful_upload(
   inertia_gleam.context(req)
   |> utils.assign_common_props()
   |> inertia_gleam.assign_prop("success", json.string(success_message))
-  |> inertia_gleam.assign_prop("uploaded_files", inertia_gleam.files_to_json(files))
+  |> inertia_gleam.assign_prop(
+    "uploaded_files",
+    inertia_gleam.files_to_json(files),
+  )
   |> inertia_gleam.render("UploadSuccess")
 }
 
@@ -64,14 +69,14 @@ pub fn progress_endpoint(_req: wisp.Request) -> wisp.Response {
   // This would be used for upload progress tracking
   // In a real implementation, you might track upload progress in a cache/database
   // and return the current progress as JSON
-  
-  let progress_data = json.object([
-    #("uploaded", json.int(0)),
-    #("total", json.int(0)),
-    #("percent", json.int(0)),
-    #("status", json.string("waiting"))
-  ])
+
+  let progress_data =
+    json.object([
+      #("uploaded", json.int(0)),
+      #("total", json.int(0)),
+      #("percent", json.int(0)),
+      #("status", json.string("waiting")),
+    ])
 
   wisp.json_response(json.to_string_tree(progress_data), 200)
 }
-

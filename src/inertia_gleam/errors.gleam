@@ -14,10 +14,11 @@ pub fn assign_errors(
   ctx: controller.InertiaContext,
   errors: ValidationErrors,
 ) -> controller.InertiaContext {
-  let errors_list = dict.fold(errors, [], fn(acc, key, value) {
-    [#(key, json.string(value)), ..acc]
-  })
-  
+  let errors_list =
+    dict.fold(errors, [], fn(acc, key, value) {
+      [#(key, json.string(value)), ..acc]
+    })
+
   controller.assign_prop(ctx, "errors", json.object(errors_list))
 }
 
@@ -42,7 +43,10 @@ pub fn single_error(field: String, message: String) -> ValidationErrors {
 }
 
 /// Merge multiple validation error dictionaries
-pub fn merge_errors(errors1: ValidationErrors, errors2: ValidationErrors) -> ValidationErrors {
+pub fn merge_errors(
+  errors1: ValidationErrors,
+  errors2: ValidationErrors,
+) -> ValidationErrors {
   dict.merge(errors1, errors2)
 }
 
@@ -58,9 +62,10 @@ pub fn get_error(errors: ValidationErrors, field: String) -> Result(String, Nil)
 
 /// Convert validation errors to a JSON object for inclusion in props
 pub fn to_json(errors: ValidationErrors) -> json.Json {
-  let errors_list = dict.fold(errors, [], fn(acc, key, value) {
-    [#(key, json.string(value)), ..acc]
-  })
+  let errors_list =
+    dict.fold(errors, [], fn(acc, key, value) {
+      [#(key, json.string(value)), ..acc]
+    })
   json.object(errors_list)
 }
 
