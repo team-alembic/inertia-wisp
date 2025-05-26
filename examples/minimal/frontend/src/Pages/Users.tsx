@@ -1,15 +1,18 @@
 import { Head, router } from "@inertiajs/react";
-import { UsersPageProps, UsersPagePropsSchema, withValidatedProps } from "../schemas";
-import { 
-  PageHeader, 
-  Card, 
-  LinkButton, 
-  UsersTable, 
-  EmptyUsersState, 
-  DemoNotes, 
+import {
+  UsersPageProps,
+  UsersPagePropsSchema,
+  withValidatedProps,
+} from "../schemas";
+import {
+  PageHeader,
+  Card,
+  LinkButton,
+  UsersTable,
+  EmptyUsersState,
+  DemoNotes,
   AuthInfo,
-  UserPageNavigation,
-  GradientBackground
+  GradientBackground,
 } from "../components";
 import { UsersIconLarge, PlusIcon } from "../components/icons";
 
@@ -25,20 +28,16 @@ function Users({ users, auth, csrf_token }: UsersPageProps) {
   return (
     <>
       <Head title="Users" />
-      
+
       <GradientBackground>
         <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
-          
           <PageHeader
             title="Users"
             subtitle="Manage users with forms, validation, and CRUD operations"
             icon={<UsersIconLarge />}
           />
-          
-          <UserPageNavigation />
 
           <div className="mx-auto max-w-6xl">
-            
             {/* Create User Button */}
             <div className="flex justify-center mb-8">
               <LinkButton
@@ -50,10 +49,9 @@ function Users({ users, auth, csrf_token }: UsersPageProps) {
                 Create New User
               </LinkButton>
             </div>
-            
+
             {/* Main Card */}
             <Card variant="elevated" padding="none" className="overflow-hidden">
-              
               {users.length === 0 ? (
                 <EmptyUsersState />
               ) : (
@@ -63,10 +61,7 @@ function Users({ users, auth, csrf_token }: UsersPageProps) {
                 </>
               )}
 
-              {auth?.authenticated && (
-                <AuthInfo auth={auth} />
-              )}
-
+              {auth?.authenticated && <AuthInfo auth={auth} />}
             </Card>
           </div>
         </div>
