@@ -2746,6 +2746,9 @@
   .text-cyan-600 {
     color: var(--color-cyan-600);
   }
+  .text-cyan-700 {
+    color: var(--color-cyan-700);
+  }
   .text-cyan-900 {
     color: var(--color-cyan-900);
   }
@@ -3453,6 +3456,13 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-blue-700);
+      }
+    }
+  }
+  .hover\:bg-cyan-200 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-cyan-200);
       }
     }
   }

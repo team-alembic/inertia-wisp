@@ -1,4 +1,4 @@
-import { Head, Link, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import {
   HomePageProps,
   HomePagePropsSchema,
@@ -12,6 +12,12 @@ import {
   UploadIcon,
   UsersIcon,
 } from "../components/icons";
+import {
+  Button,
+  LinkButton,
+  InfoRow,
+  SectionHeader,
+} from "../components";
 
 interface PageHeaderProps {
   title: string;
@@ -45,22 +51,13 @@ function ServerInfoCard({
 }: ServerInfoCardProps) {
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      <SectionHeader level="h2" size="lg">
         Server Information
-      </h2>
+      </SectionHeader>
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
-          <span className="text-sm font-medium text-gray-700">Message:</span>
-          <span className="text-sm font-bold text-indigo-900">{message}</span>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-cyan-50 rounded-lg">
-          <span className="text-sm font-medium text-gray-700">Timestamp:</span>
-          <span className="text-sm text-cyan-900">{timestamp}</span>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-          <span className="text-sm font-medium text-gray-700">User Count:</span>
-          <span className="text-sm font-bold text-purple-900">{userCount}</span>
-        </div>
+        <InfoRow label="Message" value={message} variant="indigo" />
+        <InfoRow label="Timestamp" value={timestamp} variant="cyan" />
+        <InfoRow label="User Count" value={userCount} variant="purple" />
       </div>
     </div>
   );
@@ -69,29 +66,30 @@ function ServerInfoCard({
 function NavigationLinks() {
   return (
     <div className="mb-8">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Navigation</h3>
+      <SectionHeader>Navigation</SectionHeader>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
+        <LinkButton
           href="/about"
-          className="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors duration-200"
+          variant="indigo"
+          icon={<InfoIcon />}
         >
-          <InfoIcon />
           About
-        </Link>
-        <Link
+        </LinkButton>
+        <LinkButton
           href="/users"
-          className="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-green-700 bg-green-100 hover:bg-green-200 transition-colors duration-200"
+          variant="green"
+          icon={<UsersIcon />}
         >
-          <UsersIcon />
           Users (Forms Demo)
-        </Link>
-        <Link
+        </LinkButton>
+        <LinkButton
           href="/upload"
-          className="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-purple-700 bg-purple-100 hover:bg-purple-200 transition-colors duration-200 sm:col-span-2 lg:col-span-1"
+          variant="purple"
+          icon={<UploadIcon />}
+          className="sm:col-span-2 lg:col-span-1"
         >
-          <UploadIcon />
           File Upload Demo
-        </Link>
+        </LinkButton>
       </div>
     </div>
   );
@@ -149,9 +147,9 @@ function DemoFeaturesList() {
 
   return (
     <div className="mb-8">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <SectionHeader>
         Demo Features
-      </h3>
+      </SectionHeader>
       <div className="space-y-4">
         {features.map((feature, index) => (
           <FeatureItem
@@ -168,24 +166,24 @@ function DemoFeaturesList() {
 function TestNavigationButtons() {
   return (
     <div>
-      <h4 className="text-lg font-semibold text-gray-900 mb-4">
+      <SectionHeader level="h4">
         Test Navigation
-      </h4>
+      </SectionHeader>
       <div className="flex flex-col sm:flex-row gap-3">
-        <button
+        <Button
           onClick={() => router.visit("/")}
-          className="inline-flex items-center justify-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 transition-colors duration-200"
+          variant="outline"
+          icon={<RefreshIcon />}
         >
-          <RefreshIcon />
           Reload Home (XHR)
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => (window.location.href = "/")}
-          className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+          variant="ghost"
+          icon={<RefreshIcon />}
         >
-          <RefreshIcon />
           Reload Home (Full)
-        </button>
+        </Button>
       </div>
     </div>
   );
