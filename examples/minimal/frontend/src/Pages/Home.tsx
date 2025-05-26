@@ -12,12 +12,7 @@ import {
   UploadIcon,
   UsersIcon,
 } from "../components/icons";
-import {
-  Button,
-  LinkButton,
-  InfoRow,
-  SectionHeader,
-} from "../components";
+import { Button, LinkButton, InfoRow, SectionHeader } from "../components";
 
 interface PageHeaderProps {
   title: string;
@@ -68,18 +63,10 @@ function NavigationLinks() {
     <div className="mb-8">
       <SectionHeader>Navigation</SectionHeader>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <LinkButton
-          href="/about"
-          variant="indigo"
-          icon={<InfoIcon />}
-        >
+        <LinkButton href="/about" variant="indigo" icon={<InfoIcon />}>
           About
         </LinkButton>
-        <LinkButton
-          href="/users"
-          variant="green"
-          icon={<UsersIcon />}
-        >
+        <LinkButton href="/users" variant="green" icon={<UsersIcon />}>
           Users (Forms Demo)
         </LinkButton>
         <LinkButton
@@ -147,9 +134,7 @@ function DemoFeaturesList() {
 
   return (
     <div className="mb-8">
-      <SectionHeader>
-        Demo Features
-      </SectionHeader>
+      <SectionHeader>Demo Features</SectionHeader>
       <div className="space-y-4">
         {features.map((feature, index) => (
           <FeatureItem
@@ -166,9 +151,7 @@ function DemoFeaturesList() {
 function TestNavigationButtons() {
   return (
     <div>
-      <SectionHeader level="h4">
-        Test Navigation
-      </SectionHeader>
+      <SectionHeader level="h4">Test Navigation</SectionHeader>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button
           onClick={() => router.visit("/")}
@@ -255,18 +238,14 @@ function Home({
           title="Welcome to Inertia Gleam!"
           subtitle="Full-stack web applications with Gleam and React"
         />
-
         <MainCard auth={auth}>
           <ServerInfoCard
             message={message}
             timestamp={timestamp}
             userCount={user_count}
           />
-
           <NavigationLinks />
-
           <DemoFeaturesList />
-
           <TestNavigationButtons />
         </MainCard>
       </MainLayout>
