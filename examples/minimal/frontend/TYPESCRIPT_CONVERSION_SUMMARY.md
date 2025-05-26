@@ -17,7 +17,6 @@ This document summarizes the complete TypeScript conversion of the Inertia Gleam
 - `tsconfig.json` - TypeScript configuration
 - `src/types/index.ts` - Type definitions matching Gleam backend
 - `src/schemas/index.ts` - Zod schemas for runtime validation
-- `src/Pages/CreateUserEnhanced.tsx` - Example with Zod validation
 
 ## Type Safety Implementation
 
@@ -223,7 +222,7 @@ export default function CreateUser({ errors, old, csrf_token }: CreateUserPagePr
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    
+
     const validation = validateFormData(CreateUserFormSchema, formData);
     if (!validation.success) {
       setClientErrors(validation.errors);
@@ -252,7 +251,6 @@ frontend/
 │       ├── ShowUser.tsx
 │       ├── CreateUser.tsx
 │       ├── EditUser.tsx
-│       └── CreateUserEnhanced.tsx # Example with Zod validation
 ├── tsconfig.json                  # TypeScript configuration
 ├── package.json                   # Updated with TS dependencies
 ├── README.md                      # Updated documentation

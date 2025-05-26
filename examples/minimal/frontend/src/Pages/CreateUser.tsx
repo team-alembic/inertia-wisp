@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Head, Link, router } from "@inertiajs/react";
-import { CreateUserPageProps, CreateUserPagePropsSchema, withValidatedProps } from "../schemas";
+import { CreateUserPageProps, CreateUserPagePropsSchema, CreateUserFormSchema, validateFormData, withValidatedProps } from "../schemas";
 
 interface CreateUserFormData {
   name: string;
@@ -13,13 +13,25 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
     email: old?.email || "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Client-side validation with Zod
+    const validation = validateFormData(CreateUserFormSchema, formData);
+    
+    if (!validation.success) {
+      setClientErrors(validation.errors);
+      return;
+    }
+    
+    // Clear client errors if validation passes
+    setClientErrors({});
     setIsSubmitting(true);
 
     router.post("/users", {
-      ...formData,
+      ...validation.data,
       _token: csrf_token,
     }, {
       onFinish: () => setIsSubmitting(false),
@@ -32,27 +44,35 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (clientErrors[name]) {
+      setClientErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
+
+  // Merge server errors and client errors, preferring server errors
+  const allErrors = { ...clientErrors, ...errors };
 
   return (
     <>
-      <Head title="Create New User" />
+      <Head title="Create New User (Improved)" />
       
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
         <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
           
           {/* Header */}
           <div className="text-center mb-12">
-            <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
+            <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-600 flex items-center justify-center mb-6">
               <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
               Create New User
             </h1>
             <p className="mt-4 text-lg text-gray-600">
-              Add a new user to the system with form validation
+              Improved validation with advanced error handling
             </p>
             
             <Link 
@@ -71,8 +91,25 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
             {/* Main Card */}
             <div className="bg-white shadow-xl ring-1 ring-gray-900/5 rounded-2xl overflow-hidden">
               
+              {/* Improved Features Notice */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-l-4 border-blue-400 p-4 m-6 rounded-md">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">Improved Version</h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>Enhanced form with prop validation, client-side validation, and improved error handling patterns.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Errors */}
-              {(errors?.name || errors?.email) && (
+              {(allErrors?.name || allErrors?.email) && (
                 <div className="bg-red-50 border-l-4 border-red-400 p-4 m-6 rounded-md">
                   <div className="flex">
                     <div className="flex-shrink-0">
@@ -84,11 +121,11 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
                       <h3 className="text-sm font-medium text-red-800">Validation errors:</h3>
                       <div className="mt-2 text-sm text-red-700">
                         <ul className="list-disc pl-5 space-y-1">
-                          {errors?.name && (
-                            <li><strong>Name:</strong> {errors.name}</li>
+                          {allErrors?.name && (
+                            <li><strong>Name:</strong> {allErrors.name}</li>
                           )}
-                          {errors?.email && (
-                            <li><strong>Email:</strong> {errors.email}</li>
+                          {allErrors?.email && (
+                            <li><strong>Email:</strong> {allErrors.email}</li>
                           )}
                         </ul>
                       </div>
@@ -122,15 +159,22 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
                         disabled={isSubmitting}
                         className={`
                           block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm 
-                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-                          ${errors?.name 
+                          ${allErrors?.name 
                             ? 'border-red-300 text-red-900 focus:ring-red-500' 
                             : 'border-gray-300 text-gray-900'
                           }
                         `}
                         placeholder="Enter your full name"
                       />
+                      {!allErrors?.name && formData.name.length > 0 && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                          <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -154,15 +198,22 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
                         disabled={isSubmitting}
                         className={`
                           block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm 
-                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-                          ${errors?.email 
+                          ${allErrors?.email 
                             ? 'border-red-300 text-red-900 focus:ring-red-500' 
                             : 'border-gray-300 text-gray-900'
                           }
                         `}
                         placeholder="Enter your email address"
                       />
+                      {!allErrors?.email && formData.email.includes('@') && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                          <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -176,7 +227,7 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
                         text-sm font-medium rounded-lg transition-all duration-200
                         ${isSubmitting 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                          : 'text-white bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                         }
                       `}
                     >
@@ -213,29 +264,29 @@ function CreateUser({ errors, old, csrf_token, auth }: CreateUserPageProps) {
 
               </div>
 
-              {/* Validation Info */}
+              {/* Improved Features Info */}
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Form Validation Demo</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Improved Form Features</h4>
                 <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex items-start space-x-2">
-                    <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></div>
-                    <span>Name is required and must be at least 2 characters</span>
+                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                    <span>Runtime schema validation with detailed error handling</span>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></div>
-                    <span>Email is required and must contain @</span>
+                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                    <span>Client-side validation before submission</span>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></div>
-                    <span>Email must be unique (try using alice@example.com)</span>
+                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                    <span>Type safety with compile-time and runtime checking</span>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></div>
-                    <span>Validation errors are preserved when form submission fails</span>
+                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                    <span>Error merging - client errors shown immediately, server errors on submission</span>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></div>
-                    <span>Form data is preserved on validation errors</span>
+                    <div className="h-1.5 w-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                    <span>Schema consistency with backend validation rules</span>
                   </div>
                 </div>
               </div>
