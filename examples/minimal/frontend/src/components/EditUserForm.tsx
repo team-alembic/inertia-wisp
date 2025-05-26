@@ -4,6 +4,7 @@ import { FormField } from "./FormField";
 import { LoadingButton } from "./LoadingButton";
 import { LinkButton } from "./LinkButton";
 import { UserIcon, EmailIcon, CheckIcon, XIcon } from "./icons";
+import { EditUserFormSchema, validateFormData } from "../schemas";
 
 interface EditUserFormData {
   name: string;
@@ -26,9 +27,22 @@ export function EditUserForm({ user, errors, csrf_token }: EditUserFormProps) {
     email: user?.email || "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Clear previous validation errors
+    setValidationErrors({});
+    
+    // Validate form data
+    const validation = validateFormData(EditUserFormSchema, formData);
+    
+    if (!validation.success) {
+      setValidationErrors(validation.errors);
+      return;
+    }
+    
     setIsSubmitting(true);
 
     router.post(`/users/${user.id}`, {
@@ -45,6 +59,15 @@ export function EditUserForm({ user, errors, csrf_token }: EditUserFormProps) {
       ...prev,
       [name]: value
     }));
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   return (
@@ -57,7 +80,7 @@ export function EditUserForm({ user, errors, csrf_token }: EditUserFormProps) {
         value={formData.name}
         onChange={handleChange}
         disabled={isSubmitting}
-        error={errors?.name}
+        error={validationErrors?.name || errors?.name}
         icon={<UserIcon />}
         placeholder="Enter your full name"
       />
@@ -70,7 +93,7 @@ export function EditUserForm({ user, errors, csrf_token }: EditUserFormProps) {
         value={formData.email}
         onChange={handleChange}
         disabled={isSubmitting}
-        error={errors?.email}
+        error={validationErrors?.email || errors?.email}
         icon={<EmailIcon />}
         placeholder="Enter your email address"
       />
