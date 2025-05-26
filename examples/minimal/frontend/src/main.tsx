@@ -1,6 +1,5 @@
 import { createInertiaApp } from "@inertiajs/react";
 import { createRoot } from "react-dom/client";
-import "./styles.css";
 
 createInertiaApp({
   resolve: async (name: string) => {

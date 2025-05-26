@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build:css": "npx tailwindcss -i ./src/styles.css -o ../static/css/styles.css --minify",
-    "watch:css": "npx tailwindcss -i ./src/styles.css -o ../static/css/styles.css --watch",
+    "build:css": "./tailwindcss -i ./src/styles.css -o ../static/css/styles.css --minify",
+    "watch:css": "./tailwindcss -i ./src/styles.css -o ../static/css/styles.css --watch",
     "build:js": "esbuild src/main.tsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --jsx=automatic",
     "watch:js": "esbuild src/main.tsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --watch --jsx=automatic",
     "build": "npm run type-check && npm run build:css && npm run build:js",
@@ -27,11 +27,8 @@
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "autoprefixer": "^10.4.21",
     "esbuild": "^0.19.11",
     "npm-run-all": "^4.1.5",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17",
     "typescript": "^5.0.0"
   }
 }
