@@ -9,6 +9,8 @@ A modern server-side adapter for [Inertia.js](https://inertiajs.com/) built for 
 
 Inertia.js allows you to build single-page applications using classic server-side routing and controllers, without the complexity of maintaining a separate API. You get the benefits of a SPA (no full page reloads) with the simplicity of server-side rendering.
 
+This library provides the server-side adapter for Gleam applications, handling the Inertia.js protocol and providing a type-safe API for building modern web applications.
+
 ## Installation
 
 ```sh
@@ -28,9 +30,9 @@ import inertia_gleam
 
 pub fn main() {
   wisp.configure_logger()
-  
+
   let config = inertia_gleam.default_config()
-  
+
   let assert Ok(_) =
     fn(req) { handle_request(req, config) }
     |> wisp_mist.handler("your_secret_key")
@@ -43,7 +45,7 @@ pub fn main() {
 
 fn handle_request(req: wisp.Request, config: inertia_gleam.Config) -> wisp.Response {
   use _req <- inertia_gleam.inertia_middleware(req, config)
-  
+
   case wisp.path_segments(req) {
     [] -> home_page(req)
     ["about"] -> about_page(req)
@@ -56,17 +58,6 @@ fn handle_request(req: wisp.Request, config: inertia_gleam.Config) -> wisp.Respo
 
 ```gleam
 fn home_page(req: wisp.Request) -> wisp.Response {
-  let props = inertia_gleam.props_from_list([
-    #("message", inertia_gleam.string_prop("Hello from Gleam!")),
-    #("user", inertia_gleam.string_prop("Alice")),
-    #("count", inertia_gleam.int_prop(42)),
-  ])
-  
-  inertia_gleam.render_inertia_with_props(req, "Home", props)
-}
-
-// Alternative: Pipe-friendly context API
-fn home_page_alt(req: wisp.Request) -> wisp.Response {
   inertia_gleam.context(req)
   |> inertia_gleam.assign_prop("message", inertia_gleam.string_prop("Hello from Gleam!"))
   |> inertia_gleam.assign_prop("user", inertia_gleam.string_prop("Alice"))
@@ -121,12 +112,10 @@ export default function About() {
 
 ### 🚧 Coming Soon
 
-- **Form Handling**: POST requests with validation errors
-- **Lazy Props**: Props that are only evaluated when requested
-- **Partial Reloads**: Request only specific props for performance
 - **Asset Versioning**: Automatic page reloads when assets change
-- **Redirects**: Proper redirect handling for SPAs
 - **Server-Side Rendering**: Optional SSR support
+- **Error Pages**: 404/500 handling through Inertia
+- **Advanced Redirects**: External redirect handling
 
 ## API Reference
 
@@ -204,48 +193,42 @@ Run the included tests:
 gleam test
 ```
 
-Test the example server:
-
-```sh
-cd examples/minimal
-gleam run
-# Server starts on http://localhost:8000
-```
-
-Test with curl:
-
-```sh
-# Browser request (returns HTML)
-curl http://localhost:8000/
-
-# Inertia request (returns JSON)
-curl -H "X-Inertia: true" http://localhost:8000/
-```
-
 ## Examples
 
-Check out the `/examples` directory for complete working examples:
+Check out the [`examples/`](examples/) directory for complete working examples:
 
-- **Minimal Example**: Complete standalone Gleam app with React frontend and ESBuild setup
-
-## Development Status
-
-This package is currently in **Phase 0** - basic proof of concept. It successfully demonstrates:
-
-- Server-side routing with Inertia.js protocol
-- Seamless navigation between pages without full reloads
-- Type-safe prop serialization
-- React frontend integration
-
-See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for the complete roadmap.
-
-## Contributing
-
-Contributions are welcome! Please see the implementation plan for current priorities.
+- **[Minimal Example](examples/minimal/)**: Complete standalone Gleam app with React frontend, forms, validation, and file uploads
 
 ## Documentation
 
-Further documentation can be found at <https://hexdocs.pm/inertia_gleam>.
+- **[API Documentation](https://hexdocs.pm/inertia_gleam)** - Complete API reference
+- **[Development Setup](docs/development/setup.md)** - Getting started with development
+- **[Testing Guide](docs/development/testing.md)** - Testing strategies and tools
+- **[Implementation Plan](docs/development/implementation-plan.md)** - Development roadmap and architecture
+- **[Example Application Guide](docs/examples/minimal-example.md)** - Comprehensive example walkthrough
+- **[Frontend Development](docs/examples/frontend-development.md)** - React + TypeScript development guide
+
+### Feature Documentation
+
+- **[Always Props](docs/features/always-props.md)** - Global props on every request
+- **[File Uploads](docs/features/file-uploads.md)** - File upload handling and validation
+
+## Development Status
+
+This package is production-ready with comprehensive features including:
+
+- ✅ **Core Inertia Protocol**: HTML and JSON response handling
+- ✅ **Props System**: Type-safe prop serialization with lazy evaluation
+- ✅ **Form Handling**: Validation, errors, and redirects
+- ✅ **File Uploads**: Multipart form data with validation
+- ✅ **Always Props**: Global props on every request
+- ✅ **Partial Reloads**: Performance optimization for large datasets
+
+See the [implementation plan](docs/development/implementation-plan.md) for detailed feature status and roadmap.
+
+## Contributing
+
+Contributions are welcome! Please see the [implementation plan](docs/development/implementation-plan.md) for current priorities and development guidelines.
 
 ## License
 
