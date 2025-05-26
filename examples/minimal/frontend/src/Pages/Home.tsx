@@ -1,4 +1,4 @@
-import { Head, router } from "@inertiajs/react";
+import { Head, router, Link } from "@inertiajs/react";
 import {
   HomePageProps,
   HomePagePropsSchema,
@@ -84,10 +84,10 @@ function NavigationLinks() {
 
 interface FeatureItemProps {
   title: string;
-  description: string;
+  children: React.ReactNode;
 }
 
-function FeatureItem({ title, description }: FeatureItemProps) {
+function FeatureItem({ title, children }: FeatureItemProps) {
   return (
     <div className="flex items-start space-x-3">
       <div className="flex-shrink-0">
@@ -97,52 +97,38 @@ function FeatureItem({ title, description }: FeatureItemProps) {
       </div>
       <div>
         <p className="text-sm font-medium text-gray-900">{title}</p>
-        <div
-          className="text-sm text-gray-500"
-          dangerouslySetInnerHTML={{ __html: description }}
-        />
+        <div className="text-sm text-gray-500">
+          {children}
+        </div>
       </div>
     </div>
   );
 }
 
 function DemoFeaturesList() {
-  const features = [
-    {
-      title: "Navigation",
-      description: "All page transitions use Inertia XHR requests",
-    },
-    {
-      title: "Props System",
-      description: "Server-side data passed to React components",
-    },
-    {
-      title: "Forms & Validation",
-      description:
-        'Check out the <a href="/users" class="text-indigo-600 hover:text-indigo-500">Users section</a>',
-    },
-    {
-      title: "File Uploads",
-      description:
-        'Try the <a href="/upload" class="text-indigo-600 hover:text-indigo-500">File Upload demo</a>',
-    },
-    {
-      title: "Redirects",
-      description: "Form submissions redirect properly",
-    },
-  ];
-
   return (
     <div className="mb-8">
       <SectionHeader>Demo Features</SectionHeader>
       <div className="space-y-4">
-        {features.map((feature, index) => (
-          <FeatureItem
-            key={index}
-            title={feature.title}
-            description={feature.description}
-          />
-        ))}
+        <FeatureItem title="Navigation">
+          All page transitions use Inertia XHR requests
+        </FeatureItem>
+        
+        <FeatureItem title="Props System">
+          Server-side data passed to React components
+        </FeatureItem>
+        
+        <FeatureItem title="Forms & Validation">
+          Check out the <Link href="/users" className="text-indigo-600 hover:text-indigo-500">Users section</Link>
+        </FeatureItem>
+        
+        <FeatureItem title="File Uploads">
+          Try the <Link href="/upload" className="text-indigo-600 hover:text-indigo-500">File Upload demo</Link>
+        </FeatureItem>
+        
+        <FeatureItem title="Redirects">
+          Form submissions redirect properly
+        </FeatureItem>
       </div>
     </div>
   );
