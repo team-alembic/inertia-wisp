@@ -43,6 +43,7 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
     ["users", id], http.Post -> users.update_user(ctx, id)
     ["users", id, "delete"], http.Post -> users.delete_user(ctx, id)
     ["upload"], http.Get -> uploads.upload_form_page(ctx)
+    ["upload"], http.Post -> uploads.handle_upload(ctx)
     _, _ -> wisp.not_found()
   }
 }
