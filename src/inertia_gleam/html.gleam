@@ -1,6 +1,5 @@
 import gleam/json
 import gleam/string
-import inertia_gleam/json as inertia_json
 import inertia_gleam/types.{type Page}
 
 /// Generate the root HTML template for initial page loads
@@ -31,7 +30,7 @@ pub fn app_template(page: Page) -> String {
 
 /// Encode page for HTML data attribute (same as JSON but formatted for HTML)
 fn encode_page_for_html(page: Page) -> json.Json {
-  inertia_json.encode_page(page)
+  types.encode_page(page)
 }
 
 /// Escape HTML characters for safe insertion into attributes

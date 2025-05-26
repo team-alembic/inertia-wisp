@@ -19,17 +19,17 @@ Inertia Gleam provides comprehensive file upload support with:
 ```gleam
 import inertia_gleam
 
-pub fn handle_upload(req: wisp.Request) -> wisp.Response {
+pub fn handle_upload(req: inertia_gleam.InertiaContext) -> wisp.Response {
   case inertia_gleam.get_uploaded_files_default(req) {
     Ok(files) -> {
       // Files uploaded successfully
-      inertia_gleam.context(req)
+      req
       |> inertia_gleam.assign_prop("files", inertia_gleam.files_to_json(files))
       |> inertia_gleam.render("UploadSuccess")
     }
     Error(errors) -> {
       // Handle validation errors
-      inertia_gleam.context(req)
+      req
       |> inertia_gleam.assign_errors(errors)
       |> inertia_gleam.render("UploadForm")
     }
@@ -40,8 +40,8 @@ pub fn handle_upload(req: wisp.Request) -> wisp.Response {
 ### Using Context API
 
 ```gleam
-pub fn upload_form_with_files(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+pub fn upload_form_with_files(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> inertia_gleam.assign_files_default()  // Automatically extracts and validates files
   |> inertia_gleam.assign_prop("title", json.string("Upload Form"))
   |> inertia_gleam.render("UploadForm")
@@ -61,7 +61,7 @@ The default upload configuration allows:
 let default_config = inertia_gleam.default_upload_config()
 // UploadConfig(
 //   max_file_size: 10_000_000,  // 10MB
-//   allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp", 
+//   allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp",
 //                   "application/pdf", "text/plain", "application/msword", ...],
 //   max_files: 5
 // )
@@ -77,7 +77,7 @@ let config = inertia_gleam.upload_config(
 )
 
 // Use with context
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_files(config)
 |> inertia_gleam.render("UploadForm")
 
@@ -124,7 +124,7 @@ Files are automatically validated against the provided configuration:
 ```gleam
 // This will validate:
 // - Total number of files <= max_files
-// - Each file size <= max_file_size  
+// - Each file size <= max_file_size
 // - Each file type in allowed_types
 case inertia_gleam.get_uploaded_files(req, config) {
   Ok(files) -> // All files passed validation
@@ -165,7 +165,7 @@ Files are converted to JSON for frontend consumption:
 let file_json = inertia_gleam.file_to_json(uploaded_file)
 // {
 //   "filename": "document.pdf",
-//   "content_type": "application/pdf", 
+//   "content_type": "application/pdf",
 //   "size": 1048576
 // }
 ```
@@ -190,8 +190,8 @@ import gleam/dict
 import gleam/json
 import inertia_gleam
 
-pub fn upload_form_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+pub fn upload_form_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> inertia_gleam.assign_prop("max_files", json.int(3))
   |> inertia_gleam.assign_prop("max_size_mb", json.int(5))
   |> inertia_gleam.assign_prop("allowed_types", json.array([
@@ -202,7 +202,7 @@ pub fn upload_form_page(req: wisp.Request) -> wisp.Response {
   |> inertia_gleam.render("UploadForm")
 }
 
-pub fn handle_upload(req: wisp.Request) -> wisp.Response {
+pub fn handle_upload(req: inertia_gleam.InertiaContext) -> wisp.Response {
   let config = inertia_gleam.upload_config(
     max_file_size: 5_000_000,  // 5MB
     allowed_types: ["image/jpeg", "image/png", "application/pdf"],
@@ -214,15 +214,15 @@ pub fn handle_upload(req: wisp.Request) -> wisp.Response {
       // Save files and redirect
       let file_count = dict.size(files)
       let message = "Successfully uploaded " <> int_to_string(file_count) <> " files"
-      
-      inertia_gleam.context(req)
+
+      req
       |> inertia_gleam.assign_prop("success", json.string(message))
       |> inertia_gleam.assign_prop("files", files_to_json(files))
       |> inertia_gleam.render("UploadSuccess")
     }
     Error(errors) -> {
       // Return form with errors
-      inertia_gleam.context(req)
+      req
       |> inertia_gleam.assign_errors(errors)
       |> inertia_gleam.assign_prop("max_files", json.int(3))
       |> inertia_gleam.assign_prop("max_size_mb", json.int(5))
@@ -254,12 +254,12 @@ function UploadForm({ max_files, max_size_mb, allowed_types, errors }) {
 
   const submit = (e) => {
     e.preventDefault()
-    
+
     const formData = new FormData()
     for (let i = 0; i < data.files.length; i++) {
       formData.append(`file_${i}`, data.files[i])
     }
-    
+
     post('/upload', {
       data: formData,
       forceFormData: true
@@ -278,7 +278,7 @@ function UploadForm({ max_files, max_size_mb, allowed_types, errors }) {
         />
         {errors.files && <div className="error">{errors.files}</div>}
       </div>
-      
+
       <button type="submit" disabled={processing}>
         {processing ? 'Uploading...' : 'Upload Files'}
       </button>
@@ -292,11 +292,11 @@ function UploadForm({ max_files, max_size_mb, allowed_types, errors }) {
 ### Backend Progress Endpoint
 
 ```gleam
-pub fn upload_progress(req: wisp.Request) -> wisp.Response {
+pub fn upload_progress(req: inertia_gleam.InertiaContext) -> wisp.Response {
   // In a real implementation, track progress in cache/database
   let progress = json.object([
     #("uploaded", json.int(1024000)),
-    #("total", json.int(2048000)), 
+    #("total", json.int(2048000)),
     #("percent", json.int(50)),
     #("status", json.string("uploading"))
   ])
@@ -312,7 +312,7 @@ import { useState, useEffect } from 'react'
 
 function UploadWithProgress() {
   const [progress, setProgress] = useState(null)
-  
+
   const checkProgress = () => {
     fetch('/upload/progress')
       .then(res => res.json())
@@ -330,8 +330,8 @@ function UploadWithProgress() {
     <div>
       {progress && (
         <div className="progress-bar">
-          <div 
-            className="progress-fill" 
+          <div
+            className="progress-fill"
             style={{ width: `${progress.percent}%` }}
           />
           <span>{progress.percent}% uploaded</span>
@@ -383,7 +383,7 @@ pub fn file_upload_test() {
     |> testing.set_body(multipart_body)
 
   let result = inertia_gleam.get_uploaded_files_default(req)
-  
+
   case result {
     Ok(files) -> {
       dict.size(files) |> should.equal(2)

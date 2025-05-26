@@ -2,7 +2,7 @@ import data/users
 import gleam/dict
 import gleam/list
 import gleam/option
-import inertia_gleam/validate
+import validate
 
 // Individual validator functions
 pub fn name_validator(name: String) -> Result(String, String) {

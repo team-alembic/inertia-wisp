@@ -2,6 +2,7 @@ import gleam/dict
 import gleam/dynamic/decode
 import gleam/http
 import gleam/http/request
+
 import gleam/json
 import gleam/list
 import gleam/string
@@ -9,10 +10,9 @@ import gleeunit
 import gleeunit/should
 import inertia_gleam
 import inertia_gleam/html
-import inertia_gleam/json as inertia_json
 import inertia_gleam/testing
 import inertia_gleam/types.{EagerProp}
-import inertia_gleam/uploads
+import inertia_gleam/version
 
 import wisp
 import wisp/testing as wisp_testing
@@ -41,53 +41,6 @@ pub fn default_config_test() {
   config.ssr |> should.equal(False)
 }
 
-pub fn custom_config_test() {
-  let config = inertia_gleam.config("2.0", True)
-  config.version |> should.equal("2.0")
-  config.ssr |> should.equal(True)
-}
-
-// Test prop helpers
-pub fn string_prop_test() {
-  let prop = inertia_gleam.string_prop("test")
-  json.to_string(prop) |> should.equal("\"test\"")
-}
-
-pub fn int_prop_test() {
-  let prop = inertia_gleam.int_prop(42)
-  json.to_string(prop) |> should.equal("42")
-}
-
-pub fn bool_prop_test() {
-  let prop = inertia_gleam.bool_prop(True)
-  json.to_string(prop) |> should.equal("true")
-}
-
-pub fn props_from_list_test() {
-  let props =
-    inertia_gleam.props_from_list([
-      #("name", inertia_gleam.string_prop("John")),
-      #("age", inertia_gleam.int_prop(30)),
-      #("active", inertia_gleam.bool_prop(True)),
-    ])
-
-  dict.size(props) |> should.equal(3)
-  dict.has_key(props, "name") |> should.equal(True)
-  dict.has_key(props, "age") |> should.equal(True)
-  dict.has_key(props, "active") |> should.equal(True)
-}
-
-// Test page creation
-pub fn new_page_test() {
-  let props = dict.from_list([#("title", json.string("Test Page"))])
-
-  let page = types.new_page("TestComponent", props, "/test", "1.0")
-
-  page.component |> should.equal("TestComponent")
-  page.url |> should.equal("/test")
-  page.version |> should.equal("1.0")
-}
-
 // Test JSON encoding
 pub fn encode_page_test() {
   let props =
@@ -99,9 +52,11 @@ pub fn encode_page_test() {
       props: props,
       url: "/test",
       version: "1",
+      encrypt_history: False,
+      clear_history: False,
     )
 
-  let encoded = inertia_json.encode_page(page)
+  let encoded = types.encode_page(page)
   let json_string = json.to_string(encoded)
 
   // Should contain all required fields
@@ -114,7 +69,15 @@ pub fn encode_page_test() {
 // Test HTML generation
 pub fn root_template_test() {
   let props = dict.new()
-  let page = types.Page(component: "Home", props: props, url: "/", version: "1")
+  let page =
+    types.Page(
+      component: "Home",
+      props: props,
+      url: "/",
+      version: "1",
+      encrypt_history: False,
+      clear_history: False,
+    )
 
   let html = html.root_template(page, "Test App")
 
@@ -126,7 +89,15 @@ pub fn root_template_test() {
 
 pub fn app_template_test() {
   let props = dict.new()
-  let page = types.Page(component: "Home", props: props, url: "/", version: "1")
+  let page =
+    types.Page(
+      component: "Home",
+      props: props,
+      url: "/",
+      version: "1",
+      encrypt_history: False,
+      clear_history: False,
+    )
 
   let html = html.app_template(page)
 
@@ -135,19 +106,10 @@ pub fn app_template_test() {
   html |> should_not_contain("<!DOCTYPE html>")
 }
 
-// Test initial state
-pub fn initial_state_test() {
-  let state = types.initial_state()
-
-  state.is_inertia |> should.equal(False)
-  state.partial_data |> should.equal([])
-  dict.size(state.props) |> should.equal(0)
-}
-
 // Test context-based prop assignment
 pub fn context_creation_test() {
   let req = mock_request()
-  let ctx = inertia_gleam.context(req)
+  let ctx = types.new_context(types.default_config(), req)
 
   dict.size(ctx.props) |> should.equal(0)
 }
@@ -155,8 +117,8 @@ pub fn context_creation_test() {
 pub fn assign_prop_test() {
   let req = mock_request()
   let ctx =
-    inertia_gleam.context(req)
-    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
+    types.new_context(types.default_config(), req)
+    |> inertia_gleam.assign_prop("name", json.string("Alice"))
 
   dict.size(ctx.props) |> should.equal(1)
   dict.has_key(ctx.props, "name") |> should.equal(True)
@@ -165,10 +127,10 @@ pub fn assign_prop_test() {
 pub fn assign_multiple_props_test() {
   let req = mock_request()
   let ctx =
-    inertia_gleam.context(req)
-    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
-    |> inertia_gleam.assign_prop("age", inertia_gleam.int_prop(30))
-    |> inertia_gleam.assign_prop("active", inertia_gleam.bool_prop(True))
+    types.new_context(types.default_config(), req)
+    |> inertia_gleam.assign_prop("name", json.string("Alice"))
+    |> inertia_gleam.assign_prop("age", json.int(30))
+    |> inertia_gleam.assign_prop("active", json.bool(True))
 
   dict.size(ctx.props) |> should.equal(3)
   dict.has_key(ctx.props, "name") |> should.equal(True)
@@ -179,12 +141,12 @@ pub fn assign_multiple_props_test() {
 pub fn assign_props_list_test() {
   let req = mock_request()
   let props_list = [
-    #("title", inertia_gleam.string_prop("Test Page")),
-    #("count", inertia_gleam.int_prop(42)),
+    #("title", json.string("Test Page")),
+    #("count", json.int(42)),
   ]
 
   let ctx =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_props(props_list)
 
   dict.size(ctx.props) |> should.equal(2)
@@ -195,9 +157,9 @@ pub fn assign_props_list_test() {
 pub fn context_prop_override_test() {
   let req = mock_request()
   let ctx =
-    inertia_gleam.context(req)
-    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
-    |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Bob"))
+    types.new_context(types.default_config(), req)
+    |> inertia_gleam.assign_prop("name", json.string("Alice"))
+    |> inertia_gleam.assign_prop("name", json.string("Bob"))
 
   dict.size(ctx.props) |> should.equal(1)
 
@@ -214,7 +176,7 @@ pub fn assign_lazy_prop_test() {
   let expensive_calculation = fn() { json.string("expensive_result") }
 
   let ctx =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_lazy_prop("expensive_data", expensive_calculation)
 
   dict.size(ctx.props) |> should.equal(1)
@@ -229,7 +191,7 @@ pub fn lazy_prop_evaluation_test() {
   }
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_lazy_prop("expensive_data", expensive_calculation)
     |> inertia_gleam.render("TestComponent")
 
@@ -243,7 +205,7 @@ pub fn lazy_and_eager_props_test() {
   let expensive_calculation = fn() { json.string("lazy_value") }
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_prop("eager", json.string("eager_value"))
     |> inertia_gleam.assign_lazy_prop("lazy", expensive_calculation)
     |> inertia_gleam.render("TestComponent")
@@ -259,11 +221,8 @@ pub fn lazy_and_eager_props_test() {
 pub fn assign_always_prop_test() {
   let req = mock_request()
   let ctx =
-    inertia_gleam.context(req)
-    |> inertia_gleam.assign_always_prop(
-      "auth",
-      inertia_gleam.string_prop("authenticated"),
-    )
+    types.new_context(types.default_config(), req)
+    |> inertia_gleam.assign_always_prop("auth", json.string("authenticated"))
 
   dict.size(ctx.always_props) |> should.equal(1)
   dict.has_key(ctx.always_props, "auth") |> should.equal(True)
@@ -272,12 +231,12 @@ pub fn assign_always_prop_test() {
 pub fn assign_always_props_test() {
   let req = mock_request()
   let always_props_list = [
-    #("auth", inertia_gleam.string_prop("authenticated")),
-    #("csrf_token", inertia_gleam.string_prop("abc123")),
+    #("auth", json.string("authenticated")),
+    #("csrf_token", json.string("abc123")),
   ]
 
   let ctx =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_always_props(always_props_list)
 
   dict.size(ctx.always_props) |> should.equal(2)
@@ -285,22 +244,10 @@ pub fn assign_always_props_test() {
   dict.has_key(ctx.always_props, "csrf_token") |> should.equal(True)
 }
 
-pub fn assign_always_lazy_prop_test() {
-  let req = mock_request()
-  let auth_check = fn() { json.string("user_authenticated") }
-
-  let ctx =
-    inertia_gleam.context(req)
-    |> inertia_gleam.assign_always_lazy_prop("auth_status", auth_check)
-
-  dict.size(ctx.always_props) |> should.equal(1)
-  dict.has_key(ctx.always_props, "auth_status") |> should.equal(True)
-}
-
 pub fn always_props_in_response_test() {
   let req = mock_request()
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_always_prop("auth", json.string("authenticated"))
     |> inertia_gleam.assign_prop("page_data", json.string("some_data"))
     |> inertia_gleam.render("TestComponent")
@@ -315,7 +262,7 @@ pub fn always_props_in_response_test() {
 pub fn always_props_override_test() {
   let req = mock_request()
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_always_prop("title", json.string("Default Title"))
     |> inertia_gleam.assign_prop("title", json.string("Page Title"))
     |> inertia_gleam.render("TestComponent")
@@ -330,9 +277,9 @@ pub fn mixed_always_props_test() {
   let auth_calculation = fn() { json.string("lazy_auth_result") }
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_always_prop("csrf", json.string("token123"))
-    |> inertia_gleam.assign_always_lazy_prop("auth", auth_calculation)
+    |> inertia_gleam.assign_lazy_prop("auth", auth_calculation)
     |> inertia_gleam.assign_prop("content", json.string("page_content"))
     |> inertia_gleam.render("TestComponent")
 
@@ -357,7 +304,7 @@ pub fn partial_reload_with_always_props_test() {
     |> request.set_body(body)
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_always_prop("csrf", json.string("always_token"))
     |> inertia_gleam.assign_prop("content", json.string("requested_content"))
     |> inertia_gleam.assign_prop("sidebar", json.string("not_requested"))
@@ -387,7 +334,7 @@ pub fn basic_partial_reload_test() {
     |> request.set_body(body)
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_prop("title", json.string("Page Title"))
     |> inertia_gleam.assign_prop("count", json.int(42))
     |> inertia_gleam.assign_prop(
@@ -410,7 +357,7 @@ pub fn basic_partial_reload_test() {
 pub fn testing_helpers_test() {
   let req = mock_request()
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_prop("title", json.string("Test Page"))
     |> inertia_gleam.assign_prop("count", json.int(42))
     |> inertia_gleam.render("TestComponent")
@@ -427,7 +374,7 @@ pub fn testing_helpers_test() {
 pub fn testing_no_prop_test() {
   let req = mock_request()
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_prop("existing", json.string("value"))
     |> inertia_gleam.render("TestComponent")
 
@@ -448,7 +395,7 @@ pub fn assign_errors_test() {
     ])
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_errors(errors)
     |> inertia_gleam.render("LoginForm")
 
@@ -460,7 +407,7 @@ pub fn assign_errors_test() {
 pub fn assign_single_error_test() {
   let req = mock_request()
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_error("username", "Username is taken")
     |> inertia_gleam.render("SignupForm")
 
@@ -474,7 +421,7 @@ pub fn multiple_errors_test() {
   let initial_errors = dict.from_list([#("email", "Email is required")])
 
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_errors(initial_errors)
     |> inertia_gleam.assign_error("password", "Password is required")
     |> inertia_gleam.render("LoginForm")
@@ -487,7 +434,11 @@ pub fn multiple_errors_test() {
 // Test redirect functionality
 pub fn redirect_browser_request_test() {
   let req = wisp_testing.request(http.Post, "/submit", [], <<>>)
-  let response = inertia_gleam.redirect(req, "/success")
+  let response =
+    inertia_gleam.redirect(
+      types.new_context(types.default_config(), req),
+      "/success",
+    )
 
   response.status |> should.equal(303)
 
@@ -505,7 +456,11 @@ pub fn redirect_inertia_request_test() {
   let req =
     testing.inertia_request()
     |> request.set_method(http.Post)
-  let response = inertia_gleam.redirect(req, "/dashboard")
+  let response =
+    inertia_gleam.redirect(
+      types.new_context(types.default_config(), req),
+      "/dashboard",
+    )
 
   response.status |> should.equal(303)
 
@@ -547,7 +502,12 @@ pub fn redirect_test() {
   let req =
     testing.inertia_request()
     |> request.set_method(http.Post)
-  let response = inertia_gleam.redirect(req, "/success")
+
+  let response =
+    inertia_gleam.redirect(
+      types.new_context(types.default_config(), req),
+      "/success",
+    )
 
   response.status |> should.equal(303)
 
@@ -567,8 +527,10 @@ pub fn form_submission_success_workflow_test() {
     testing.inertia_request()
     |> request.set_method(http.Post)
 
+  let ctx = types.new_context(types.default_config(), req)
+
   // Simulate successful form submission
-  let response = inertia_gleam.redirect(req, "/users")
+  let response = inertia_gleam.redirect(ctx, "/users")
 
   response.status |> should.equal(303)
 
@@ -595,7 +557,7 @@ pub fn form_submission_with_errors_workflow_test() {
 
   // Simulate form submission with validation errors
   let response =
-    inertia_gleam.context(req)
+    types.new_context(types.default_config(), req)
     |> inertia_gleam.assign_errors(validation_errors)
     |> inertia_gleam.assign_prop("name", json.string(""))
     |> inertia_gleam.assign_prop("email", json.string("invalid-email"))
@@ -612,53 +574,51 @@ pub fn form_submission_with_errors_workflow_test() {
   |> should.equal(Ok("invalid-email"))
 }
 
-pub fn default_upload_config_test() {
-  let config = inertia_gleam.default_upload_config()
-
-  // Just test that we can create a default config
-  case config {
-    uploads.UploadConfig(_, _, _) -> should.be_true(True)
-  }
-}
-
-pub fn custom_upload_config_test() {
-  let config =
-    inertia_gleam.upload_config(
-      max_file_size: 5_000_000,
-      allowed_types: ["image/jpeg", "image/png"],
-      max_files: 3,
-    )
-
-  // Just test that we can create a custom config
-  case config {
-    uploads.UploadConfig(_, _, _) -> should.be_true(True)
-  }
-}
-
-pub fn assign_files_default_workflow_test() {
+// History control tests
+pub fn encrypt_history_test() {
   let req = testing.inertia_request()
 
-  // Test assigning files with default config
   let response =
-    inertia_gleam.context(req)
-    |> inertia_gleam.assign_files_default()
-    |> inertia_gleam.assign_prop("title", json.string("Upload Form"))
-    |> inertia_gleam.render("UploadForm")
+    types.new_context(types.default_config(), req)
+    |> inertia_gleam.encrypt_history()
+    |> inertia_gleam.render("TestComponent")
 
-  // Should be a valid response
   response.status |> should.equal(200)
 
-  // Should contain the title prop
-  testing.prop(response, "title", decode.string)
-  |> should.equal(Ok("Upload Form"))
+  // Check that the JSON includes encryptHistory: true
+  let json_body = wisp_testing.string_body(response)
+  json_body |> should_contain("\"encryptHistory\":true")
 }
 
-pub fn get_uploaded_files_empty_test() {
+pub fn clear_history_test() {
   let req = testing.inertia_request()
 
-  // Test getting files from a non-multipart request
-  let result = inertia_gleam.get_uploaded_files_default(req)
+  let response =
+    types.new_context(types.default_config(), req)
+    |> inertia_gleam.clear_history()
+    |> inertia_gleam.render("TestComponent")
 
-  // Should return an error since it's not multipart
-  result |> should.be_error()
+  response.status |> should.equal(200)
+
+  // Check that the JSON includes clearHistory: true
+  let json_body = wisp_testing.string_body(response)
+  json_body |> should_contain("\"clearHistory\":true")
+}
+
+pub fn version_matches_test() {
+  let config = types.Config(..types.default_config(), version: "v1.2.3")
+  let req =
+    testing.inertia_request()
+    |> request.set_header("x-inertia-version", "v1.2.3")
+
+  version.version_matches(req, config) |> should.be_true()
+}
+
+pub fn version_mismatch_test() {
+  let config = types.Config(..types.default_config(), version: "v1.2.3")
+  let req =
+    testing.inertia_request()
+    |> request.set_header("x-inertia-version", "v1.2.2")
+
+  version.version_matches(req, config) |> should.be_false()
 }

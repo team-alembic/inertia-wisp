@@ -43,7 +43,7 @@ pub fn main() {
   process.sleep_forever()
 }
 
-fn handle_request(req: wisp.Request, config: inertia_gleam.Config) -> wisp.Response {
+fn handle_request(req: inertia_gleam.InertiaContext, config: inertia_gleam.Config) -> wisp.Response {
   use _req <- inertia_gleam.inertia_middleware(req, config)
 
   case wisp.path_segments(req) {
@@ -57,15 +57,15 @@ fn handle_request(req: wisp.Request, config: inertia_gleam.Config) -> wisp.Respo
 ### 2. Create Your Pages
 
 ```gleam
-fn home_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+fn home_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> inertia_gleam.assign_prop("message", inertia_gleam.string_prop("Hello from Gleam!"))
   |> inertia_gleam.assign_prop("user", inertia_gleam.string_prop("Alice"))
   |> inertia_gleam.assign_prop("count", inertia_gleam.int_prop(42))
   |> inertia_gleam.render("Home")
 }
 
-fn about_page(req: wisp.Request) -> wisp.Response {
+fn about_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
   inertia_gleam.render_inertia(req, "About")
 }
 ```
@@ -143,7 +143,7 @@ let props = inertia_gleam.props_from_list([
 inertia_gleam.render_inertia_with_props(req, "Dashboard", props)
 
 // Component with props (pipe-friendly context approach)
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_prop("title", inertia_gleam.string_prop("My App"))
 |> inertia_gleam.assign_prop("items", inertia_gleam.int_list_to_json([1, 2, 3]))
 |> inertia_gleam.assign_prop("user_count", inertia_gleam.int_prop(42))
@@ -169,7 +169,7 @@ inertia_gleam.props_from_list([
 ])
 
 // Pipe-friendly context API
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_prop("name", inertia_gleam.string_prop("Alice"))
 |> inertia_gleam.assign_prop("age", inertia_gleam.int_prop(30))
 |> inertia_gleam.render("UserProfile")
@@ -179,7 +179,7 @@ inertia_gleam.context(req)
 
 ```gleam
 // Add Inertia middleware to your request handler
-fn handle_request(req: wisp.Request, config: inertia_gleam.Config) -> wisp.Response {
+fn handle_request(req: inertia_gleam.InertiaContext, config: inertia_gleam.Config) -> wisp.Response {
   use processed_req <- inertia_gleam.inertia_middleware(req, config)
   // Your route handling here...
 }

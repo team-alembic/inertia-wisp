@@ -8,17 +8,17 @@ import types/user.{type CreateUserRequest, CreateUserRequest}
 import validators/user_validator
 import wisp
 
-pub fn create_user_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+pub fn create_user_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> utils.assign_common_props()
   |> inertia_gleam.render("CreateUser")
 }
 
-pub fn create_user(req: wisp.Request) -> wisp.Response {
-  use json_data <- wisp.require_json(req)
+pub fn create_user(ctx: inertia_gleam.InertiaContext) -> wisp.Response {
+  use json_data <- wisp.require_json(ctx.request)
 
   case decode_user_request(json_data) {
-    Ok(user_request) -> handle_valid_user_request(req, user_request)
+    Ok(user_request) -> handle_valid_user_request(ctx, user_request)
     Error(_) -> wisp.bad_request()
   }
 }
@@ -37,7 +37,7 @@ fn decode_user_request(
 }
 
 fn handle_valid_user_request(
-  req: wisp.Request,
+  req: inertia_gleam.InertiaContext,
   user_request: CreateUserRequest,
 ) -> wisp.Response {
   let validation_result =
@@ -53,16 +53,18 @@ fn handle_valid_user_request(
   }
 }
 
-fn handle_successful_creation(req: wisp.Request) -> wisp.Response {
+fn handle_successful_creation(
+  req: inertia_gleam.InertiaContext,
+) -> wisp.Response {
   inertia_gleam.redirect(req, "/users")
 }
 
 fn handle_validation_errors(
-  req: wisp.Request,
+  req: inertia_gleam.InertiaContext,
   user_request: CreateUserRequest,
   errors: dict.Dict(String, String),
 ) -> wisp.Response {
-  inertia_gleam.context(req)
+  req
   |> utils.assign_common_props()
   |> inertia_gleam.assign_errors(errors)
   |> inertia_gleam.assign_props([

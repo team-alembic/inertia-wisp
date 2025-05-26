@@ -7,7 +7,7 @@ This is a complete, standalone Gleam application demonstrating how to use the `i
 The minimal example demonstrates:
 
 - **Navigation**: Seamless SPA navigation using Inertia.js
-- **Props System**: Server-side data passing to React components  
+- **Props System**: Server-side data passing to React components
 - **Forms & Validation**: User creation and editing with validation
 - **File Uploads**: Complete file upload system with drag & drop support
 - **Error Handling**: Form validation errors with field-level feedback
@@ -198,7 +198,7 @@ export default function CreateUser({ auth, csrf_token, errors, old }: CreateUser
 ### Backend Handler
 
 ```gleam
-fn create_user(req: wisp.Request) -> wisp.Response {
+fn create_user(req: inertia_gleam.InertiaContext) -> wisp.Response {
   use form_data <- wisp.require_form(req)
 
   let name = wisp.get_form_value(form_data, "name") |> result.unwrap("")
@@ -209,7 +209,7 @@ fn create_user(req: wisp.Request) -> wisp.Response {
   case dict.size(errors) {
     0 -> inertia_gleam.redirect(req, "/users")
     _ ->
-      inertia_gleam.context(req)
+      req
       |> utils.assign_common_props()
       |> inertia_gleam.assign_errors(errors)
       |> inertia_gleam.assign_prop("old", json.object([
@@ -305,8 +305,8 @@ case wisp.path_segments(req), req.method {
   // ...
 }
 
-fn contact_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+fn contact_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> utils.assign_common_props()
   |> inertia_gleam.assign_prop("email", json.string("hello@example.com"))
   |> inertia_gleam.render("Contact")

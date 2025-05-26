@@ -12,8 +12,8 @@ Use `assign_always_prop()` to add a single always prop:
 import inertia_gleam
 import gleam/json
 
-pub fn handle_request(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+pub fn handle_request(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> inertia_gleam.assign_always_prop("csrf_token", json.string("abc123"))
   |> inertia_gleam.assign_prop("page_data", json.string("specific data"))
   |> inertia_gleam.render("HomePage")
@@ -25,14 +25,14 @@ pub fn handle_request(req: wisp.Request) -> wisp.Response {
 Use `assign_always_props()` to add multiple always props at once:
 
 ```gleam
-pub fn handle_request(req: wisp.Request) -> wisp.Response {
+pub fn handle_request(req: inertia_gleam.InertiaContext) -> wisp.Response {
   let global_props = [
     #("auth", json.string("authenticated")),
     #("csrf_token", json.string("abc123")),
     #("app_version", json.string("1.2.3")),
   ]
-  
-  inertia_gleam.context(req)
+
+  req
   |> inertia_gleam.assign_always_props(global_props)
   |> inertia_gleam.assign_prop("posts", json.array([], json.string))
   |> inertia_gleam.render("BlogIndex")
@@ -44,13 +44,13 @@ pub fn handle_request(req: wisp.Request) -> wisp.Response {
 For expensive calculations that should be available globally but only computed when needed:
 
 ```gleam
-pub fn handle_request(req: wisp.Request) -> wisp.Response {
+pub fn handle_request(req: inertia_gleam.InertiaContext) -> wisp.Response {
   let get_user_permissions = fn() {
     // Expensive database query or computation
     json.string("admin,editor,viewer")
   }
-  
-  inertia_gleam.context(req)
+
+  req
   |> inertia_gleam.assign_always_lazy_prop("permissions", get_user_permissions)
   |> inertia_gleam.assign_prop("content", json.string("page content"))
   |> inertia_gleam.render("Dashboard")
@@ -82,7 +82,7 @@ On Inertia XHR requests, always props are still included:
 
 ```json
 {
-  "component": "AboutPage", 
+  "component": "AboutPage",
   "props": {
     "csrf_token": "abc123",
     "auth": "authenticated",
@@ -114,7 +114,7 @@ Response includes always props + requested props:
   "component": "BlogIndex",
   "props": {
     "csrf_token": "abc123",
-    "auth": "authenticated", 
+    "auth": "authenticated",
     "posts": [...]
   },
   "url": "/blog",
@@ -127,7 +127,7 @@ Response includes always props + requested props:
 When the same key exists in both always props and regular props, **regular props take precedence**:
 
 ```gleam
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_always_prop("title", json.string("Default Title"))
 |> inertia_gleam.assign_prop("title", json.string("Page Specific Title"))
 |> inertia_gleam.render("SomePage")
@@ -154,7 +154,7 @@ let auth_props = case get_current_user(req) {
   ]
 }
 
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_always_props(auth_props)
 |> inertia_gleam.render("AnyPage")
 ```
@@ -164,10 +164,10 @@ inertia_gleam.context(req)
 ```gleam
 import gleam/crypto
 
-pub fn handle_request(req: wisp.Request) -> wisp.Response {
+pub fn handle_request(req: inertia_gleam.InertiaContext) -> wisp.Response {
   let csrf_token = crypto.strong_random_bytes(32) |> crypto.encode_base64()
-  
-  inertia_gleam.context(req)
+
+  req
   |> inertia_gleam.assign_always_prop("csrf_token", json.string(csrf_token))
   |> inertia_gleam.render("FormPage")
 }
@@ -186,7 +186,7 @@ let app_config = [
   ]))
 ]
 
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_always_props(app_config)
 |> inertia_gleam.render("HomePage")
 ```
@@ -205,7 +205,7 @@ let expensive_calculation = fn() {
   |> json.object()
 }
 
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_always_lazy_prop("dashboard_stats", expensive_calculation)
 |> inertia_gleam.render("SomePage")
 ```
@@ -232,8 +232,8 @@ import inertia_gleam/testing
 
 pub fn test_always_props() {
   let req = testing.mock_inertia_request()
-  let response = 
-    inertia_gleam.context(req)
+  let response =
+    req
     |> inertia_gleam.assign_always_prop("csrf", json.string("test_token"))
     |> inertia_gleam.assign_prop("content", json.string("page_content"))
     |> inertia_gleam.render("TestPage")

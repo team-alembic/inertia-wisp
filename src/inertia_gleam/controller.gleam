@@ -4,55 +4,11 @@ import gleam/list
 import gleam/string
 import gleam/string_tree
 import inertia_gleam/html
-import inertia_gleam/json as inertia_json
 import inertia_gleam/middleware
-import inertia_gleam/types.{type Page, type PropValue}
-import inertia_gleam/uploads.{type UploadConfig, type UploadedFile}
+import inertia_gleam/types.{
+  type InertiaContext, type Page, type PropValue, InertiaContext,
+}
 import wisp.{type Request, type Response}
-
-/// Context wrapper for building up props before rendering
-pub type InertiaContext {
-  InertiaContext(
-    request: Request,
-    props: Dict(String, PropValue),
-    always_props: Dict(String, PropValue),
-  )
-}
-
-/// Render an Inertia response with component name only
-pub fn render_inertia(req: Request, component: String) -> Response {
-  render_inertia_with_props(req, component, dict.new())
-}
-
-/// Render an Inertia response with component and props
-pub fn render_inertia_with_props(
-  req: Request,
-  component: String,
-  props: Dict(String, json.Json),
-) -> Response {
-  let url = wisp.path_segments(req) |> string.join("/")
-  let url = "/" <> url
-
-  // Create page object
-  let page =
-    types.Page(
-      component: component,
-      props: props,
-      url: url,
-      version: "1",
-      // TODO: Get from config
-    )
-
-  case middleware.is_inertia_request(req) {
-    True -> render_json_response(page)
-    False -> render_html_response(page)
-  }
-}
-
-/// Create an Inertia context from a request
-pub fn context(req: Request) -> InertiaContext {
-  InertiaContext(request: req, props: dict.new(), always_props: dict.new())
-}
 
 /// Add a prop to the context in a pipe-friendly way
 pub fn assign_prop(
@@ -75,18 +31,6 @@ pub fn assign_always_prop(
   InertiaContext(
     ..ctx,
     always_props: dict.insert(ctx.always_props, key, types.EagerProp(value)),
-  )
-}
-
-/// Add a lazy always prop to the context that will be included in every response
-pub fn assign_always_lazy_prop(
-  ctx: InertiaContext,
-  key: String,
-  evaluator: fn() -> json.Json,
-) -> InertiaContext {
-  InertiaContext(
-    ..ctx,
-    always_props: dict.insert(ctx.always_props, key, types.LazyProp(evaluator)),
   )
 }
 
@@ -139,7 +83,24 @@ pub fn render(ctx: InertiaContext, component: String) -> Response {
       partial_data,
     )
 
-  render_inertia_with_props(ctx.request, component, evaluated_props)
+  let url = wisp.path_segments(ctx.request) |> string.join("/")
+  let url = "/" <> url
+
+  // Create page object
+  let page =
+    types.Page(
+      component: component,
+      props: evaluated_props,
+      url: url,
+      version: ctx.config.version,
+      clear_history: ctx.clear_history,
+      encrypt_history: ctx.encrypt_history,
+    )
+
+  case middleware.is_inertia_request(ctx.request) {
+    True -> render_json_response(page)
+    False -> render_html_response(page)
+  }
 }
 
 /// Evaluate props based on request type and partial data requirements
@@ -197,8 +158,8 @@ fn evaluate_prop_value(prop_value: PropValue) -> json.Json {
 }
 
 /// Render JSON response for Inertia XHR requests
-fn render_json_response(page: Page) -> Response {
-  let json_body = inertia_json.encode_page(page) |> json.to_string_tree()
+fn render_json_response(page: types.Page) -> Response {
+  let json_body = types.encode_page(page) |> json.to_string_tree()
 
   wisp.json_response(json_body, 200)
   |> wisp.set_header("x-inertia", "true")
@@ -210,28 +171,6 @@ fn render_html_response(page: Page) -> Response {
   let html_body = html.root_template(page, page.component)
 
   wisp.html_response(string_tree.from_string(html_body), 200)
-}
-
-/// Helper to convert string to JSON for props
-pub fn string_prop(value: String) -> json.Json {
-  json.string(value)
-}
-
-/// Helper to convert int to JSON for props
-pub fn int_prop(value: Int) -> json.Json {
-  json.int(value)
-}
-
-/// Helper to convert bool to JSON for props
-pub fn bool_prop(value: Bool) -> json.Json {
-  json.bool(value)
-}
-
-/// Helper to create props dict from list of tuples
-pub fn props_from_list(
-  props: List(#(String, json.Json)),
-) -> Dict(String, json.Json) {
-  dict.from_list(props)
 }
 
 /// Check if current request is an Inertia request
@@ -263,6 +202,16 @@ pub fn assign_error(
   assign_errors(ctx, errors)
 }
 
+/// Set encrypt history flag on context
+pub fn encrypt_history(ctx: InertiaContext) -> InertiaContext {
+  InertiaContext(..ctx, encrypt_history: True)
+}
+
+/// Set clear history flag on context
+pub fn clear_history(ctx: InertiaContext) -> InertiaContext {
+  InertiaContext(..ctx, clear_history: True)
+}
+
 /// Create a redirect response that works with both regular browsers and Inertia XHR requests
 pub fn redirect(_req: Request, to url: String) -> Response {
   wisp.response(303)
@@ -274,58 +223,4 @@ pub fn redirect(_req: Request, to url: String) -> Response {
 pub fn external_redirect(to url: String) -> Response {
   wisp.response(409)
   |> wisp.set_header("x-inertia-location", url)
-}
-
-/// Add uploaded files to the context
-/// Files are validated according to the provided configuration
-pub fn assign_files(ctx: InertiaContext, config: UploadConfig) -> InertiaContext {
-  case uploads.extract_files(ctx.request, config) {
-    Ok(files) -> {
-      // Add files as JSON representation for frontend
-      assign_prop(ctx, "files", uploads.files_to_json(files))
-    }
-    Error(errors) -> {
-      // Add file upload errors
-      assign_errors(ctx, errors)
-    }
-  }
-}
-
-/// Add uploaded files with default configuration
-pub fn assign_files_default(ctx: InertiaContext) -> InertiaContext {
-  assign_files(ctx, uploads.default_upload_config())
-}
-
-/// Extract and validate uploaded files from request
-pub fn get_uploaded_files(
-  req: Request,
-  config: UploadConfig,
-) -> Result(Dict(String, UploadedFile), Dict(String, String)) {
-  uploads.extract_files(req, config)
-}
-
-/// Extract uploaded files with default configuration
-pub fn get_uploaded_files_default(
-  req: Request,
-) -> Result(Dict(String, UploadedFile), Dict(String, String)) {
-  uploads.extract_files(req, uploads.default_upload_config())
-}
-
-/// Create upload configuration helper
-pub fn upload_config(
-  max_file_size max_size: Int,
-  allowed_types types: List(String),
-  max_files max: Int,
-) -> UploadConfig {
-  uploads.upload_config(max_size, types, max)
-}
-
-/// Helper to create file info JSON from uploaded file
-pub fn file_to_json(file: UploadedFile) -> json.Json {
-  uploads.file_to_json(file)
-}
-
-/// Helper to create JSON from multiple uploaded files
-pub fn files_to_json(files: Dict(String, UploadedFile)) -> json.Json {
-  uploads.files_to_json(files)
 }

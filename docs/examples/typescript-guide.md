@@ -39,7 +39,7 @@ Each page component has strongly typed props that correspond to backend handler 
 
 **Backend (Gleam):**
 ```gleam
-inertia_gleam.context(req)
+req
 |> utils.assign_common_props()      // adds auth, csrf_token
 |> inertia_gleam.assign_prop("user", user_data)
 |> inertia_gleam.render("ShowUser")
@@ -134,7 +134,7 @@ Runtime validation ensures backend sends expected data:
 export default function MyPage(props: unknown) {
   // Validates props match expected schema
   const { user, auth } = validatePageProps(MyPagePropsSchema, props);
-  
+
   // TypeScript now knows user and auth are properly typed
   return <div>{user.name}</div>;
 }
@@ -269,7 +269,7 @@ npm run build
 - Cause: Backend added/removed a prop
 - Fix: Update the corresponding TypeScript interface
 
-**Error: Argument of type 'Z' is not assignable**  
+**Error: Argument of type 'Z' is not assignable**
 - Cause: Form data doesn't match expected backend input
 - Fix: Update form interface or backend decoder
 

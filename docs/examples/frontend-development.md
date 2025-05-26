@@ -143,11 +143,11 @@ import { useState, FormEvent } from "react";
 import { router } from "@inertiajs/react";
 import { CreateUserPageProps, CreateUserRequest } from "../types";
 
-export default function CreateUser({ 
-  auth, 
-  csrf_token, 
-  errors = {}, 
-  old = { name: "", email: "" } 
+export default function CreateUser({
+  auth,
+  csrf_token,
+  errors = {},
+  old = { name: "", email: "" }
 }: CreateUserPageProps) {
   const [formData, setFormData] = useState<CreateUserRequest>(old);
 
@@ -165,7 +165,7 @@ export default function CreateUser({
   return (
     <form onSubmit={handleSubmit}>
       <input name="_token" type="hidden" value={csrf_token} />
-      
+
       <div>
         <label htmlFor="name">Name:</label>
         <input
@@ -208,9 +208,9 @@ interface UploadFormPageProps extends BasePageProps {
   allowed_types?: string[];
 }
 
-export default function UploadForm({ 
-  auth, 
-  csrf_token, 
+export default function UploadForm({
+  auth,
+  csrf_token,
   errors = {},
   max_files,
   max_size_mb,
@@ -222,7 +222,7 @@ export default function UploadForm({
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
     validateAndSetFiles(droppedFiles);
   };
@@ -247,7 +247,7 @@ export default function UploadForm({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    
+
     const formData = new FormData();
     formData.append("_token", csrf_token);
     files.forEach((file, index) => {
@@ -274,7 +274,7 @@ export default function UploadForm({
           onChange={handleFileSelect}
           style={{ display: "none" }}
         />
-        
+
         <p>Drop files here or click to browse</p>
         <p>Max {max_files} files, {max_size_mb}MB each</p>
       </div>
@@ -285,8 +285,8 @@ export default function UploadForm({
             <div key={index} className="file-item">
               <span>{file.name}</span>
               <span>{(file.size / 1024).toFixed(1)} KB</span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setFiles(prev => prev.filter((_, i) => i !== index))}
               >
                 ×
@@ -509,7 +509,7 @@ test('renders welcome message', () => {
   };
 
   render(<Home {...props} />);
-  
+
   expect(screen.getByText('Hello World')).toBeInTheDocument();
   expect(screen.getByText('Welcome, John!')).toBeInTheDocument();
 });
@@ -549,7 +549,7 @@ export default function Contact({ email, phone, auth }: ContactPageProps) {
 The corresponding Gleam handler should render this component:
 
 ```gleam
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_prop("email", json.string("contact@example.com"))
 |> inertia_gleam.assign_prop("phone", json.string("555-0123"))
 |> inertia_gleam.render("Contact")

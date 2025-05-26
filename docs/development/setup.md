@@ -84,11 +84,11 @@ case wisp.path_segments(req) {
   _ -> wisp.not_found()
 }
 
-fn new_page(req: wisp.Request) -> wisp.Response {
+fn new_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
   let props = inertia_gleam.props_from_list([
     #("title", inertia_gleam.string_prop("New Page")),
   ])
-  
+
   inertia_gleam.render_inertia_with_props(req, "NewPage", props)
 }
 ```

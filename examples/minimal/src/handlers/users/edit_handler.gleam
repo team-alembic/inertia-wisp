@@ -9,23 +9,32 @@ import types/user.{type CreateUserRequest, type User, CreateUserRequest}
 import validators/user_validator
 import wisp
 
-pub fn edit_user_page(req: wisp.Request, id_str: String) -> wisp.Response {
+pub fn edit_user_page(
+  req: inertia_gleam.InertiaContext,
+  id_str: String,
+) -> wisp.Response {
   case utils.parse_user_id(id_str) {
     Ok(id) -> handle_valid_edit_request(req, id)
     Error(_) -> wisp.not_found()
   }
 }
 
-pub fn update_user(req: wisp.Request, id_str: String) -> wisp.Response {
-  use json_data <- wisp.require_json(req)
+pub fn update_user(
+  ctx: inertia_gleam.InertiaContext,
+  id_str: String,
+) -> wisp.Response {
+  use json_data <- wisp.require_json(ctx.request)
 
   case utils.parse_user_id(id_str) {
-    Ok(id) -> handle_valid_update_request(req, id, id_str, json_data)
+    Ok(id) -> handle_valid_update_request(ctx, id, id_str, json_data)
     Error(_) -> wisp.not_found()
   }
 }
 
-fn handle_valid_edit_request(req: wisp.Request, id: Int) -> wisp.Response {
+fn handle_valid_edit_request(
+  req: inertia_gleam.InertiaContext,
+  id: Int,
+) -> wisp.Response {
   case users.find_user_by_id(id) {
     Ok(user) -> render_edit_page(req, user)
     Error(_) -> wisp.not_found()
@@ -33,7 +42,7 @@ fn handle_valid_edit_request(req: wisp.Request, id: Int) -> wisp.Response {
 }
 
 fn handle_valid_update_request(
-  req: wisp.Request,
+  req: inertia_gleam.InertiaContext,
   id: Int,
   id_str: String,
   json_data,
@@ -46,7 +55,7 @@ fn handle_valid_update_request(
 }
 
 fn process_update_request(
-  req: wisp.Request,
+  req: inertia_gleam.InertiaContext,
   id: Int,
   id_str: String,
   found_user: User,
@@ -60,7 +69,7 @@ fn process_update_request(
 }
 
 fn handle_decoded_update(
-  req: wisp.Request,
+  req: inertia_gleam.InertiaContext,
   id: Int,
   id_str: String,
   found_user: User,
@@ -93,28 +102,34 @@ fn decode_user_request(
   decode.run(json_data, user_decoder)
 }
 
-fn render_edit_page(req: wisp.Request, user: User) -> wisp.Response {
+fn render_edit_page(
+  req: inertia_gleam.InertiaContext,
+  user: User,
+) -> wisp.Response {
   let user_data = utils.serialize_user_data(user)
 
-  inertia_gleam.context(req)
+  req
   |> utils.assign_common_props()
   |> inertia_gleam.assign_prop("user", user_data)
   |> inertia_gleam.render("EditUser")
 }
 
-fn handle_successful_update(req: wisp.Request, id_str: String) -> wisp.Response {
+fn handle_successful_update(
+  req: inertia_gleam.InertiaContext,
+  id_str: String,
+) -> wisp.Response {
   inertia_gleam.redirect(req, "/users/" <> id_str)
 }
 
 fn handle_update_validation_errors(
-  req: wisp.Request,
+  req: inertia_gleam.InertiaContext,
   found_user: User,
   user_request: CreateUserRequest,
   errors: dict.Dict(String, String),
 ) -> wisp.Response {
   let user_data = serialize_user_with_form_data(found_user, user_request)
 
-  inertia_gleam.context(req)
+  req
   |> utils.assign_common_props()
   |> inertia_gleam.assign_errors(errors)
   |> inertia_gleam.assign_prop("user", user_data)

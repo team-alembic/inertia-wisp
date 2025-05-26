@@ -6,10 +6,10 @@ import inertia_gleam
 import types/user.{type User}
 import wisp
 
-pub fn users_page(req: wisp.Request) -> wisp.Response {
+pub fn users_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
   let users_data = get_users_data()
 
-  inertia_gleam.context(req)
+  req
   |> utils.assign_common_props()
   |> inertia_gleam.assign_prop("users", users_data)
   |> inertia_gleam.render("Users")

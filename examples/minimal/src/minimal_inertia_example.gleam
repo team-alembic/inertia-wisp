@@ -6,6 +6,7 @@ import gleam/list
 import handlers/uploads
 import handlers/users
 import inertia_gleam
+import inertia_gleam/types.{Config}
 import mist
 import wisp
 import wisp/wisp_mist
@@ -25,27 +26,29 @@ pub fn main() {
 
 fn handle_request(req: wisp.Request) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use req <- inertia_gleam.inertia_middleware(req)
+  use ctx <- inertia_gleam.inertia_middleware(
+    req,
+    inertia_gleam.default_config(),
+  )
 
   case wisp.path_segments(req), req.method {
-    [], http.Get -> home_page(req)
-    ["about"], http.Get -> about_page(req)
-    ["users"], http.Get -> users.users_page(req)
-    ["users", "create"], http.Get -> users.create_user_page(req)
-    ["users"], http.Post -> users.create_user(req)
-    ["users", id], http.Get -> users.show_user_page(req, id)
-    ["users", id, "edit"], http.Get -> users.edit_user_page(req, id)
-    ["users", id], http.Post -> users.update_user(req, id)
-    ["users", id, "delete"], http.Post -> users.delete_user(req, id)
-    ["upload"], http.Get -> uploads.upload_form_page(req)
-    ["upload"], http.Post -> uploads.handle_file_upload(req)
-    ["upload", "progress"], http.Get -> uploads.progress_endpoint(req)
+    [], http.Get -> home_page(ctx)
+    ["about"], http.Get -> about_page(ctx)
+    ["versioned"], http.Get -> versioned_page(ctx)
+    ["users"], http.Get -> users.users_page(ctx)
+    ["users", "create"], http.Get -> users.create_user_page(ctx)
+    ["users"], http.Post -> users.create_user(ctx)
+    ["users", id], http.Get -> users.show_user_page(ctx, id)
+    ["users", id, "edit"], http.Get -> users.edit_user_page(ctx, id)
+    ["users", id], http.Post -> users.update_user(ctx, id)
+    ["users", id, "delete"], http.Post -> users.delete_user(ctx, id)
+    ["upload"], http.Get -> uploads.upload_form_page(ctx)
     _, _ -> wisp.not_found()
   }
 }
 
-fn home_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+fn home_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> inertia_gleam.assign_always_props([
     #(
       "auth",
@@ -64,8 +67,25 @@ fn home_page(req: wisp.Request) -> wisp.Response {
   |> inertia_gleam.render("Home")
 }
 
-fn about_page(req: wisp.Request) -> wisp.Response {
-  inertia_gleam.context(req)
+/// Example of using asset versioning with custom config
+fn versioned_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  // Create config with custom version (in real app, this might come from build system)
+  let config =
+    Config(..inertia_gleam.default_config(), version: "v2.1.0-abc123")
+
+  req
+  |> inertia_gleam.set_config(config)
+  |> inertia_gleam.assign_prop("title", json.string("Asset Versioning Demo"))
+  |> inertia_gleam.assign_prop("version", json.string(config.version))
+  |> inertia_gleam.assign_prop(
+    "message",
+    json.string("This page uses custom asset versioning"),
+  )
+  |> inertia_gleam.render("VersionedPage")
+}
+
+fn about_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+  req
   |> inertia_gleam.assign_always_props([
     #(
       "auth",

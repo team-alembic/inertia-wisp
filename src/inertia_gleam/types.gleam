@@ -1,5 +1,6 @@
 import gleam/dict.{type Dict}
 import gleam/json
+import wisp
 
 /// Represents an Inertia.js page object
 /// Page data to be sent to the client
@@ -9,7 +10,21 @@ pub type Page {
     props: Dict(String, json.Json),
     url: String,
     version: String,
+    encrypt_history: Bool,
+    clear_history: Bool,
   )
+}
+
+/// Encode a Page object to JSON
+pub fn encode_page(page: Page) -> json.Json {
+  json.object([
+    #("component", json.string(page.component)),
+    #("props", json.object(dict.to_list(page.props))),
+    #("url", json.string(page.url)),
+    #("version", json.string(page.version)),
+    #("encryptHistory", json.bool(page.encrypt_history)),
+    #("clearHistory", json.bool(page.clear_history)),
+  ])
 }
 
 /// Prop value that can be either eager or lazy
@@ -20,36 +35,43 @@ pub type PropValue {
 
 /// Configuration for the Inertia adapter
 pub type Config {
-  Config(version: String, ssr: Bool, always_props: Dict(String, PropValue))
-}
-
-/// Internal request state for Inertia processing
-/// State to track Inertia request information
-pub type InertiaState {
-  InertiaState(
-    is_inertia: Bool,
-    partial_data: List(String),
-    props: Dict(String, PropValue),
+  Config(
+    version: String,
+    ssr: Bool,
+    always_props: Dict(String, PropValue),
+    encrypt_history: Bool,
   )
 }
 
 /// Default configuration
 pub fn default_config() -> Config {
-  Config(version: "1", ssr: False, always_props: dict.new())
+  Config(
+    version: "1",
+    ssr: False,
+    always_props: dict.new(),
+    encrypt_history: False,
+  )
 }
 
-/// Create a new page object
-pub fn new_page(
-  component: String,
-  props: Dict(String, json.Json),
-  url: String,
-  version: String,
-) -> Page {
-  Page(component: component, props: props, url: url, version: version)
+/// Context wrapper for building up props before rendering
+pub type InertiaContext {
+  InertiaContext(
+    config: Config,
+    request: wisp.Request,
+    props: Dict(String, PropValue),
+    always_props: Dict(String, PropValue),
+    encrypt_history: Bool,
+    clear_history: Bool,
+  )
 }
 
-/// Create initial Inertia state
-/// Create initial state for Inertia processing
-pub fn initial_state() -> InertiaState {
-  InertiaState(is_inertia: False, partial_data: [], props: dict.new())
+pub fn new_context(config, request) {
+  InertiaContext(
+    config: config,
+    request: request,
+    props: dict.new(),
+    always_props: dict.new(),
+    encrypt_history: config.encrypt_history,
+    clear_history: False,
+  )
 }

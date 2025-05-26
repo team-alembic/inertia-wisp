@@ -8,7 +8,7 @@ We have successfully completed Phase 3 of the Inertia.js Gleam port! The compreh
 
 ### Core Form Handling
 - **Form Submissions**: POST requests handled seamlessly through Inertia
-- **Redirects**: Both internal and external redirects work correctly 
+- **Redirects**: Both internal and external redirects work correctly
 - **Validation Integration**: Comprehensive validation error handling and display
 - **Flash Messages**: Error and success message patterns implemented
 
@@ -31,7 +31,7 @@ We have successfully completed Phase 3 of the Inertia.js Gleam port! The compreh
 ```bash
 # Validation error handling
 pub fn assign_errors_test()
-pub fn assign_single_error_test() 
+pub fn assign_single_error_test()
 pub fn multiple_errors_test()
 
 # Form submission workflows
@@ -99,7 +99,7 @@ pub fn get_uploaded_files_empty_test()
 inertia_gleam.redirect(req, "/users")
 
 // Handle validation errors
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_errors(validation_errors)
 |> inertia_gleam.assign_prop("old", form_data)
 |> inertia_gleam.render("CreateForm")
@@ -108,7 +108,7 @@ inertia_gleam.context(req)
 ### File Upload API
 ```gleam
 // Default file upload handling
-inertia_gleam.context(req)
+req
 |> inertia_gleam.assign_files_default()
 |> inertia_gleam.render("UploadForm")
 
