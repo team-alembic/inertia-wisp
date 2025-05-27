@@ -8,76 +8,24 @@ SSR in Inertia Gleam uses a supervised pool of Node.js processes to render React
 
 ## Prerequisites
 
-1. **Elixir Environment**: SSR requires running in an Elixir Mix project, not pure Gleam
+1. **Gleam Project**: SSR works with standard Gleam projects using gleam.toml
 2. **Node.js**: Version 18 or higher
-3. **Elixir nodejs package**: For managing Node.js worker processes
+3. **nodejs package**: Gleam package for managing Node.js worker processes
 
-## Step 1: Elixir Mix Project Setup
+## Step 1: Project Dependencies
 
-Convert your Gleam project to use Elixir Mix:
+Add the required dependencies to your `gleam.toml`:
 
-### Create mix.exs
-
-```elixir
-defmodule MinimalInertiaExample.MixProject do
-  use Mix.Project
-
-  def project do
-    [
-      app: :minimal_inertia_example,
-      version: "0.1.0",
-      elixir: "~> 1.14",
-      start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      aliases: aliases()
-    ]
-  end
-
-  def application do
-    [
-      extra_applications: [:logger],
-      mod: {MinimalInertiaExample.Application, []}
-    ]
-  end
-
-  defp deps do
-    [
-      {:gleam_stdlib, "~> 0.60"},
-      {:gleam_otp, "~> 0.15"},
-      {:gleam_http, "~> 4.0"},
-      {:gleam_json, "~> 3.0"},
-      {:wisp, "~> 1.7"},
-      {:mist, "~> 2.0"},
-      {:nodejs, "~> 2.0"},
-      {:inertia_gleam, path: "../../"}
-    ]
-  end
-
-  defp aliases do
-    [
-      "gleam.build": ["cmd gleam build"],
-      "gleam.run": ["cmd gleam run"]
-    ]
-  end
-end
-```
-
-### Create application.ex
-
-```elixir
-defmodule MinimalInertiaExample.Application do
-  use Application
-
-  def start(_type, _args) do
-    children = [
-      # Start the NodeJS supervisor for SSR
-      {NodeJS.Supervisor, [path: Path.join([File.cwd!(), "ssr"]), pool_size: 4]}
-    ]
-
-    opts = [strategy: :one_for_one, name: MinimalInertiaExample.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
-end
+```toml
+[dependencies]
+gleam_stdlib = ">= 0.60.0"
+gleam_http = ">= 4.0.0"
+gleam_json = ">= 3.0.0"
+wisp = ">= 1.7.0"
+inertia_gleam = "~> 1.0"
+nodejs = ">= 3.1.3 and < 4.0.0"
+gleam_otp = ">= 0.15.0 and < 1.0.0"
+mist = ">= 2.0.0"
 ```
 
 ## Step 2: Frontend SSR Bundle
@@ -125,45 +73,53 @@ export function render(page: any) {
 Update your main application to use SSR:
 
 ```gleam
+import gleam/erlang/process
+import gleam/option
+import inertia_gleam
 import inertia_gleam/ssr
-import inertia_gleam/ssr/config as ssr_config
+import inertia_gleam/types
+import wisp
 
 pub fn main() {
   wisp.configure_logger()
 
-  // Start SSR supervisor
+  // Start SSR supervisor with graceful fallback
   let ssr_supervisor = case start_ssr_supervisor() {
     Ok(supervisor) -> {
-      wisp.log_info("SSR enabled")
+      wisp.log_info("SSR supervisor started successfully")
       option.Some(supervisor)
     }
     Error(error) -> {
-      wisp.log_info("SSR not available: " <> error)
+      wisp.log_info("SSR not available, falling back to CSR: " <> error)
       option.None
     }
   }
 
-  // ... rest of application setup
+  // ... rest of application setup with ssr_supervisor
 }
 
 fn start_ssr_supervisor() {
-  let config = ssr_config.SSRConfig(
-    enabled: True,
-    path: "./ssr",
-    module: "ssr",
-    pool_size: 2,
-    timeout_ms: 5000,
-    raise_on_failure: False,
-    supervisor_name: "InertiaSSR",
-  )
+  let config =
+    types.SSRConfig(
+      enabled: True,
+      path: "./ssr",
+      module: "ssr",
+      pool_size: 2,
+      timeout_ms: 5000,
+      raise_on_failure: False,
+      supervisor_name: "InertiaSSR",
+    )
   
   ssr.start_supervisor(config)
 }
 
-fn handle_request(req, ssr_supervisor) {
-  use ctx <- inertia_gleam.inertia_middleware(req, config)
+fn handle_request(
+  req: wisp.Request,
+  ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
+) -> wisp.Response {
+  use ctx <- inertia_gleam.inertia_middleware(req, inertia_gleam.default_config())
   
-  // Enable SSR if available
+  // Enable SSR if supervisor is available
   let ctx = case ssr_supervisor {
     option.Some(supervisor) -> 
       ctx
@@ -176,7 +132,43 @@ fn handle_request(req, ssr_supervisor) {
 }
 ```
 
-## Step 4: Build and Run
+## Step 4: SSR Configuration Options
+
+### Using Configuration Helpers
+
+For common scenarios, use the built-in configuration helpers:
+
+```gleam
+import inertia_gleam/ssr/config
+
+// Development configuration
+let dev_config = 
+  config.development()
+  |> config.with_path("./ssr")
+  |> config.with_module("ssr")
+
+// Production configuration  
+let prod_config =
+  config.production()
+  |> config.with_path("./ssr")
+  |> config.with_module("ssr")
+```
+
+### Manual Configuration
+
+```gleam
+let custom_config = types.SSRConfig(
+  enabled: True,
+  path: "./ssr",           // Path to SSR bundle directory
+  module: "ssr",           // Module name (without .js extension)
+  pool_size: 4,           // Number of Node.js workers
+  timeout_ms: 5000,       // Render timeout in milliseconds
+  raise_on_failure: False, // Whether to raise or fallback on errors
+  supervisor_name: "InertiaSSR", // Process name
+)
+```
+
+## Step 5: Build and Run
 
 ```bash
 # Install frontend dependencies
@@ -185,14 +177,11 @@ cd frontend && npm install
 # Build frontend bundles (including SSR)
 npm run build
 
-# Install Elixir dependencies
-cd .. && mix deps.get
-
-# Compile Gleam code
-mix gleam.build
+# Install Gleam dependencies
+cd .. && gleam deps download
 
 # Run with SSR
-mix run --no-halt
+gleam run
 ```
 
 ## How It Works
@@ -214,14 +203,14 @@ If SSR fails for any reason:
 - **Pool Size**: Start with 2-4 workers, adjust based on traffic
 - **Timeout**: 5 seconds is reasonable, adjust based on component complexity
 - **Memory**: Each Node.js worker uses ~30-50MB memory
-- **Caching**: Consider caching rendered components for static content
+- **Path**: Default path is "priv", change to "./ssr" for development
 
 ## Troubleshooting
 
 ### SSR Supervisor Fails to Start
-- Ensure you're running in an Elixir Mix project
-- Check that `nodejs` dependency is installed
-- Verify SSR bundle exists at configured path
+- Ensure Node.js is installed and accessible
+- Check that SSR bundle exists at configured path
+- Verify module name matches the exported file
 
 ### Render Errors
 - Check Node.js console output for JavaScript errors
@@ -237,13 +226,25 @@ If SSR fails for any reason:
 
 ### Development
 ```gleam
-ssr_config.development() // Raises errors, longer timeout
+config.development() // Raises errors, longer timeout, fewer workers
 ```
 
 ### Production
 ```gleam
-ssr_config.production() // Graceful fallback, more workers
+config.production() // Graceful fallback, shorter timeout, more workers
 ```
+
+## Configuration Reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | Bool | False | Whether SSR is globally enabled |
+| `path` | String | "priv" | Directory containing SSR bundle |
+| `module` | String | "ssr" | Node.js module name (no .js) |
+| `pool_size` | Int | 4 | Number of Node.js workers |
+| `timeout_ms` | Int | 5000 | Render timeout in milliseconds |
+| `raise_on_failure` | Bool | False | Raise exceptions vs fallback |
+| `supervisor_name` | String | "InertiaSSR" | Process name |
 
 ## Example Output
 

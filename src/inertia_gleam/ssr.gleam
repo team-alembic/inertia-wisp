@@ -12,14 +12,16 @@ import inertia_gleam/types.{type SSRConfig, type SSRMessage}
 pub fn start_supervisor(
   ssr_config: SSRConfig,
 ) -> Result(Subject(SSRMessage), String) {
-  use validated_config <- result.try(validate_config_with_detailed_errors(ssr_config))
+  use validated_config <- result.try(validate_config_with_detailed_errors(
+    ssr_config,
+  ))
   use sup <- result.try(
     supervisor.start_link(validated_config)
-    |> result.map_error(fn(_) { "Failed to start supervisor" })
+    |> result.map_error(fn(_) { "Failed to start supervisor" }),
   )
   use _ <- result.try(
     supervisor.start_nodejs(sup)
-    |> result.map_error(fn(_) { "Failed to start Node.js workers" })
+    |> result.map_error(fn(_) { "Failed to start Node.js workers" }),
   )
   Ok(sup)
 }
@@ -66,8 +68,8 @@ pub fn render_page_with_supervisor(
       let page_data = create_page_data(component, props, url, version)
       case supervisor.render_page(supervisor, page_data, component) {
         Ok(response) -> types.SSRSuccess(response)
-        Error(ssr_error) -> {
-          echo ssr_error
+        Error(_ssr_error) -> {
+          // echo ssr_error
           handle_render_error("Render failed: ", status.config.raise_on_failure)
         }
       }

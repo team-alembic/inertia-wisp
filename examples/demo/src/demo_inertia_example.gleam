@@ -17,19 +17,10 @@ pub fn main() {
   wisp.configure_logger()
 
   // Start SSR supervisor with graceful fallback
-  let ssr_supervisor = case start_ssr_supervisor() {
-    Ok(supervisor) -> {
-      wisp.log_info("SSR supervisor started successfully")
-      option.Some(supervisor)
-    }
-    Error(error) -> {
-      wisp.log_info("SSR not available, falling back to CSR: " <> error)
-      option.None
-    }
-  }
+  let ssr_supervisor = start_ssr_supervisor()
 
   let assert Ok(_) =
-    fn(req) { handle_request(req, ssr_supervisor) }
+    handle_request(_, ssr_supervisor)
     |> wisp_mist.handler("secret_key_change_me_in_production")
     |> mist.new
     |> mist.port(8000)
@@ -50,7 +41,16 @@ fn start_ssr_supervisor() {
       supervisor_name: "InertiaSSR",
     )
 
-  ssr.start_supervisor(config)
+  case ssr.start_supervisor(config) {
+    Ok(supervisor) -> {
+      wisp.log_info("SSR supervisor started successfully")
+      option.Some(supervisor)
+    }
+    Error(error) -> {
+      wisp.log_info("SSR not available, falling back to CSR: " <> error)
+      option.None
+    }
+  }
 }
 
 fn handle_request(
@@ -61,21 +61,8 @@ fn handle_request(
   use ctx <- inertia_gleam.inertia_middleware(
     req,
     inertia_gleam.default_config(),
+    ssr_supervisor,
   )
-
-  // Enable SSR for this context if supervisor is available
-  let ctx = case ssr_supervisor {
-    option.Some(supervisor) -> {
-      wisp.log_info("Using SSR for request")
-      ctx
-      |> inertia_gleam.enable_ssr()
-      |> inertia_gleam.with_ssr_supervisor(supervisor)
-    }
-    option.None -> {
-      wisp.log_info("Using CSR for request")
-      ctx
-    }
-  }
 
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx)

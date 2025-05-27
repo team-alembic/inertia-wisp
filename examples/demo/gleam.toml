@@ -1,9 +1,7 @@
-name = "minimal_inertia_example"
+name = "demo_inertia_example"
 version = "1.0.0"
-description = "Minimal example using inertia-gleam"
+description = "Demo example using inertia-gleam"
 target = "erlang"
-
-application_start_module = "src/main"
 
 [dependencies]
 gleam_stdlib = ">= 0.60.0"

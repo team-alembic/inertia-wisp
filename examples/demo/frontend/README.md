@@ -1,6 +1,6 @@
 # Frontend
 
-React + TypeScript frontend for the minimal Inertia Gleam example.
+React + TypeScript frontend for the demo Inertia Gleam example.
 
 ## Setup
 

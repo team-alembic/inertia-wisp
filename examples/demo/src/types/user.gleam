@@ -1,4 +1,4 @@
-// User-related types for the minimal inertia example
+// User-related types for the demo inertia example
 
 pub type User {
   User(id: Int, name: String, email: String)

@@ -29,9 +29,10 @@ pub fn set_config(context: types.InertiaContext, config: Config) {
 pub fn inertia_middleware(
   req: Request,
   config: types.Config,
+  ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
   handler: fn(InertiaContext) -> Response,
 ) -> Response {
-  middleware.inertia_middleware(req, config, handler)
+  middleware.inertia_middleware(req, config, ssr_supervisor, handler)
 }
 
 // Controller functions

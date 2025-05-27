@@ -1,14 +1,17 @@
+import gleam/erlang/process.{type Subject}
 import gleam/http/request
 import gleam/list
+import gleam/option.{type Option}
 import gleam/string
-import inertia_gleam/types.{type Config, type InertiaContext}
+import inertia_gleam/types.{type Config, type InertiaContext, type SSRMessage}
 import inertia_gleam/version
 import wisp.{type Request, type Response}
 
-/// Middleware to detect and process Inertia requests with config
+/// Middleware to detect and process Inertia requests with config and optional SSR
 pub fn inertia_middleware(
   req: Request,
   config: Config,
+  ssr_supervisor: Option(Subject(SSRMessage)),
   handler: fn(InertiaContext) -> Response,
 ) -> Response {
   let is_inertia_request = is_inertia_request(req)
@@ -17,6 +20,15 @@ pub fn inertia_middleware(
     True -> version.version_mismatch_response()
     False -> {
       let context = types.new_context(config, req)
+      // Configure SSR if supervisor is available
+      let context = case ssr_supervisor {
+        option.Some(supervisor) -> {
+          context
+          |> enable_ssr()
+          |> with_ssr_supervisor(supervisor)
+        }
+        option.None -> context
+      }
       let response = handler(context)
       case is_inertia_request {
         True -> add_inertia_headers(response)
@@ -47,4 +59,18 @@ pub fn get_partial_data(req: Request) -> List(String) {
     Ok(data) -> string.split(data, ",") |> list.map(string.trim)
     _ -> []
   }
+}
+
+/// Enable SSR for the given context
+fn enable_ssr(ctx: InertiaContext) -> InertiaContext {
+  let new_config = types.Config(..ctx.config, ssr: True)
+  types.InertiaContext(..ctx, config: new_config)
+}
+
+/// Set the SSR supervisor for the given context
+fn with_ssr_supervisor(
+  ctx: InertiaContext,
+  supervisor: Subject(SSRMessage),
+) -> InertiaContext {
+  types.InertiaContext(..ctx, ssr_supervisor: option.Some(supervisor))
 }

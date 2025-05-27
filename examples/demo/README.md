@@ -1,4 +1,4 @@
-# Minimal Inertia Gleam Example
+# Demo Inertia Gleam Example
 
 A complete demonstration of the `inertia-gleam` library with React frontend components, showcasing forms, validation, file uploads, and CRUD operations.
 
@@ -57,7 +57,7 @@ For full SSR setup in production:
 ## Project Structure
 
 ```
-minimal/
+demo/
 ├── src/                     # Gleam backend
 ├── frontend/src/Pages/      # React components  
 ├── static/js/               # Built assets

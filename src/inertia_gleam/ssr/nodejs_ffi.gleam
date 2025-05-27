@@ -68,13 +68,9 @@ pub fn call_render(
   ]
   let dynamic_module = to_dynamic(module_tuple)
 
-  echo dynamic_module
-  echo args
-  echo opts
-
   nodejs_call(dynamic_module, args, opts)
-  |> result.map_error(fn(err) {
-    echo err
+  |> result.map_error(fn(_err) {
+    // echo err
     NodeCallError("SSR render failed")
   })
   |> result.then(fn(ssr_result) {
@@ -84,8 +80,8 @@ pub fn call_render(
       decode.success(SSRResponse(head, body))
     }
     decode.run(ssr_result, decoder)
-    |> result.map_error(fn(err) {
-      echo err
+    |> result.map_error(fn(_err) {
+      // echo err
       NodeCallError("SSR result decode failed")
     })
   })
