@@ -3,6 +3,7 @@ import gleam/result
 
 /// External types for Erlang/Elixir interop
 pub type Atom
+
 pub type Pid
 
 /// FFI errors that can occur when calling Node.js
@@ -14,19 +15,21 @@ pub type FFIError {
 
 /// Configuration for starting a Node.js supervisor
 pub type NodeSupervisorConfig {
-  NodeSupervisorConfig(
-    path: String,
-    pool_size: Int,
-    name: String,
-  )
+  NodeSupervisorConfig(path: String, pool_size: Int, name: String)
 }
 
 // Direct FFI calls to NodeJS Elixir package
 @external(erlang, "Elixir.NodeJS.Supervisor", "start_link")
-fn nodejs_supervisor_start_link(opts: List(#(Atom, Dynamic))) -> Result(Pid, Dynamic)
+fn nodejs_supervisor_start_link(
+  opts: List(#(Atom, Dynamic)),
+) -> Result(Pid, Dynamic)
 
 @external(erlang, "Elixir.NodeJS", "call")
-fn nodejs_call(module: Dynamic, args: List(Dynamic), opts: List(#(Atom, Dynamic))) -> Result(String, Dynamic)
+fn nodejs_call(
+  module: Dynamic,
+  args: List(Dynamic),
+  opts: List(#(Atom, Dynamic)),
+) -> Result(String, Dynamic)
 
 // Helper to create atoms from strings
 @external(erlang, "erlang", "binary_to_atom")
@@ -37,9 +40,9 @@ pub fn start_supervisor(config: NodeSupervisorConfig) -> Result(Pid, FFIError) {
   let opts = [
     #(atom_from_string("path"), to_dynamic(config.path)),
     #(atom_from_string("pool_size"), to_dynamic(config.pool_size)),
-    #(atom_from_string("name"), to_dynamic(atom_from_string(config.name)))
+    #(atom_from_string("name"), to_dynamic(atom_from_string(config.name))),
   ]
-  
+
   nodejs_supervisor_start_link(opts)
   |> result.map_error(fn(_err) {
     SupervisorStartError("Failed to start NodeJS supervisor")
@@ -48,10 +51,10 @@ pub fn start_supervisor(config: NodeSupervisorConfig) -> Result(Pid, FFIError) {
 
 /// Call the render function in a Node.js module
 pub fn call_render(
-  module: String, 
-  page_json: String, 
+  module: String,
+  page_json: String,
   supervisor_name: String,
-  timeout_ms: Int
+  timeout_ms: Int,
 ) -> Result(String, FFIError) {
   // Create {module, "render"} tuple for the function call
   let module_tuple = #(module, "render")
@@ -59,11 +62,12 @@ pub fn call_render(
   let opts = [
     #(atom_from_string("binary"), to_dynamic(True)),
     #(atom_from_string("name"), to_dynamic(atom_from_string(supervisor_name))),
-    #(atom_from_string("timeout"), to_dynamic(timeout_ms))
+    #(atom_from_string("timeout"), to_dynamic(timeout_ms)),
   ]
-  
+
   nodejs_call(to_dynamic(module_tuple), args, opts)
-  |> result.map_error(fn(_err) {
+  |> result.map_error(fn(err) {
+    echo err
     NodeCallError("SSR render failed")
   })
 }
@@ -76,7 +80,7 @@ pub fn supervisor_running(_name: String) -> Bool {
 }
 
 // Helper to convert any value to Dynamic
-@external(erlang, "erlang", "identity")
+@external(erlang, "gleam@dynamic", "from")
 fn to_dynamic(value: a) -> Dynamic
 
 /// Convert a Gleam string to an Erlang atom

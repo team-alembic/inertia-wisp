@@ -1,7 +1,8 @@
 import gleam/int
 import gleam/json
+import gleam/erlang/process.{type Subject}
 import inertia_gleam/ssr/config.{type SSRConfig}
-import inertia_gleam/ssr/nodejs_ffi
+import inertia_gleam/ssr/supervisor.{type Message}
 
 /// Result of an SSR rendering attempt
 pub type SSRResult {
@@ -13,87 +14,67 @@ pub type SSRResult {
   SSRError(error: String)
 }
 
-/// SSR-specific errors
-pub type SSRError {
-  NotInitialized
-  RenderTimeout(Int)
-  WorkerUnavailable
-  SerializationFailed(String)
-  ConfigurationInvalid(String)
-}
 
 
 
-/// Initialize SSR with the given configuration
-pub fn initialize(ssr_config: SSRConfig) -> Result(Nil, SSRError) {
+/// Start the SSR supervisor with the given configuration
+pub fn start_supervisor(ssr_config: SSRConfig) -> Result(Subject(Message), String) {
   case config.validate(ssr_config) {
     Ok(validated_config) -> {
-      let node_config = nodejs_ffi.NodeSupervisorConfig(
-        path: validated_config.path,
-        pool_size: validated_config.pool_size,
-        name: validated_config.supervisor_name,
-      )
-      
-      case nodejs_ffi.start_supervisor(node_config) {
-        Ok(_) -> Ok(Nil)
-        Error(nodejs_ffi.SupervisorStartError(msg)) -> 
-          Error(ConfigurationInvalid("Failed to start supervisor: " <> msg))
-        Error(_) -> 
-          Error(ConfigurationInvalid("Unknown supervisor error"))
+      case supervisor.start_link(validated_config) {
+        Ok(sup) -> {
+          // Start the Node.js workers
+          case supervisor.start_nodejs(sup) {
+            Ok(_) -> Ok(sup)
+            Error(_) -> Error("Failed to start Node.js workers")
+          }
+        }
+        Error(_) -> Error("Failed to start supervisor")
       }
     }
     Error(config.InvalidPoolSize(size)) -> 
-      Error(ConfigurationInvalid("Invalid pool size: " <> int.to_string(size)))
+      Error("Invalid pool size: " <> int.to_string(size))
     Error(config.InvalidTimeout(timeout)) -> 
-      Error(ConfigurationInvalid("Invalid timeout: " <> int.to_string(timeout)))
+      Error("Invalid timeout: " <> int.to_string(timeout))
     Error(config.InvalidModuleName(name)) -> 
-      Error(ConfigurationInvalid("Invalid module name: " <> name))
+      Error("Invalid module name: " <> name)
     Error(config.InvalidPath(path)) -> 
-      Error(ConfigurationInvalid("Invalid path: " <> path))
+      Error("Invalid path: " <> path)
   }
 }
 
 /// Check if SSR is enabled and available
-pub fn is_enabled() -> Bool {
-  // For now, return False since we don't have global state management
-  // In Phase 2, this will check the supervisor state
-  False
+pub fn is_enabled(supervisor: Subject(Message)) -> Bool {
+  let status = supervisor.get_status(supervisor)
+  status.enabled && status.supervisor_running
 }
 
 /// Check if the SSR supervisor is running  
-pub fn is_supervisor_running() -> Bool {
-  // For now, use default supervisor name
-  nodejs_ffi.supervisor_running("InertiaSSR")
+pub fn is_supervisor_running(supervisor: Subject(Message)) -> Bool {
+  let status = supervisor.get_status(supervisor)
+  status.supervisor_running
 }
 
-/// Render a page using SSR with explicit configuration
-pub fn render_page_with_config(
+/// Render a page using SSR with explicit supervisor
+pub fn render_page_with_supervisor(
+  supervisor: Subject(Message),
   component: String,
   props: json.Json,
   url: String,
-  version: String,
-  ssr_config: SSRConfig
+  version: String
 ) -> SSRResult {
-  case ssr_config.enabled {
+  let status = supervisor.get_status(supervisor)
+  case status.enabled {
     False -> SSRFallback("SSR not enabled")
     True -> {
       let page_data = create_page_data(component, props, url, version)
       
       case serialize_page_data(page_data) {
         Ok(page_json) -> {
-          case nodejs_ffi.call_render(
-            ssr_config.module,
-            page_json,
-            ssr_config.supervisor_name,
-            ssr_config.timeout_ms
-          ) {
+          case supervisor.render_page(supervisor, page_json, component) {
             Ok(html) -> SSRSuccess(html)
-            Error(nodejs_ffi.NodeCallError(msg)) -> 
-              handle_render_error(msg, ssr_config.raise_on_failure)
-            Error(nodejs_ffi.SerializationError(msg)) ->
-              SSRFallback("Serialization failed: " <> msg)
-            Error(_) ->
-              SSRFallback("Unknown render error")
+            Error(_) -> 
+              handle_render_error("Render failed", status.config.raise_on_failure)
           }
         }
         Error(msg) -> SSRFallback("Failed to serialize page data: " <> msg)
@@ -102,14 +83,16 @@ pub fn render_page_with_config(
   }
 }
 
-/// Render a page using SSR with default configuration
+/// Render a page using SSR - requires explicit supervisor
+/// For convenience, use render_page_with_supervisor instead
 pub fn render_page(
+  supervisor: Subject(Message),
   component: String,
   props: json.Json,
   url: String,
   version: String
 ) -> SSRResult {
-  render_page_with_config(component, props, url, version, config.default())
+  render_page_with_supervisor(supervisor, component, props, url, version)
 }
 
 /// Create page data structure expected by Inertia.js SSR
@@ -146,9 +129,30 @@ pub fn get_default_config() -> SSRConfig {
 }
 
 /// Validate an SSR configuration
-pub fn validate_config(ssr_config: SSRConfig) -> Result(SSRConfig, SSRError) {
+pub fn validate_config(ssr_config: SSRConfig) -> Result(SSRConfig, String) {
   case config.validate(ssr_config) {
     Ok(validated) -> Ok(validated)
-    Error(_) -> Error(ConfigurationInvalid("Invalid configuration"))
+    Error(_) -> Error("Invalid configuration")
+  }
+}
+
+/// Get current SSR status
+pub fn get_status(supervisor: Subject(Message)) -> supervisor.SSRStatus {
+  supervisor.get_status(supervisor)
+}
+
+/// Update SSR configuration
+pub fn update_config(supervisor: Subject(Message), new_config: SSRConfig) -> Result(Nil, String) {
+  case supervisor.update_config(supervisor, new_config) {
+    Ok(result) -> Ok(result)
+    Error(_) -> Error("Failed to update configuration")
+  }
+}
+
+/// Stop SSR supervisor
+pub fn stop(supervisor: Subject(Message)) -> Result(Nil, String) {
+  case supervisor.stop_nodejs(supervisor) {
+    Ok(result) -> Ok(result)
+    Error(_) -> Error("Failed to stop Node.js workers")
   }
 }
