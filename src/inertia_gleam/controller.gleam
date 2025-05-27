@@ -177,23 +177,35 @@ fn render_html_response(page: Page) -> Response {
 }
 
 /// Render HTML response with SSR check at the final moment
-fn render_html_response_with_ssr_check(page: Page, ctx: InertiaContext) -> Response {
+fn render_html_response_with_ssr_check(
+  page: Page,
+  ctx: InertiaContext,
+) -> Response {
   // Check if SSR is enabled and supervisor is available
   let should_use_ssr = ctx.config.ssr && option.is_some(ctx.ssr_supervisor)
-  
+
   case should_use_ssr {
     True -> {
       case ctx.ssr_supervisor {
         option.Some(supervisor) -> {
           // Try SSR render with the fully evaluated page
           let _page_json = types.encode_page(page) |> json.to_string()
-          
-          case ssr.render_page(supervisor, page.component, json.object(dict.to_list(page.props)), page.url, page.version) {
-            ssr.SSRSuccess(html) -> {
-              // SSR successful - return the rendered HTML
-              wisp.html_response(string_tree.from_string(html), 200)
+
+          case
+            ssr.render_page(
+              supervisor,
+              page.component,
+              json.object(dict.to_list(page.props)),
+              page.url,
+              page.version,
+            )
+          {
+            types.SSRSuccess(ssr_response) -> {
+              // SSR successful - return the rendered HTML with SSR template
+              let html_body = html.ssr_template(ssr_response, page)
+              wisp.html_response(string_tree.from_string(html_body), 200)
             }
-            ssr.SSRFallback(_reason) | ssr.SSRError(_error) -> {
+            types.SSRFallback(_reason) | types.SSRError(_error) -> {
               // SSR failed - fall back to CSR
               render_html_response(page)
             }

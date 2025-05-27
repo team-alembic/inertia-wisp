@@ -3,9 +3,11 @@ import gleam/erlang/process
 import gleam/http
 import gleam/json
 import gleam/list
+import gleam/option
 import handlers/uploads
 import handlers/users
 import inertia_gleam
+import inertia_gleam/ssr
 import inertia_gleam/types.{Config}
 import mist
 import wisp
@@ -14,8 +16,20 @@ import wisp/wisp_mist
 pub fn main() {
   wisp.configure_logger()
 
+  // Start SSR supervisor with graceful fallback
+  let ssr_supervisor = case start_ssr_supervisor() {
+    Ok(supervisor) -> {
+      wisp.log_info("SSR supervisor started successfully")
+      option.Some(supervisor)
+    }
+    Error(error) -> {
+      wisp.log_info("SSR not available, falling back to CSR: " <> error)
+      option.None
+    }
+  }
+
   let assert Ok(_) =
-    fn(req) { handle_request(req) }
+    fn(req) { handle_request(req, ssr_supervisor) }
     |> wisp_mist.handler("secret_key_change_me_in_production")
     |> mist.new
     |> mist.port(8000)
@@ -24,12 +38,44 @@ pub fn main() {
   process.sleep_forever()
 }
 
-fn handle_request(req: wisp.Request) -> wisp.Response {
+fn start_ssr_supervisor() {
+  let config =
+    types.SSRConfig(
+      enabled: True,
+      path: "./ssr",
+      module: "ssr",
+      pool_size: 2,
+      timeout_ms: 5000,
+      raise_on_failure: False,
+      supervisor_name: "InertiaSSR",
+    )
+
+  ssr.start_supervisor(config)
+}
+
+fn handle_request(
+  req: wisp.Request,
+  ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
+) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
   use ctx <- inertia_gleam.inertia_middleware(
     req,
     inertia_gleam.default_config(),
   )
+
+  // Enable SSR for this context if supervisor is available
+  let ctx = case ssr_supervisor {
+    option.Some(supervisor) -> {
+      wisp.log_info("Using SSR for request")
+      ctx
+      |> inertia_gleam.enable_ssr()
+      |> inertia_gleam.with_ssr_supervisor(supervisor)
+    }
+    option.None -> {
+      wisp.log_info("Using CSR for request")
+      ctx
+    }
+  }
 
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx)

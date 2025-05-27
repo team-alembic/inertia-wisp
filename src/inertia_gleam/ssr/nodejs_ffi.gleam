@@ -1,5 +1,7 @@
 import gleam/dynamic.{type Dynamic}
+import gleam/dynamic/decode
 import gleam/result
+import inertia_gleam/types.{type SSRResponse, SSRResponse}
 
 /// External types for Erlang/Elixir interop
 pub type Atom
@@ -29,7 +31,7 @@ fn nodejs_call(
   module: Dynamic,
   args: List(Dynamic),
   opts: List(#(Atom, Dynamic)),
-) -> Result(String, Dynamic)
+) -> Result(Dynamic, Dynamic)
 
 // Helper to create atoms from strings
 @external(erlang, "erlang", "binary_to_atom")
@@ -52,23 +54,40 @@ pub fn start_supervisor(config: NodeSupervisorConfig) -> Result(Pid, FFIError) {
 /// Call the render function in a Node.js module
 pub fn call_render(
   module: String,
-  page_json: String,
+  page: Dynamic,
   supervisor_name: String,
   timeout_ms: Int,
-) -> Result(String, FFIError) {
+) -> Result(SSRResponse, FFIError) {
   // Create {module, "render"} tuple for the function call
   let module_tuple = #(module, "render")
-  let args = [to_dynamic(page_json)]
+  let args = [page]
   let opts = [
     #(atom_from_string("binary"), to_dynamic(True)),
     #(atom_from_string("name"), to_dynamic(atom_from_string(supervisor_name))),
     #(atom_from_string("timeout"), to_dynamic(timeout_ms)),
   ]
+  let dynamic_module = to_dynamic(module_tuple)
 
-  nodejs_call(to_dynamic(module_tuple), args, opts)
+  echo dynamic_module
+  echo args
+  echo opts
+
+  nodejs_call(dynamic_module, args, opts)
   |> result.map_error(fn(err) {
     echo err
     NodeCallError("SSR render failed")
+  })
+  |> result.then(fn(ssr_result) {
+    let decoder = {
+      use head <- decode.field("head", decode.list(decode.string))
+      use body <- decode.field("body", decode.string)
+      decode.success(SSRResponse(head, body))
+    }
+    decode.run(ssr_result, decoder)
+    |> result.map_error(fn(err) {
+      echo err
+      NodeCallError("SSR result decode failed")
+    })
   })
 }
 

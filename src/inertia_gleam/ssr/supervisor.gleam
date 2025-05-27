@@ -1,31 +1,14 @@
+import gleam/dynamic.{type Dynamic}
 import gleam/erlang/process.{type Subject}
 import gleam/otp/actor
 import gleam/otp/supervisor
 
-import inertia_gleam/ssr/config.{type SSRConfig}
+import inertia_gleam/ssr/config
 import inertia_gleam/ssr/nodejs_ffi
-
-/// Messages that the SSR supervisor can handle
-pub type Message {
-  StartNodeJS(reply_with: Subject(Result(Nil, SSRError)))
-  StopNodeJS(reply_with: Subject(Result(Nil, SSRError)))
-  GetStatus(reply_with: Subject(SSRStatus))
-  UpdateConfig(SSRConfig, reply_with: Subject(Result(Nil, SSRError)))
-  RenderPage(String, String, reply_with: Subject(Result(String, SSRError)))
-}
-
-/// Current status of the SSR system
-pub type SSRStatus {
-  SSRStatus(enabled: Bool, supervisor_running: Bool, config: SSRConfig)
-}
-
-/// SSR supervisor errors
-pub type SSRError {
-  SupervisorNotStarted
-  NodeJSStartFailed(String)
-  NodeJSStopFailed(String)
-  ConfigurationError(String)
-  RenderError(String)
+import inertia_gleam/types.{
+  type SSRConfig, type SSRError, type SSRMessage, ConfigurationError, GetStatus,
+  NodeJSStartFailed, RenderError, RenderPage, SSRStatus, StartNodeJS, StopNodeJS,
+  SupervisorNotStarted, UpdateConfig,
 }
 
 /// SSR supervisor state
@@ -36,7 +19,7 @@ type State {
 /// Start the SSR supervisor
 pub fn start_link(
   config: SSRConfig,
-) -> Result(Subject(Message), actor.StartError) {
+) -> Result(Subject(SSRMessage), actor.StartError) {
   let initial_state = State(config: config, nodejs_started: False)
 
   actor.start_spec(actor.Spec(
@@ -47,12 +30,17 @@ pub fn start_link(
 }
 
 /// Start the SSR supervisor as a child in a supervision tree
-pub fn child_spec(config: SSRConfig) -> supervisor.ChildSpec(Message, Nil, Nil) {
+pub fn child_spec(
+  config: SSRConfig,
+) -> supervisor.ChildSpec(SSRMessage, Nil, Nil) {
   supervisor.worker(fn(_) { start_link(config) })
 }
 
 /// Handle messages sent to the SSR supervisor
-fn handle_message(message: Message, state: State) -> actor.Next(Message, State) {
+fn handle_message(
+  message: SSRMessage,
+  state: State,
+) -> actor.Next(SSRMessage, State) {
   case message {
     StartNodeJS(client) -> {
       case state.nodejs_started {
@@ -122,7 +110,7 @@ fn handle_message(message: Message, state: State) -> actor.Next(Message, State) 
       }
     }
 
-    RenderPage(page_json, _component, client) -> {
+    RenderPage(page, _component, client) -> {
       case state.nodejs_started && state.config.enabled {
         False -> {
           process.send(client, Error(SupervisorNotStarted))
@@ -132,20 +120,20 @@ fn handle_message(message: Message, state: State) -> actor.Next(Message, State) 
           case
             nodejs_ffi.call_render(
               state.config.module,
-              page_json,
+              page,
               state.config.supervisor_name,
               state.config.timeout_ms,
             )
           {
-            Ok(html) -> {
-              process.send(client, Ok(html))
+            Ok(ssr_response) -> {
+              process.send(client, Ok(ssr_response))
               actor.continue(state)
             }
             Error(nodejs_ffi.NodeCallError(msg)) -> {
               process.send(client, Error(RenderError(msg)))
               actor.continue(state)
             }
-            Error(e) -> {
+            Error(_e) -> {
               process.send(client, Error(RenderError("Render failed")))
               actor.continue(state)
             }
@@ -158,23 +146,23 @@ fn handle_message(message: Message, state: State) -> actor.Next(Message, State) 
 
 /// Client functions for interacting with the SSR supervisor
 /// Start the Node.js worker pool
-pub fn start_nodejs(supervisor: Subject(Message)) -> Result(Nil, SSRError) {
+pub fn start_nodejs(supervisor: Subject(SSRMessage)) -> Result(Nil, SSRError) {
   process.call(supervisor, StartNodeJS, 5000)
 }
 
 /// Stop the Node.js worker pool
-pub fn stop_nodejs(supervisor: Subject(Message)) -> Result(Nil, SSRError) {
+pub fn stop_nodejs(supervisor: Subject(SSRMessage)) -> Result(Nil, SSRError) {
   process.call(supervisor, StopNodeJS, 5000)
 }
 
 /// Get the current status of the SSR system
-pub fn get_status(supervisor: Subject(Message)) -> SSRStatus {
+pub fn get_status(supervisor: Subject(SSRMessage)) -> types.SSRStatus {
   process.call(supervisor, GetStatus, 5000)
 }
 
 /// Update the SSR configuration
 pub fn update_config(
-  supervisor: Subject(Message),
+  supervisor: Subject(SSRMessage),
   new_config: SSRConfig,
 ) -> Result(Nil, SSRError) {
   process.call(supervisor, UpdateConfig(new_config, _), 5000)
@@ -182,9 +170,9 @@ pub fn update_config(
 
 /// Render a page using the SSR system
 pub fn render_page(
-  supervisor: Subject(Message),
-  page_json: String,
+  supervisor: Subject(SSRMessage),
+  page: Dynamic,
   component: String,
-) -> Result(String, SSRError) {
-  process.call(supervisor, RenderPage(page_json, component, _), 10_000)
+) -> Result(types.SSRResponse, SSRError) {
+  process.call(supervisor, RenderPage(page, component, _), 10_000)
 }

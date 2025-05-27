@@ -1,6 +1,6 @@
 import gleam/json
 import gleam/string
-import inertia_gleam/types.{type Page}
+import inertia_gleam/types.{type Page, type SSRResponse}
 
 /// Generate the root HTML template for initial page loads
 pub fn root_template(page: Page, title: String) -> String {
@@ -16,6 +16,25 @@ pub fn root_template(page: Page, title: String) -> String {
 </head>
 <body>
     <div id=\"app\" data-page=\"" <> escape_html(page_json) <> "\"></div>
+    <script type=\"module\" src=\"/static/js/main.js\"></script>
+</body>
+</html>"
+}
+
+/// Generate SSR HTML template with server-rendered content
+pub fn ssr_template(ssr_response: SSRResponse, _page: Page) -> String {
+  let head_elements = string.join(ssr_response.head, "\n    ")
+
+  "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    " <> head_elements <> "
+    <link rel=\"stylesheet\" href=\"/static/css/styles.css\">
+</head>
+<body>
+    " <> ssr_response.body <> "
     <script type=\"module\" src=\"/static/js/main.js\"></script>
 </body>
 </html>"

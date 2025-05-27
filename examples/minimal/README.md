@@ -29,6 +29,7 @@ gleam run
 - **File Uploads** with drag & drop interface
 - **Form Handling** with error feedback
 - **TypeScript Frontend** with React components
+- **Server-Side Rendering (SSR)** with Node.js integration
 
 ## Development
 
@@ -43,6 +44,15 @@ For active development with auto-rebuilding:
    ```bash
    gleam run
    ```
+
+## Server-Side Rendering (SSR)
+
+This example includes SSR support for faster initial page loads and better SEO. Currently running in CSR fallback mode.
+
+For full SSR setup in production:
+- See [SSR_SETUP.md](./SSR_SETUP.md) for detailed configuration
+- Requires Elixir Mix environment with `nodejs` package
+- Gracefully falls back to CSR when SSR unavailable
 
 ## Project Structure
 

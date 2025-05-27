@@ -1,9 +1,9 @@
 import gleam/dict.{type Dict}
+import gleam/dynamic
 import gleam/erlang/process.{type Subject}
 import gleam/json
 import gleam/option.{type Option}
 import wisp
-import inertia_gleam/ssr/supervisor
 
 /// Represents an Inertia.js page object
 /// Page data to be sent to the client
@@ -65,11 +65,9 @@ pub type InertiaContext {
     always_props: Dict(String, PropValue),
     encrypt_history: Bool,
     clear_history: Bool,
-    ssr_supervisor: Option(Subject(supervisor.Message)),
+    ssr_supervisor: Option(Subject(SSRMessage)),
   )
 }
-
-
 
 pub fn new_context(config, request) {
   InertiaContext(
@@ -80,5 +78,67 @@ pub fn new_context(config, request) {
     encrypt_history: config.encrypt_history,
     clear_history: False,
     ssr_supervisor: option.None,
+  )
+}
+
+/// SSR response from Node.js
+pub type SSRResponse {
+  SSRResponse(head: List(String), body: String)
+}
+
+/// Result of an SSR rendering attempt
+pub type SSRResult {
+  /// SSR succeeded and returned rendered content
+  SSRSuccess(response: SSRResponse)
+  /// SSR failed but should fallback to CSR gracefully
+  SSRFallback(reason: String)
+  /// SSR failed with an error that should be raised
+  SSRError(error: String)
+}
+
+/// Messages that the SSR supervisor can handle
+pub type SSRMessage {
+  StartNodeJS(reply_with: Subject(Result(Nil, SSRError)))
+  StopNodeJS(reply_with: Subject(Result(Nil, SSRError)))
+  GetStatus(reply_with: Subject(SSRStatus))
+  UpdateConfig(SSRConfig, reply_with: Subject(Result(Nil, SSRError)))
+  RenderPage(
+    dynamic.Dynamic,
+    String,
+    reply_with: Subject(Result(SSRResponse, SSRError)),
+  )
+}
+
+/// Current status of the SSR system
+pub type SSRStatus {
+  SSRStatus(enabled: Bool, supervisor_running: Bool, config: SSRConfig)
+}
+
+/// SSR supervisor errors
+pub type SSRError {
+  SupervisorNotStarted
+  NodeJSStartFailed(String)
+  NodeJSStopFailed(String)
+  ConfigurationError(String)
+  RenderError(String)
+}
+
+/// SSR configuration settings
+pub type SSRConfig {
+  SSRConfig(
+    /// Whether SSR is enabled globally
+    enabled: Bool,
+    /// Path to directory containing the ssr.js file
+    path: String,
+    /// Name of the Node.js module (without .js extension)
+    module: String,
+    /// Number of Node.js worker processes in the pool
+    pool_size: Int,
+    /// Timeout for SSR renders in milliseconds
+    timeout_ms: Int,
+    /// Whether to raise exceptions on SSR failure or fallback to CSR
+    raise_on_failure: Bool,
+    /// Name for the supervisor process
+    supervisor_name: String,
   )
 }

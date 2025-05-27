@@ -1,24 +1,5 @@
 import gleam/result
-
-/// SSR configuration settings
-pub type SSRConfig {
-  SSRConfig(
-    /// Whether SSR is enabled globally
-    enabled: Bool,
-    /// Path to directory containing the ssr.js file
-    path: String,
-    /// Name of the Node.js module (without .js extension)
-    module: String,
-    /// Number of Node.js worker processes in the pool
-    pool_size: Int,
-    /// Timeout for SSR renders in milliseconds
-    timeout_ms: Int,
-    /// Whether to raise exceptions on SSR failure or fallback to CSR
-    raise_on_failure: Bool,
-    /// Name for the supervisor process
-    supervisor_name: String,
-  )
-}
+import inertia_gleam/types.{type SSRConfig, SSRConfig}
 
 /// Error types for SSR configuration
 pub type ConfigError {
@@ -112,10 +93,16 @@ pub fn with_timeout(config: SSRConfig, timeout_ms: Int) -> SSRConfig {
   SSRConfig(..config, timeout_ms: timeout_ms)
 }
 
-pub fn with_raise_on_failure(config: SSRConfig, raise_on_failure: Bool) -> SSRConfig {
+pub fn with_raise_on_failure(
+  config: SSRConfig,
+  raise_on_failure: Bool,
+) -> SSRConfig {
   SSRConfig(..config, raise_on_failure: raise_on_failure)
 }
 
-pub fn with_supervisor_name(config: SSRConfig, supervisor_name: String) -> SSRConfig {
+pub fn with_supervisor_name(
+  config: SSRConfig,
+  supervisor_name: String,
+) -> SSRConfig {
   SSRConfig(..config, supervisor_name: supervisor_name)
 }

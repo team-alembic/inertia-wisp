@@ -3,20 +3,22 @@ import gleam/erlang/process
 import gleam/int
 import gleam/io
 import gleam/json
+import gleam/list
 import gleam/string
 import inertia_gleam/ssr
 import inertia_gleam/ssr/config
 import inertia_gleam/ssr/supervisor
+import inertia_gleam/types
 
 pub fn main() {
   example_integration()
-
 }
+
 /// Example of how to integrate SSR with your Gleam application
 pub fn example_integration() {
   // 1. Create SSR configuration
   let ssr_config =
-    config.SSRConfig(
+    types.SSRConfig(
       enabled: True,
       path: "priv",
       // Path to directory containing ssr.js
@@ -68,15 +70,22 @@ pub fn example_integration() {
       case
         ssr.render_page(supervisor, "UserDashboard", props, "/dashboard", "1.0")
       {
-        ssr.SSRSuccess(html) -> {
+        types.SSRSuccess(ssr_response) -> {
           io.println("SSR render successful!")
-          io.println("HTML length: " <> html |> string.length |> int.to_string)
+          io.println(
+            "Body length: "
+            <> ssr_response.body |> string.length |> int.to_string,
+          )
+          io.println(
+            "Head elements: "
+            <> ssr_response.head |> list.length |> int.to_string,
+          )
         }
-        ssr.SSRFallback(reason) -> {
+        types.SSRFallback(reason) -> {
           io.println("SSR fallback: " <> reason)
           // Your app would render CSR here
         }
-        ssr.SSRError(error) -> {
+        types.SSRError(error) -> {
           io.println("SSR error: " <> error)
           // Handle error appropriately
         }
@@ -124,7 +133,7 @@ pub fn ssr_middleware_concept() {
 
 /// Example SSR request handler
 pub fn handle_ssr_example(
-  supervisor: process.Subject(supervisor.Message),
+  supervisor: process.Subject(types.SSRMessage),
 ) -> String {
   // Extract component and props based on your route handling
   let component = "HomePage"
@@ -136,11 +145,11 @@ pub fn handle_ssr_example(
   // Your app version
 
   case ssr.render_page(supervisor, component, props, url, version) {
-    ssr.SSRSuccess(html) -> {
-      // Return HTML response with embedded Inertia data
-      html
+    types.SSRSuccess(ssr_response) -> {
+      // Return the rendered body from SSR
+      ssr_response.body
     }
-    ssr.SSRFallback(_) | ssr.SSRError(_) -> {
+    types.SSRFallback(_) | types.SSRError(_) -> {
       // Fallback to standard Inertia CSR response
       build_inertia_html(component, props, url, version)
     }

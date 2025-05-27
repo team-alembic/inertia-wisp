@@ -4,8 +4,8 @@ import gleam/json
 import gleam/option
 import inertia_gleam/controller
 import inertia_gleam/middleware
-import inertia_gleam/types
 import inertia_gleam/ssr/supervisor
+import inertia_gleam/types
 
 import wisp.{type Request, type Response}
 
@@ -100,7 +100,7 @@ pub fn clear_history(ctx: InertiaContext) -> InertiaContext {
 // SSR Configuration
 pub fn with_ssr_supervisor(
   ctx: InertiaContext,
-  supervisor: Subject(supervisor.Message),
+  supervisor: Subject(types.SSRMessage),
 ) -> InertiaContext {
   types.InertiaContext(..ctx, ssr_supervisor: option.Some(supervisor))
 }
