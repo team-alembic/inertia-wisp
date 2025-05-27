@@ -4,7 +4,7 @@ import gleam/json
 import gleam/option
 import inertia_gleam/controller
 import inertia_gleam/middleware
-import inertia_gleam/ssr/supervisor
+
 import inertia_gleam/types
 
 import wisp.{type Request, type Response}

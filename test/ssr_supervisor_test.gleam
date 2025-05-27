@@ -3,6 +3,7 @@ import gleeunit
 import gleeunit/should
 import inertia_gleam/ssr/config
 import inertia_gleam/ssr/supervisor
+import inertia_gleam/types.{SSRConfig}
 
 pub fn main() {
   gleeunit.main()
@@ -10,7 +11,7 @@ pub fn main() {
 
 pub fn supervisor_start_test() {
   let test_config =
-    config.SSRConfig(
+    SSRConfig(
       enabled: True,
       path: "test/priv",
       module: "test_ssr",
@@ -55,12 +56,12 @@ pub fn supervisor_status_test() {
 
 pub fn config_update_test() {
   let initial_config =
-    config.SSRConfig(..config.default(), enabled: False, pool_size: 2)
+    SSRConfig(..config.default(), enabled: False, pool_size: 2)
 
   case supervisor.start_link(initial_config) {
     Ok(sup) -> {
       let new_config =
-        config.SSRConfig(..initial_config, enabled: True, pool_size: 4)
+        SSRConfig(..initial_config, enabled: True, pool_size: 4)
 
       case supervisor.update_config(sup, new_config) {
         Ok(_) -> {
@@ -84,7 +85,7 @@ pub fn invalid_config_update_test() {
   case supervisor.start_link(initial_config) {
     Ok(sup) -> {
       let invalid_config =
-        config.SSRConfig(
+        SSRConfig(
           ..initial_config,
           pool_size: -1,
           // Invalid pool size
@@ -92,7 +93,7 @@ pub fn invalid_config_update_test() {
 
       case supervisor.update_config(sup, invalid_config) {
         Ok(_) -> should.fail()
-        Error(supervisor.ConfigurationError(_)) -> True |> should.equal(True)
+        Error(types.ConfigurationError(_)) -> True |> should.equal(True)
         Error(_) -> should.fail()
       }
     }
@@ -101,7 +102,7 @@ pub fn invalid_config_update_test() {
 }
 
 pub fn nodejs_start_stop_test() {
-  let test_config = config.SSRConfig(..config.default(), enabled: True)
+  let test_config = SSRConfig(..config.default(), enabled: True)
 
   case supervisor.start_link(test_config) {
     Ok(sup) -> {
@@ -133,7 +134,7 @@ pub fn nodejs_start_stop_test() {
 }
 
 pub fn render_page_without_nodejs_test() {
-  let test_config = config.SSRConfig(..config.default(), enabled: True)
+  let test_config = SSRConfig(..config.default(), enabled: True)
 
   case supervisor.start_link(test_config) {
     Ok(sup) -> {
@@ -148,7 +149,7 @@ pub fn render_page_without_nodejs_test() {
       case supervisor.render_page(sup, page, "TestComponent") {
         Ok(_) -> should.fail()
         // Should fail since Node.js isn't started
-        Error(supervisor.SupervisorNotStarted) -> True |> should.equal(True)
+        Error(types.SupervisorNotStarted) -> True |> should.equal(True)
         Error(_) -> True |> should.equal(True)
         // Other errors are also acceptable
       }

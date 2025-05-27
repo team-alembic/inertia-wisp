@@ -3,6 +3,7 @@ import gleeunit/should
 import inertia_gleam/ssr/config
 import inertia_gleam/ssr/nodejs_ffi
 import inertia_gleam/ssr
+import inertia_gleam/types.{SSRConfig, SSRFallback}
 import gleam/json
 
 pub fn main() {
@@ -68,7 +69,7 @@ pub fn config_validation_valid_test() {
 }
 
 pub fn config_validation_invalid_pool_size_test() {
-  let invalid_config = config.SSRConfig(
+  let invalid_config = SSRConfig(
     ..config.default(),
     pool_size: 0
   )
@@ -78,7 +79,7 @@ pub fn config_validation_invalid_pool_size_test() {
 }
 
 pub fn config_validation_invalid_timeout_test() {
-  let invalid_config = config.SSRConfig(
+  let invalid_config = SSRConfig(
     ..config.default(),
     timeout_ms: -1
   )
@@ -88,7 +89,7 @@ pub fn config_validation_invalid_timeout_test() {
 }
 
 pub fn config_validation_invalid_module_name_test() {
-  let invalid_config = config.SSRConfig(
+  let invalid_config = SSRConfig(
     ..config.default(),
     module: ""
   )
@@ -152,7 +153,7 @@ pub fn node_supervisor_config_creation_test() {
 
 pub fn ssr_not_enabled_by_default_test() {
   // Create a supervisor with disabled config
-  let disabled_config = config.SSRConfig(
+  let disabled_config = SSRConfig(
     ..config.default(),
     enabled: False
   )
@@ -190,7 +191,7 @@ pub fn ssr_render_page_when_disabled_test() {
     #("message", json.string("Hello, World!"))
   ])
   
-  let disabled_config = config.SSRConfig(
+  let disabled_config = SSRConfig(
     ..config.default(),
     enabled: False
   )
@@ -200,7 +201,7 @@ pub fn ssr_render_page_when_disabled_test() {
       let result = ssr.render_page(supervisor, "TestComponent", props, "/test", "1.0")
       
       case result {
-        ssr.SSRFallback(reason) -> {
+        SSRFallback(reason) -> {
           reason
           |> should.equal("SSR not enabled")
         }

@@ -3,6 +3,7 @@ import gleam/dynamic/decode
 import gleam/erlang/process.{type Subject}
 import gleam/int
 import gleam/json
+import gleam/result
 import inertia_gleam/ssr/config
 import inertia_gleam/ssr/supervisor
 import inertia_gleam/types.{type SSRConfig, type SSRMessage}
@@ -11,19 +12,23 @@ import inertia_gleam/types.{type SSRConfig, type SSRMessage}
 pub fn start_supervisor(
   ssr_config: SSRConfig,
 ) -> Result(Subject(SSRMessage), String) {
+  use validated_config <- result.try(validate_config_with_detailed_errors(ssr_config))
+  use sup <- result.try(
+    supervisor.start_link(validated_config)
+    |> result.map_error(fn(_) { "Failed to start supervisor" })
+  )
+  use _ <- result.try(
+    supervisor.start_nodejs(sup)
+    |> result.map_error(fn(_) { "Failed to start Node.js workers" })
+  )
+  Ok(sup)
+}
+
+fn validate_config_with_detailed_errors(
+  ssr_config: SSRConfig,
+) -> Result(SSRConfig, String) {
   case config.validate(ssr_config) {
-    Ok(validated_config) -> {
-      case supervisor.start_link(validated_config) {
-        Ok(sup) -> {
-          // Start the Node.js workers
-          case supervisor.start_nodejs(sup) {
-            Ok(_) -> Ok(sup)
-            Error(_) -> Error("Failed to start Node.js workers")
-          }
-        }
-        Error(_) -> Error("Failed to start supervisor")
-      }
-    }
+    Ok(validated_config) -> Ok(validated_config)
     Error(config.InvalidPoolSize(size)) ->
       Error("InvalidSSRMessageize: " <> int.to_string(size))
     Error(config.InvalidTimeout(timeout)) ->
