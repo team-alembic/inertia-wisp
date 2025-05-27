@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build:css": "./tailwindcss -i ./src/styles.css -o ../static/css/styles.css --minify",
-    "watch:css": "./tailwindcss -i ./src/styles.css -o ../static/css/styles.css --watch",
+    "build:css": "npx @tailwindcss/cli -i ./src/styles.css -o ../static/css/styles.css --minify",
+    "watch:css": "npx @tailwindcss/cli -i ./src/styles.css -o ../static/css/styles.css --watch",
     "build:js": "esbuild src/main.tsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --jsx=automatic",
     "build:ssr": "esbuild src/ssr.tsx --bundle --outdir=../ssr --format=cjs --platform=node --target=node18 --jsx=automatic",
     "watch:js": "esbuild src/main.tsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --watch --jsx=automatic",
@@ -28,10 +28,12 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.7",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "esbuild": "^0.19.11",
     "npm-run-all": "^4.1.5",
+    "tailwindcss": "^4.1.7",
     "typescript": "^5.0.0"
   }
 }
