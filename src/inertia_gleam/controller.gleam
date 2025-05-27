@@ -1,10 +1,13 @@
 import gleam/dict.{type Dict}
 import gleam/json
 import gleam/list
+import gleam/option
+
 import gleam/string
 import gleam/string_tree
 import inertia_gleam/html
 import inertia_gleam/middleware
+import inertia_gleam/ssr
 import inertia_gleam/types.{
   type InertiaContext, type Page, type PropValue, InertiaContext,
 }
@@ -99,7 +102,7 @@ pub fn render(ctx: InertiaContext, component: String) -> Response {
 
   case middleware.is_inertia_request(ctx.request) {
     True -> render_json_response(page)
-    False -> render_html_response(page)
+    False -> render_html_response_with_ssr_check(page, ctx)
   }
 }
 
@@ -171,6 +174,42 @@ fn render_html_response(page: Page) -> Response {
   let html_body = html.root_template(page, page.component)
 
   wisp.html_response(string_tree.from_string(html_body), 200)
+}
+
+/// Render HTML response with SSR check at the final moment
+fn render_html_response_with_ssr_check(page: Page, ctx: InertiaContext) -> Response {
+  // Check if SSR is enabled and supervisor is available
+  let should_use_ssr = ctx.config.ssr && option.is_some(ctx.ssr_supervisor)
+  
+  case should_use_ssr {
+    True -> {
+      case ctx.ssr_supervisor {
+        option.Some(supervisor) -> {
+          // Try SSR render with the fully evaluated page
+          let _page_json = types.encode_page(page) |> json.to_string()
+          
+          case ssr.render_page(supervisor, page.component, json.object(dict.to_list(page.props)), page.url, page.version) {
+            ssr.SSRSuccess(html) -> {
+              // SSR successful - return the rendered HTML
+              wisp.html_response(string_tree.from_string(html), 200)
+            }
+            ssr.SSRFallback(_reason) | ssr.SSRError(_error) -> {
+              // SSR failed - fall back to CSR
+              render_html_response(page)
+            }
+          }
+        }
+        option.None -> {
+          // No supervisor available - fall back to CSR
+          render_html_response(page)
+        }
+      }
+    }
+    False -> {
+      // SSR not enabled - use CSR
+      render_html_response(page)
+    }
+  }
 }
 
 /// Check if current request is an Inertia request

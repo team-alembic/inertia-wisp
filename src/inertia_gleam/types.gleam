@@ -1,6 +1,9 @@
 import gleam/dict.{type Dict}
+import gleam/erlang/process.{type Subject}
 import gleam/json
+import gleam/option.{type Option}
 import wisp
+import inertia_gleam/ssr/supervisor
 
 /// Represents an Inertia.js page object
 /// Page data to be sent to the client
@@ -62,8 +65,11 @@ pub type InertiaContext {
     always_props: Dict(String, PropValue),
     encrypt_history: Bool,
     clear_history: Bool,
+    ssr_supervisor: Option(Subject(supervisor.Message)),
   )
 }
+
+
 
 pub fn new_context(config, request) {
   InertiaContext(
@@ -73,5 +79,6 @@ pub fn new_context(config, request) {
     always_props: dict.new(),
     encrypt_history: config.encrypt_history,
     clear_history: False,
+    ssr_supervisor: option.None,
   )
 }

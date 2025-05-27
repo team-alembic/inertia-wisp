@@ -123,7 +123,6 @@ fn handle_message(message: Message, state: State) -> actor.Next(Message, State) 
     }
 
     RenderPage(page_json, _component, client) -> {
-      echo page_json
       case state.nodejs_started && state.config.enabled {
         False -> {
           process.send(client, Error(SupervisorNotStarted))
@@ -143,13 +142,10 @@ fn handle_message(message: Message, state: State) -> actor.Next(Message, State) 
               actor.continue(state)
             }
             Error(nodejs_ffi.NodeCallError(msg)) -> {
-              echo msg
-
               process.send(client, Error(RenderError(msg)))
               actor.continue(state)
             }
             Error(e) -> {
-              echo e
               process.send(client, Error(RenderError("Render failed")))
               actor.continue(state)
             }

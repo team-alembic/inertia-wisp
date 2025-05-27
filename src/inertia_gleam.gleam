@@ -1,8 +1,11 @@
 import gleam/dict.{type Dict}
+import gleam/erlang/process.{type Subject}
 import gleam/json
+import gleam/option
 import inertia_gleam/controller
 import inertia_gleam/middleware
 import inertia_gleam/types
+import inertia_gleam/ssr/supervisor
 
 import wisp.{type Request, type Response}
 
@@ -92,6 +95,24 @@ pub fn encrypt_history(ctx: InertiaContext) -> InertiaContext {
 
 pub fn clear_history(ctx: InertiaContext) -> InertiaContext {
   controller.clear_history(ctx)
+}
+
+// SSR Configuration
+pub fn with_ssr_supervisor(
+  ctx: InertiaContext,
+  supervisor: Subject(supervisor.Message),
+) -> InertiaContext {
+  types.InertiaContext(..ctx, ssr_supervisor: option.Some(supervisor))
+}
+
+pub fn enable_ssr(ctx: InertiaContext) -> InertiaContext {
+  let new_config = types.Config(..ctx.config, ssr: True)
+  types.InertiaContext(..ctx, config: new_config)
+}
+
+pub fn disable_ssr(ctx: InertiaContext) -> InertiaContext {
+  let new_config = types.Config(..ctx.config, ssr: False)
+  types.InertiaContext(..ctx, config: new_config)
 }
 
 pub fn render(ctx: InertiaContext, component: String) -> Response {
