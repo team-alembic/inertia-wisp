@@ -33,7 +33,7 @@ fn start_ssr_supervisor() {
   let config =
     types.SSRConfig(
       enabled: True,
-      path: "./ssr",
+      path: "./static/js",
       module: "ssr",
       pool_size: 2,
       timeout_ms: 5000,
@@ -104,8 +104,7 @@ fn home_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
 /// Example of using asset versioning with custom config
 fn versioned_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
   // Create config with custom version (in real app, this might come from build system)
-  let config =
-    Config(..inertia_wisp.default_config(), version: "v2.1.0-abc123")
+  let config = Config(..inertia_wisp.default_config(), version: "v2.1.0-abc123")
 
   req
   |> inertia_wisp.set_config(config)
