@@ -263,7 +263,7 @@ With SSR enabled, initial page loads return:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title inertia>Welcome to Inertia Gleam</title>
+    <title inertia>Welcome to Inertia Wisp</title>
     <link rel="stylesheet" href="/static/css/styles.css" />
   </head>
   <body>

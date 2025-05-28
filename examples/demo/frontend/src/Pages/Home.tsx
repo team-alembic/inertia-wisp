@@ -97,9 +97,7 @@ function FeatureItem({ title, children }: FeatureItemProps) {
       </div>
       <div>
         <p className="text-sm font-medium text-gray-900">{title}</p>
-        <div className="text-sm text-gray-500">
-          {children}
-        </div>
+        <div className="text-sm text-gray-500">{children}</div>
       </div>
     </div>
   );
@@ -113,19 +111,28 @@ function DemoFeaturesList() {
         <FeatureItem title="Navigation">
           All page transitions use Inertia XHR requests
         </FeatureItem>
-        
+
         <FeatureItem title="Props System">
           Server-side data passed to React components
         </FeatureItem>
-        
+
         <FeatureItem title="Forms & Validation">
-          Check out the <Link href="/users" className="text-indigo-600 hover:text-indigo-500">Users section</Link>
+          Check out the{" "}
+          <Link href="/users" className="text-indigo-600 hover:text-indigo-500">
+            Users section
+          </Link>
         </FeatureItem>
-        
+
         <FeatureItem title="File Uploads">
-          Try the <Link href="/upload" className="text-indigo-600 hover:text-indigo-500">File Upload demo</Link>
+          Try the{" "}
+          <Link
+            href="/upload"
+            className="text-indigo-600 hover:text-indigo-500"
+          >
+            File Upload demo
+          </Link>
         </FeatureItem>
-        
+
         <FeatureItem title="Redirects">
           Form submissions redirect properly
         </FeatureItem>
@@ -217,11 +224,11 @@ function Home({
 }: HomePageProps) {
   return (
     <>
-      <Head title="Welcome to Inertia Gleam" />
+      <Head title="Welcome to Inertia Wisp" />
 
       <MainLayout>
         <PageHeader
-          title="Welcome to Inertia Gleam!"
+          title="Welcome to Inertia Wisp!"
           subtitle="Full-stack web applications with Gleam and React"
         />
         <MainCard auth={auth}>
