@@ -3,9 +3,9 @@ import gleam/erlang/process.{type Subject}
 import gleam/otp/actor
 import gleam/otp/supervisor
 
-import inertia_gleam/ssr/config
-import inertia_gleam/ssr/nodejs_ffi
-import inertia_gleam/types.{
+import inertia_wisp/ssr/config
+import inertia_wisp/ssr/nodejs_ffi
+import inertia_wisp/types.{
   type SSRConfig, type SSRError, type SSRMessage, ConfigurationError, GetStatus,
   NodeJSStartFailed, RenderError, RenderPage, SSRStatus, StartNodeJS, StopNodeJS,
   SupervisorNotStarted, UpdateConfig,

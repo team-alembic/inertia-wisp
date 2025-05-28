@@ -1,6 +1,6 @@
 import gleam/json
 import gleam/string
-import inertia_gleam/types.{type Page, type SSRResponse}
+import inertia_wisp/types.{type Page, type SSRResponse}
 
 /// Generate the root HTML template for initial page loads
 pub fn root_template(page: Page, title: String) -> String {

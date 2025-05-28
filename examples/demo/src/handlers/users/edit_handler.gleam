@@ -4,13 +4,13 @@ import gleam/dynamic/decode
 import gleam/json
 import gleam/option
 import handlers/utils
-import inertia_gleam
+import inertia_wisp
 import types/user.{type CreateUserRequest, type User, CreateUserRequest}
 import validators/user_validator
 import wisp
 
 pub fn edit_user_page(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id_str: String,
 ) -> wisp.Response {
   case utils.parse_user_id(id_str) {
@@ -20,7 +20,7 @@ pub fn edit_user_page(
 }
 
 pub fn update_user(
-  ctx: inertia_gleam.InertiaContext,
+  ctx: inertia_wisp.InertiaContext,
   id_str: String,
 ) -> wisp.Response {
   use json_data <- wisp.require_json(ctx.request)
@@ -32,7 +32,7 @@ pub fn update_user(
 }
 
 fn handle_valid_edit_request(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id: Int,
 ) -> wisp.Response {
   case users.find_user_by_id(id) {
@@ -42,7 +42,7 @@ fn handle_valid_edit_request(
 }
 
 fn handle_valid_update_request(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id: Int,
   id_str: String,
   json_data,
@@ -55,7 +55,7 @@ fn handle_valid_update_request(
 }
 
 fn process_update_request(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id: Int,
   id_str: String,
   found_user: User,
@@ -69,7 +69,7 @@ fn process_update_request(
 }
 
 fn handle_decoded_update(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id: Int,
   id_str: String,
   found_user: User,
@@ -103,26 +103,26 @@ fn decode_user_request(
 }
 
 fn render_edit_page(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   user: User,
 ) -> wisp.Response {
   let user_data = utils.serialize_user_data(user)
 
   req
   |> utils.assign_common_props()
-  |> inertia_gleam.assign_prop("user", user_data)
-  |> inertia_gleam.render("EditUser")
+  |> inertia_wisp.assign_prop("user", user_data)
+  |> inertia_wisp.render("EditUser")
 }
 
 fn handle_successful_update(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id_str: String,
 ) -> wisp.Response {
-  inertia_gleam.redirect(req, "/users/" <> id_str)
+  inertia_wisp.redirect(req, "/users/" <> id_str)
 }
 
 fn handle_update_validation_errors(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   found_user: User,
   user_request: CreateUserRequest,
   errors: dict.Dict(String, String),
@@ -131,9 +131,9 @@ fn handle_update_validation_errors(
 
   req
   |> utils.assign_common_props()
-  |> inertia_gleam.assign_errors(errors)
-  |> inertia_gleam.assign_prop("user", user_data)
-  |> inertia_gleam.render("EditUser")
+  |> inertia_wisp.assign_errors(errors)
+  |> inertia_wisp.assign_prop("user", user_data)
+  |> inertia_wisp.render("EditUser")
 }
 
 fn serialize_user_with_form_data(

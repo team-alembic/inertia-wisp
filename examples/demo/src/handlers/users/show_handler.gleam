@@ -1,11 +1,11 @@
 import data/users
 import handlers/utils
-import inertia_gleam
+import inertia_wisp
 import types/user.{type User}
 import wisp
 
 pub fn show_user_page(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id_str: String,
 ) -> wisp.Response {
   case utils.parse_user_id(id_str) {
@@ -15,7 +15,7 @@ pub fn show_user_page(
 }
 
 fn handle_valid_user_id(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   id: Int,
 ) -> wisp.Response {
   case users.find_user_by_id(id) {
@@ -25,13 +25,13 @@ fn handle_valid_user_id(
 }
 
 fn render_user_page(
-  req: inertia_gleam.InertiaContext,
+  req: inertia_wisp.InertiaContext,
   user: User,
 ) -> wisp.Response {
   let user_data = utils.serialize_user_data(user)
 
   req
   |> utils.assign_common_props()
-  |> inertia_gleam.assign_prop("user", user_data)
-  |> inertia_gleam.render("ShowUser")
+  |> inertia_wisp.assign_prop("user", user_data)
+  |> inertia_wisp.render("ShowUser")
 }

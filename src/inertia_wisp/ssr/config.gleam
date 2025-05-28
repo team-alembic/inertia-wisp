@@ -1,5 +1,5 @@
 import gleam/result
-import inertia_gleam/types.{type SSRConfig, SSRConfig}
+import inertia_wisp/types.{type SSRConfig, SSRConfig}
 
 /// Error types for SSR configuration
 pub type ConfigError {

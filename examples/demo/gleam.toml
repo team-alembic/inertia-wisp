@@ -1,6 +1,6 @@
 name = "demo_inertia_example"
 version = "1.0.0"
-description = "Demo example using inertia-gleam"
+description = "Demo example using inertia-wisp"
 target = "erlang"
 
 [dependencies]
@@ -8,7 +8,7 @@ gleam_stdlib = ">= 0.60.0"
 gleam_http = ">= 4.0.0"
 gleam_json = ">= 3.0.0"
 wisp = ">= 1.7.0"
-inertia_gleam = { path = "../../" }
+inertia_wisp = { path = "../../" }
 simplifile = ">= 2.2.1 and < 3.0.0"
 gleam_otp = ">= 0.15.0 and < 1.0.0"
 nodejs = ">= 3.1.3 and < 4.0.0"

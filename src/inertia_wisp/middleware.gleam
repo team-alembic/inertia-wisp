@@ -3,8 +3,8 @@ import gleam/http/request
 import gleam/list
 import gleam/option.{type Option}
 import gleam/string
-import inertia_gleam/types.{type Config, type InertiaContext, type SSRMessage}
-import inertia_gleam/version
+import inertia_wisp/types.{type Config, type InertiaContext, type SSRMessage}
+import inertia_wisp/version
 import wisp.{type Request, type Response}
 
 /// Middleware to detect and process Inertia requests with config and optional SSR

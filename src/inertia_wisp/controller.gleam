@@ -5,10 +5,10 @@ import gleam/option
 
 import gleam/string
 import gleam/string_tree
-import inertia_gleam/html
-import inertia_gleam/middleware
-import inertia_gleam/ssr
-import inertia_gleam/types.{
+import inertia_wisp/html
+import inertia_wisp/middleware
+import inertia_wisp/ssr
+import inertia_wisp/types.{
   type InertiaContext, type Page, type PropValue, InertiaContext,
 }
 import wisp.{type Request, type Response}

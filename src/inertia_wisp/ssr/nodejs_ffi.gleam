@@ -1,7 +1,7 @@
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/result
-import inertia_gleam/types.{type SSRResponse, SSRResponse}
+import inertia_wisp/types.{type SSRResponse, SSRResponse}
 
 /// External types for Erlang/Elixir interop
 pub type Atom

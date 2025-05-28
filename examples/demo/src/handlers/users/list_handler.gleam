@@ -2,17 +2,17 @@ import data/users
 import gleam/json
 import gleam/list
 import handlers/utils
-import inertia_gleam
+import inertia_wisp
 import types/user.{type User}
 import wisp
 
-pub fn users_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+pub fn users_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
   let users_data = get_users_data()
 
   req
   |> utils.assign_common_props()
-  |> inertia_gleam.assign_prop("users", users_data)
-  |> inertia_gleam.render("Users")
+  |> inertia_wisp.assign_prop("users", users_data)
+  |> inertia_wisp.render("Users")
 }
 
 fn get_users_data() -> json.Json {

@@ -4,7 +4,7 @@ import handlers/users/delete_handler
 import handlers/users/edit_handler
 import handlers/users/list_handler
 import handlers/users/show_handler
-import inertia_gleam.{type InertiaContext}
+import inertia_wisp.{type InertiaContext}
 import wisp
 
 // Re-export all user handler functions for easy importing

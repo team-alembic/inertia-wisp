@@ -2,10 +2,10 @@ import gleam/dict.{type Dict}
 import gleam/erlang/process.{type Subject}
 import gleam/json
 import gleam/option
-import inertia_gleam/controller
-import inertia_gleam/middleware
+import inertia_wisp/controller
+import inertia_wisp/middleware
 
-import inertia_gleam/types
+import inertia_wisp/types
 
 import wisp.{type Request, type Response}
 

@@ -6,9 +6,9 @@ import gleam/list
 import gleam/option
 import handlers/uploads
 import handlers/users
-import inertia_gleam
-import inertia_gleam/ssr
-import inertia_gleam/types.{Config}
+import inertia_wisp
+import inertia_wisp/ssr
+import inertia_wisp/types.{Config}
 import mist
 import wisp
 import wisp/wisp_mist
@@ -58,9 +58,9 @@ fn handle_request(
   ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
 ) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use ctx <- inertia_gleam.inertia_middleware(
+  use ctx <- inertia_wisp.inertia_middleware(
     req,
-    inertia_gleam.default_config(),
+    inertia_wisp.default_config(),
     ssr_supervisor,
   )
 
@@ -81,9 +81,9 @@ fn handle_request(
   }
 }
 
-fn home_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+fn home_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
   req
-  |> inertia_gleam.assign_always_props([
+  |> inertia_wisp.assign_always_props([
     #(
       "auth",
       json.object([
@@ -93,34 +93,34 @@ fn home_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
     ),
     #("csrf_token", json.string("abc123xyz")),
   ])
-  |> inertia_gleam.assign_props([
+  |> inertia_wisp.assign_props([
     #("message", json.string("Hello from Gleam!")),
     #("timestamp", json.string("2024-01-01T00:00:00Z")),
     #("user_count", json.int(list.length(user_data.get_initial_state().users))),
   ])
-  |> inertia_gleam.render("Home")
+  |> inertia_wisp.render("Home")
 }
 
 /// Example of using asset versioning with custom config
-fn versioned_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+fn versioned_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
   // Create config with custom version (in real app, this might come from build system)
   let config =
-    Config(..inertia_gleam.default_config(), version: "v2.1.0-abc123")
+    Config(..inertia_wisp.default_config(), version: "v2.1.0-abc123")
 
   req
-  |> inertia_gleam.set_config(config)
-  |> inertia_gleam.assign_prop("title", json.string("Asset Versioning Demo"))
-  |> inertia_gleam.assign_prop("version", json.string(config.version))
-  |> inertia_gleam.assign_prop(
+  |> inertia_wisp.set_config(config)
+  |> inertia_wisp.assign_prop("title", json.string("Asset Versioning Demo"))
+  |> inertia_wisp.assign_prop("version", json.string(config.version))
+  |> inertia_wisp.assign_prop(
     "message",
     json.string("This page uses custom asset versioning"),
   )
-  |> inertia_gleam.render("VersionedPage")
+  |> inertia_wisp.render("VersionedPage")
 }
 
-fn about_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
+fn about_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
   req
-  |> inertia_gleam.assign_always_props([
+  |> inertia_wisp.assign_always_props([
     #(
       "auth",
       json.object([
@@ -130,6 +130,6 @@ fn about_page(req: inertia_gleam.InertiaContext) -> wisp.Response {
     ),
     #("csrf_token", json.string("abc123xyz")),
   ])
-  |> inertia_gleam.assign_prop("page_title", json.string("About Us"))
-  |> inertia_gleam.render("About")
+  |> inertia_wisp.assign_prop("page_title", json.string("About Us"))
+  |> inertia_wisp.render("About")
 }

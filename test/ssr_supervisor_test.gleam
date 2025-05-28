@@ -1,9 +1,9 @@
 import gleam/dynamic
 import gleeunit
 import gleeunit/should
-import inertia_gleam/ssr/config
-import inertia_gleam/ssr/supervisor
-import inertia_gleam/types.{SSRConfig}
+import inertia_wisp/ssr/config
+import inertia_wisp/ssr/supervisor
+import inertia_wisp/types.{ConfigurationError, SSRConfig, SupervisorNotStarted}
 
 pub fn main() {
   gleeunit.main()
@@ -60,8 +60,7 @@ pub fn config_update_test() {
 
   case supervisor.start_link(initial_config) {
     Ok(sup) -> {
-      let new_config =
-        SSRConfig(..initial_config, enabled: True, pool_size: 4)
+      let new_config = SSRConfig(..initial_config, enabled: True, pool_size: 4)
 
       case supervisor.update_config(sup, new_config) {
         Ok(_) -> {
@@ -93,7 +92,7 @@ pub fn invalid_config_update_test() {
 
       case supervisor.update_config(sup, invalid_config) {
         Ok(_) -> should.fail()
-        Error(types.ConfigurationError(_)) -> True |> should.equal(True)
+        Error(ConfigurationError(_)) -> True |> should.equal(True)
         Error(_) -> should.fail()
       }
     }
@@ -149,7 +148,7 @@ pub fn render_page_without_nodejs_test() {
       case supervisor.render_page(sup, page, "TestComponent") {
         Ok(_) -> should.fail()
         // Should fail since Node.js isn't started
-        Error(types.SupervisorNotStarted) -> True |> should.equal(True)
+        Error(SupervisorNotStarted) -> True |> should.equal(True)
         Error(_) -> True |> should.equal(True)
         // Other errors are also acceptable
       }

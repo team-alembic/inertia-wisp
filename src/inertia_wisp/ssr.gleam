@@ -4,9 +4,9 @@ import gleam/erlang/process.{type Subject}
 import gleam/int
 import gleam/json
 import gleam/result
-import inertia_gleam/ssr/config
-import inertia_gleam/ssr/supervisor
-import inertia_gleam/types.{type SSRConfig, type SSRMessage}
+import inertia_wisp/ssr/config
+import inertia_wisp/ssr/supervisor
+import inertia_wisp/types.{type SSRConfig, type SSRMessage}
 
 /// Start the SSR supervisor with the given configuration
 pub fn start_supervisor(

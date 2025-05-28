@@ -1,6 +1,6 @@
 import gleam/http/request
 import gleam/result
-import inertia_gleam/types.{type Config}
+import inertia_wisp/types.{type Config}
 import wisp.{type Request, type Response}
 
 /// Check if the incoming request version matches the current app version

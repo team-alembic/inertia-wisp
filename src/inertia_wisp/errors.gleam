@@ -1,8 +1,8 @@
 import gleam/dict.{type Dict}
 import gleam/json
 
-import inertia_gleam/controller
-import inertia_gleam/types.{type InertiaContext}
+import inertia_wisp/controller
+import inertia_wisp/types.{type InertiaContext}
 
 /// Represents validation errors that can be displayed to the user
 pub type ValidationErrors =

@@ -1,4 +1,4 @@
-# SSR Setup Guide for Inertia Gleam
+# SSR Setup Guide for Inertia Wisp
 
 This guide explains how to set up Server-Side Rendering (SSR) for your Inertia Gleam application.
 
@@ -22,7 +22,7 @@ gleam_stdlib = ">= 0.60.0"
 gleam_http = ">= 4.0.0"
 gleam_json = ">= 3.0.0"
 wisp = ">= 1.7.0"
-inertia_gleam = "~> 1.0"
+inertia_wisp = "~> 1.0"
 nodejs = ">= 3.1.3 and < 4.0.0"
 gleam_otp = ">= 0.15.0 and < 1.0.0"
 mist = ">= 2.0.0"
@@ -46,9 +46,9 @@ Your frontend build must output a CommonJS bundle for Node.js consumption.
 ### Create src/ssr.tsx
 
 ```tsx
-import React from 'react'
-import ReactDOMServer from 'react-dom/server'
-import { createInertiaApp } from '@inertiajs/react'
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+import { createInertiaApp } from "@inertiajs/react";
 
 export function render(page: any) {
   return createInertiaApp({
@@ -56,15 +56,16 @@ export function render(page: any) {
     render: ReactDOMServer.renderToString,
     resolve: async (name: string) => {
       try {
-        const component = await import(`./Pages/${name}.tsx`)
-        return component.default || component
+        const component = await import(`./Pages/${name}.tsx`);
+        return component.default || component;
       } catch (error) {
-        console.error(`SSR: Component '${name}' not found:`, error)
-        return () => React.createElement('div', {}, `Component '${name}' not found`)
+        console.error(`SSR: Component '${name}' not found:`, error);
+        return () =>
+          React.createElement("div", {}, `Component '${name}' not found`);
       }
     },
     setup: ({ App, props }) => React.createElement(App, props),
-  })
+  });
 }
 ```
 
@@ -75,9 +76,9 @@ Update your main application to use SSR:
 ```gleam
 import gleam/erlang/process
 import gleam/option
-import inertia_gleam
-import inertia_gleam/ssr
-import inertia_gleam/types
+import inertia_wisp
+import inertia_wisp/ssr
+import inertia_wisp/types
 import wisp
 
 pub fn main() {
@@ -109,7 +110,7 @@ fn start_ssr_supervisor() {
       raise_on_failure: False,
       supervisor_name: "InertiaSSR",
     )
-  
+
   ssr.start_supervisor(config)
 }
 
@@ -117,17 +118,17 @@ fn handle_request(
   req: wisp.Request,
   ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
 ) -> wisp.Response {
-  use ctx <- inertia_gleam.inertia_middleware(req, inertia_gleam.default_config())
-  
+  use ctx <- inertia_wisp.inertia_middleware(req, inertia_wisp.default_config())
+
   // Enable SSR if supervisor is available
   let ctx = case ssr_supervisor {
-    option.Some(supervisor) -> 
+    option.Some(supervisor) ->
       ctx
-      |> inertia_gleam.enable_ssr()
-      |> inertia_gleam.with_ssr_supervisor(supervisor)
+      |> inertia_wisp.enable_ssr()
+      |> inertia_wisp.with_ssr_supervisor(supervisor)
     option.None -> ctx
   }
-  
+
   // ... handle routes
 }
 ```
@@ -139,15 +140,15 @@ fn handle_request(
 For common scenarios, use the built-in configuration helpers:
 
 ```gleam
-import inertia_gleam/ssr/config
+import inertia_wisp/ssr/config
 
 // Development configuration
-let dev_config = 
+let dev_config =
   config.development()
   |> config.with_path("./ssr")
   |> config.with_module("ssr")
 
-// Production configuration  
+// Production configuration
 let prod_config =
   config.production()
   |> config.with_path("./ssr")
@@ -195,6 +196,7 @@ gleam run
 ## Graceful Fallback
 
 If SSR fails for any reason:
+
 - Development: Can raise exceptions for debugging (set `raise_on_failure: True`)
 - Production: Falls back to CSR automatically (set `raise_on_failure: False`)
 
@@ -208,16 +210,19 @@ If SSR fails for any reason:
 ## Troubleshooting
 
 ### SSR Supervisor Fails to Start
+
 - Ensure Node.js is installed and accessible
 - Check that SSR bundle exists at configured path
 - Verify module name matches the exported file
 
 ### Render Errors
+
 - Check Node.js console output for JavaScript errors
 - Ensure all imported modules are SSR-compatible
 - Verify component props match expected schema
 
 ### Performance Issues
+
 - Increase timeout for complex components
 - Add more workers to the pool
 - Consider lazy loading for heavy components
@@ -225,26 +230,28 @@ If SSR fails for any reason:
 ## Development vs Production
 
 ### Development
+
 ```gleam
 config.development() // Raises errors, longer timeout, fewer workers
 ```
 
 ### Production
+
 ```gleam
 config.production() // Graceful fallback, shorter timeout, more workers
 ```
 
 ## Configuration Reference
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | Bool | False | Whether SSR is globally enabled |
-| `path` | String | "priv" | Directory containing SSR bundle |
-| `module` | String | "ssr" | Node.js module name (no .js) |
-| `pool_size` | Int | 4 | Number of Node.js workers |
-| `timeout_ms` | Int | 5000 | Render timeout in milliseconds |
-| `raise_on_failure` | Bool | False | Raise exceptions vs fallback |
-| `supervisor_name` | String | "InertiaSSR" | Process name |
+| Option             | Type   | Default      | Description                     |
+| ------------------ | ------ | ------------ | ------------------------------- |
+| `enabled`          | Bool   | False        | Whether SSR is globally enabled |
+| `path`             | String | "priv"       | Directory containing SSR bundle |
+| `module`           | String | "ssr"        | Node.js module name (no .js)    |
+| `pool_size`        | Int    | 4            | Number of Node.js workers       |
+| `timeout_ms`       | Int    | 5000         | Render timeout in milliseconds  |
+| `raise_on_failure` | Bool   | False        | Raise exceptions vs fallback    |
+| `supervisor_name`  | String | "InertiaSSR" | Process name                    |
 
 ## Example Output
 
@@ -253,21 +260,23 @@ With SSR enabled, initial page loads return:
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title inertia>Welcome to Inertia Gleam</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
     <div id="app" data-page="{...}">
-        <!-- Fully rendered React component HTML -->
-        <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-            <!-- Component content pre-rendered -->
-        </div>
+      <!-- Fully rendered React component HTML -->
+      <div
+        class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50"
+      >
+        <!-- Component content pre-rendered -->
+      </div>
     </div>
     <script type="module" src="/static/js/main.js"></script>
-</body>
+  </body>
 </html>
 ```
 
