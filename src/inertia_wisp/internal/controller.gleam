@@ -290,12 +290,16 @@ pub fn assign_errors(
   ctx: InertiaContext,
   errors: Dict(String, String),
 ) -> InertiaContext {
+  // Merge new errors with existing ones (new errors override existing)
+  let merged_errors = dict.merge(ctx.errors, errors)
+  
   let errors_list =
-    dict.fold(errors, [], fn(acc, key, value) {
+    dict.fold(merged_errors, [], fn(acc, key, value) {
       [#(key, json.string(value)), ..acc]
     })
 
-  assign_prop(ctx, "errors", json.object(errors_list))
+  let updated_ctx = InertiaContext(..ctx, errors: merged_errors)
+  assign_prop(updated_ctx, "errors", json.object(errors_list))
 }
 
 /// Add a single validation error

@@ -200,6 +200,30 @@ pub fn version(response: Response) {
   |> inertia_data(decode.at(["version"], decode.string))
 }
 
+/// Extract the encrypt_history flag from an Inertia response.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// testing.encrypt_history(response) |> should.equal(Ok(True))
+/// ```
+pub fn encrypt_history(response: Response) {
+  response
+  |> inertia_data(decode.at(["encryptHistory"], decode.bool))
+}
+
+/// Extract the clear_history flag from an Inertia response.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// testing.clear_history(response) |> should.equal(Ok(True))
+/// ```
+pub fn clear_history(response: Response) {
+  response
+  |> inertia_data(decode.at(["clearHistory"], decode.bool))
+}
+
 // Private helper functions below this line
 
 /// Extract and decode Inertia data from either JSON or HTML responses

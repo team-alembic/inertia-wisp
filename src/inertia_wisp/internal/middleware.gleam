@@ -46,7 +46,7 @@ pub fn inertia_middleware(
   let is_inertia_request = is_inertia_request(req)
   // Check version compatibility first
   case is_inertia_request && !version.version_matches(req, config) {
-    True -> version.version_mismatch_response()
+    True -> version.version_mismatch_response(req)
     False -> {
       let context = types.new_context(config, req)
       // Configure SSR if supervisor is available

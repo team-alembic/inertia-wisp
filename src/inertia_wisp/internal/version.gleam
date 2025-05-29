@@ -28,6 +28,7 @@
 
 import gleam/http/request
 import gleam/result
+import gleam/string
 import inertia_wisp/internal/types.{type Config}
 import wisp.{type Request, type Response}
 
@@ -55,7 +56,10 @@ pub fn get_current_version(config: Config) -> String {
 }
 
 /// Create a version mismatch response
-pub fn version_mismatch_response() -> Response {
+pub fn version_mismatch_response(req: Request) -> Response {
+  let url = wisp.path_segments(req) |> string.join("/")
+  let url = "/" <> url
   wisp.response(409)
   |> wisp.set_header("x-inertia", "true")
+  |> wisp.set_header("x-inertia-location", url)
 }
