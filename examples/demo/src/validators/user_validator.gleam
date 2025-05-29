@@ -1,30 +1,31 @@
 import data/users
-import gleam/dict
 import gleam/list
 import gleam/option
+import types/user
 import validate
 
 // Individual validator functions
 pub fn name_validator(name: String) -> Result(String, String) {
-  validate.combine([validate.non_empty_string, validate.min_length(2)])(name)
+  name
+  |> validate.combine([validate.non_empty_string, validate.min_length(2)])
 }
 
 pub fn email_validator(email: String) -> Result(String, String) {
-  validate.combine([validate.non_empty_string, validate.contains("@")])(email)
+  email
+  |> validate.combine([validate.non_empty_string, validate.contains("@")])
 }
 
 pub fn duplicate_email_validator(
   existing_id: option.Option(Int),
 ) -> validate.Validator(String) {
   fn(email: String) -> Result(String, String) {
-    let is_duplicate = case existing_id {
-      option.Some(id) ->
-        users.get_initial_state().users
-        |> list.any(fn(user) { user.email == email && user.id != id })
-      option.None ->
-        users.get_initial_state().users
-        |> list.any(fn(user) { user.email == email })
+    let matching_user = fn(user: user.User) {
+      user.email == email && option.Some(user.id) != existing_id
     }
+
+    let is_duplicate =
+      users.get_initial_state().users
+      |> list.any(matching_user)
 
     case is_duplicate {
       True -> Error("already exists")
@@ -38,15 +39,9 @@ pub fn validate_user_input(
   name: String,
   email: String,
   existing_id: option.Option(Int),
-) -> Result(Nil, dict.Dict(String, String)) {
-  validate.validation_pipeline(fn() {
-    use <- validate.validate_field("name", name, name_validator)
-    use <- validate.validate_field("email", email, email_validator)
-    use <- validate.validate_field(
-      "email",
-      email,
-      duplicate_email_validator(existing_id),
-    )
-    validate.validation_valid(Nil)
-  })
+) -> validate.ValidationResult {
+  use <- validate.field("name", name, name_validator)
+  use <- validate.field("email", email, email_validator)
+  use <- validate.field("email", email, duplicate_email_validator(existing_id))
+  validate.Valid
 }

@@ -2,25 +2,25 @@ import gleam/json
 import gleam/list
 import gleam/string
 import handlers/utils
-import inertia_wisp
+import inertia_wisp/inertia
 import simplifile
 import wisp
 
-pub fn upload_form_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
+pub fn upload_form_page(req: inertia.InertiaContext) -> wisp.Response {
   req
   |> utils.assign_common_props()
-  |> inertia_wisp.assign_prop("max_files", json.int(3))
-  |> inertia_wisp.assign_prop("max_size_mb", json.int(5))
-  |> inertia_wisp.render("UploadForm")
+  |> inertia.assign_prop("max_files", json.int(3))
+  |> inertia.assign_prop("max_size_mb", json.int(5))
+  |> inertia.render("UploadForm")
 }
 
-pub fn handle_upload(req: inertia_wisp.InertiaContext) -> wisp.Response {
+pub fn handle_upload(req: inertia.InertiaContext) -> wisp.Response {
   use form_data <- wisp.require_form(req.request)
 
   req
   |> utils.assign_common_props()
-  |> inertia_wisp.assign_prop("success", json.string("Success!"))
-  |> inertia_wisp.assign_prop(
+  |> inertia.assign_prop("success", json.string("Success!"))
+  |> inertia.assign_prop(
     "uploaded_files",
     json.object(
       form_data.files
@@ -41,7 +41,7 @@ pub fn handle_upload(req: inertia_wisp.InertiaContext) -> wisp.Response {
       }),
     ),
   )
-  |> inertia_wisp.render("UploadSuccess")
+  |> inertia.render("UploadSuccess")
 }
 
 fn get_file_size(file_path: String) -> Int {
@@ -78,7 +78,7 @@ fn get_content_type_from_filename(filename: String) -> String {
   }
 }
 
-pub fn progress_endpoint(_req: inertia_wisp.InertiaContext) -> wisp.Response {
+pub fn progress_endpoint(_req: inertia.InertiaContext) -> wisp.Response {
   // This would be used for upload progress tracking
   // In a real implementation, you might track upload progress in a cache/database
   // and return the current progress as JSON

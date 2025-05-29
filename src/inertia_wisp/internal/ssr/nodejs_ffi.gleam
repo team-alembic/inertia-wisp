@@ -1,7 +1,48 @@
+//// @internal
+////
+//// Foreign Function Interface (FFI) for Node.js Server-Side Rendering integration.
+////
+//// This module provides the low-level FFI bindings that enable communication
+//// between the Gleam/Erlang runtime and Node.js processes for server-side
+//// rendering of Inertia.js pages. It handles the marshalling of data between
+//// the two runtime environments and manages the lifecycle of Node.js worker
+//// processes.
+////
+//// ## Architecture
+////
+//// The FFI system works by:
+//// 1. **Process Management**: Starting and supervising Node.js worker processes
+//// 2. **Message Passing**: Serializing Gleam data to JSON for Node.js consumption
+//// 3. **Response Handling**: Deserializing rendered HTML responses back to Gleam
+//// 4. **Error Management**: Handling failures in process communication and rendering
+////
+//// ## Data Flow
+////
+//// ```
+//// Gleam Data -> JSON -> Node.js Process -> Rendered HTML -> Gleam Response
+//// ```
+////
+//// ## Error Handling
+////
+//// The FFI defines specific error types for different failure modes:
+//// - `SupervisorStartError`: Failed to start the Node.js supervisor
+//// - `NodeCallError`: Communication failure with Node.js process
+//// - `SerializationError`: Data marshalling/unmarshalling failure
+////
+//// ## External Dependencies
+////
+//// This module relies on external Erlang/Elixir functions to:
+//// - Spawn and manage Node.js processes
+//// - Handle inter-process communication
+//// - Manage process supervision and recovery
+////
+//// The actual FFI implementations are provided by external modules
+//// that handle the platform-specific details of process management.
+
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/result
-import inertia_wisp/types.{type SSRResponse, SSRResponse}
+import inertia_wisp/internal/types.{type SSRResponse, SSRResponse}
 
 /// External types for Erlang/Elixir interop
 pub type Atom

@@ -1,8 +1,31 @@
+//// @internal
+////
+//// Error handling utilities for Inertia.js validation errors.
+////
+//// This module provides functionality for managing validation errors in Inertia.js applications.
+//// It allows you to attach validation errors to the Inertia context, which will be included
+//// in the response and can be displayed in your frontend components.
+////
+//// ## Usage
+////
+//// ```gleam
+//// let errors = dict.from_list([
+////   #("email", "Email is required"),
+////   #("password", "Password must be at least 8 characters")
+//// ])
+////
+//// ctx
+//// |> errors.assign_errors(errors)
+//// |> inertia.render("LoginForm")
+//// ```
+////
+//// The errors will be available in your frontend component as props.errors.
+
 import gleam/dict.{type Dict}
 import gleam/json
 
-import inertia_wisp/controller
-import inertia_wisp/types.{type InertiaContext}
+import inertia_wisp/internal/controller
+import inertia_wisp/internal/types.{type InertiaContext}
 
 /// Represents validation errors that can be displayed to the user
 pub type ValidationErrors =

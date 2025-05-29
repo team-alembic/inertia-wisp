@@ -1,5 +1,41 @@
+//// @internal
+////
+//// Configuration management for Server-Side Rendering (SSR) functionality.
+////
+//// This module provides configuration validation and management for the SSR
+//// system used in Inertia.js applications. It handles the setup and validation
+//// of Node.js process pool configuration, script paths, timeouts, and other
+//// SSR-specific settings.
+////
+//// ## Configuration Options
+////
+//// The SSR configuration includes:
+//// - **Script Path**: Path to the Node.js rendering script
+//// - **Pool Size**: Number of Node.js worker processes to maintain
+//// - **Timeout**: Maximum time to wait for rendering completion
+//// - **Module Name**: Name of the module containing frontend components
+////
+//// ## Validation
+////
+//// The module provides comprehensive validation for:
+//// - File system paths to ensure scripts exist and are accessible
+//// - Pool size limits to prevent resource exhaustion
+//// - Timeout values to ensure reasonable response times
+//// - Module name format for proper component resolution
+////
+//// ## Error Handling
+////
+//// Configuration errors are categorized into specific types:
+//// - `InvalidPath`: Script file not found or inaccessible
+//// - `InvalidPoolSize`: Pool size outside acceptable range
+//// - `InvalidTimeout`: Timeout value too low or too high
+//// - `InvalidModuleName`: Malformed module identifier
+////
+//// This ensures early detection of configuration issues before SSR
+//// processes are started, preventing runtime failures.
+
 import gleam/result
-import inertia_wisp/types.{type SSRConfig, SSRConfig}
+import inertia_wisp/internal/types.{type SSRConfig, SSRConfig}
 
 /// Error types for SSR configuration
 pub type ConfigError {

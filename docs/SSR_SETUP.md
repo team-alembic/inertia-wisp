@@ -118,14 +118,14 @@ fn handle_request(
   req: wisp.Request,
   ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
 ) -> wisp.Response {
-  use ctx <- inertia_wisp.inertia_middleware(req, inertia_wisp.default_config())
+  use ctx <- inertia.inertia_middleware(req, inertia.default_config())
 
   // Enable SSR if supervisor is available
   let ctx = case ssr_supervisor {
     option.Some(supervisor) ->
       ctx
-      |> inertia_wisp.enable_ssr()
-      |> inertia_wisp.with_ssr_supervisor(supervisor)
+      |> inertia.enable_ssr()
+      |> inertia.with_ssr_supervisor(supervisor)
     option.None -> ctx
   }
 

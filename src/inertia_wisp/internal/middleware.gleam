@@ -1,10 +1,39 @@
+//// @internal
+////
+//// Middleware for detecting and handling Inertia.js requests.
+////
+//// This module provides the core middleware functionality that bridges between
+//// Wisp web requests and the Inertia.js protocol. It:
+////
+//// - Detects whether incoming requests are Inertia XHR requests or initial page loads
+//// - Handles version matching and asset cache busting
+//// - Creates and manages the InertiaContext for request handling
+//// - Coordinates with optional SSR (Server-Side Rendering) functionality
+//// - Manages partial reload requests for performance optimization
+////
+//// ## Request Detection
+////
+//// The middleware identifies Inertia requests by checking for:
+//// - `X-Inertia: true` header for XHR requests
+//// - `X-Inertia-Version` for version matching
+//// - `X-Inertia-Partial-Data` for partial reloads
+//// - `X-Inertia-Partial-Component` for component-specific reloads
+////
+//// ## Response Handling
+////
+//// Based on the request type, the middleware ensures:
+//// - JSON responses for Inertia XHR requests
+//// - HTML responses for initial page loads
+//// - Proper HTTP status codes and headers
+//// - Version mismatch handling with appropriate redirects
+
 import gleam/erlang/process.{type Subject}
 import gleam/http/request
 import gleam/list
 import gleam/option.{type Option}
 import gleam/string
-import inertia_wisp/types.{type Config, type InertiaContext, type SSRMessage}
-import inertia_wisp/version
+import inertia_wisp/internal/types.{type Config, type InertiaContext, type SSRMessage}
+import inertia_wisp/internal/version
 import wisp.{type Request, type Response}
 
 /// Middleware to detect and process Inertia requests with config and optional SSR

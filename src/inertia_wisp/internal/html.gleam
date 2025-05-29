@@ -1,6 +1,31 @@
+//// @internal
+////
+//// HTML template generation for Inertia.js initial page loads.
+////
+//// This module handles the generation of HTML responses for initial page loads
+//// (when users navigate directly to a URL or refresh the page). It creates the
+//// root HTML template that includes:
+////
+//// - The basic HTML structure with DOCTYPE, head, and body
+//// - Meta tags for charset and viewport
+//// - CSS and JavaScript asset links
+//// - The initial page data embedded as JSON in a div element
+//// - The root div where the frontend framework will mount
+////
+//// ## Template Structure
+////
+//// The generated HTML includes:
+//// - `#app` div for frontend framework mounting
+//// - `#page-data` div containing the serialized page data
+//// - Asset links for CSS and JavaScript files
+//// - Support for SSR-rendered content when available
+////
+//// This ensures that both client-side navigation (via Inertia XHR requests)
+//// and direct page loads work seamlessly in Inertia.js applications.
+
 import gleam/json
 import gleam/string
-import inertia_wisp/types.{type Page, type SSRResponse}
+import inertia_wisp/internal/types.{type Page, type SSRResponse}
 
 /// Generate the root HTML template for initial page loads
 pub fn root_template(page: Page, title: String) -> String {

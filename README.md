@@ -43,9 +43,9 @@ pub fn main() {
 }
 
 fn handle_request(req: wisp.Request) -> wisp.Response {
-  use ctx <- inertia_wisp.inertia_middleware(
+  use ctx <- inertia.inertia_middleware(
     req,
-    inertia_wisp.default_config(),
+    inertia.default_config(),
     option.None  // No SSR supervisor
   )
 
@@ -63,16 +63,16 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 import gleam/json
 import gleam/option
 
-fn home_page(ctx: inertia_wisp.InertiaContext) -> wisp.Response {
+fn home_page(ctx: inertia.InertiaContext) -> wisp.Response {
   ctx
-  |> inertia_wisp.assign_prop("message", json.string("Hello from Gleam!"))
-  |> inertia_wisp.assign_prop("user", json.string("Alice"))
-  |> inertia_wisp.assign_prop("count", json.int(42))
-  |> inertia_wisp.render("Home")
+  |> inertia.assign_prop("message", json.string("Hello from Gleam!"))
+  |> inertia.assign_prop("user", json.string("Alice"))
+  |> inertia.assign_prop("count", json.int(42))
+  |> inertia.render("Home")
 }
 
-fn about_page(ctx: inertia_wisp.InertiaContext) -> wisp.Response {
-  inertia_wisp.render(ctx, "About")
+fn about_page(ctx: inertia.InertiaContext) -> wisp.Response {
+  inertia.render(ctx, "About")
 }
 ```
 
@@ -122,10 +122,10 @@ export default function About() {
 
 ```gleam
 // Default configuration
-let config = inertia_wisp.default_config()
+let config = inertia.default_config()
 
 // The middleware accepts config, optional SSR supervisor, and initializes the InertiaContext
-use ctx <- inertia_wisp.inertia_middleware(req, config, option.None)
+use ctx <- inertia.inertia_middleware(req, config, option.None)
 ```
 
 ### Rendering Pages
@@ -134,22 +134,22 @@ use ctx <- inertia_wisp.inertia_middleware(req, config, option.None)
 import gleam/json
 
 // Simple component without props
-inertia_wisp.render(ctx, "Dashboard")
+inertia.render(ctx, "Dashboard")
 
 // Component with props using pipe-friendly API
 ctx
-|> inertia_wisp.assign_prop("title", json.string("My App"))
-|> inertia_wisp.assign_prop("items", json.array([json.int(1), json.int(2)], json.int))
-|> inertia_wisp.assign_prop("user_count", json.int(42))
-|> inertia_wisp.render("Dashboard")
+|> inertia.assign_prop("title", json.string("My App"))
+|> inertia.assign_prop("items", json.array([json.int(1), json.int(2)], json.int))
+|> inertia.assign_prop("user_count", json.int(42))
+|> inertia.render("Dashboard")
 
 // Multiple props at once
 ctx
-|> inertia_wisp.assign_props([
+|> inertia.assign_props([
   #("name", json.string("Alice")),
   #("age", json.int(30)),
 ])
-|> inertia_wisp.render("UserProfile")
+|> inertia.render("UserProfile")
 ```
 
 ### Always Props (Global Props)
@@ -157,14 +157,14 @@ ctx
 ```gleam
 // Props that appear on every page
 ctx
-|> inertia_wisp.assign_always_props([
+|> inertia.assign_always_props([
   #("auth", json.object([
     #("authenticated", json.bool(True)),
     #("user", json.string("demo_user")),
   ])),
   #("csrf_token", json.string("abc123xyz")),
 ])
-|> inertia_wisp.render("SomePage")
+|> inertia.render("SomePage")
 ```
 
 ### Lazy Props
@@ -172,21 +172,21 @@ ctx
 ```gleam
 // Props that are only evaluated when needed (for performance)
 ctx
-|> inertia_wisp.assign_lazy_prop("expensive_data", fn() {
+|> inertia.assign_lazy_prop("expensive_data", fn() {
   // This function only runs if the prop is requested
   fetch_expensive_computation()
 })
-|> inertia_wisp.render("Dashboard")
+|> inertia.render("Dashboard")
 ```
 
 ### Redirects
 
 ```gleam
 // Standard redirect
-inertia_wisp.redirect(ctx, "/users")
+inertia.redirect(ctx, "/users")
 
 // External redirect (full page reload)
-inertia_wisp.external_redirect("https://example.com")
+inertia.external_redirect("https://example.com")
 ```
 
 ### Middleware
@@ -194,9 +194,9 @@ inertia_wisp.external_redirect("https://example.com")
 ```gleam
 fn handle_request(req: wisp.Request) -> wisp.Response {
   // The middleware accepts config, optional SSR supervisor, and creates InertiaContext
-  use ctx <- inertia_wisp.inertia_middleware(
+  use ctx <- inertia.inertia_middleware(
     req,
-    inertia_wisp.default_config(),
+    inertia.default_config(),
     option.None  // No SSR supervisor
   )
 
@@ -213,20 +213,20 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 Inertia Gleam focuses on the core Inertia protocol. Form validation and error handling are implemented in your application using Wisp's form handling:
 
 ```gleam
-pub fn create_user(ctx: inertia_wisp.InertiaContext) -> wisp.Response {
+pub fn create_user(ctx: inertia.InertiaContext) -> wisp.Response {
   use json_data <- wisp.require_json(ctx.request)
 
   case validate_user_data(json_data) {
     Ok(user) -> {
       // Save user and redirect
-      inertia_wisp.redirect(ctx, "/users")
+      inertia.redirect(ctx, "/users")
     }
     Error(errors) -> {
       // Return form with errors
       ctx
-      |> inertia_wisp.assign_errors(errors)
-      |> inertia_wisp.assign_prop("old", json_data)
-      |> inertia_wisp.render("CreateUser")
+      |> inertia.assign_errors(errors)
+      |> inertia.assign_prop("old", json_data)
+      |> inertia.render("CreateUser")
     }
   }
 }
@@ -237,15 +237,15 @@ pub fn create_user(ctx: inertia_wisp.InertiaContext) -> wisp.Response {
 File uploads are handled through Wisp's built-in FormData mechanisms:
 
 ```gleam
-pub fn handle_upload(ctx: inertia_wisp.InertiaContext) -> wisp.Response {
+pub fn handle_upload(ctx: inertia.InertiaContext) -> wisp.Response {
   use form_data <- wisp.require_form(ctx.request)
 
   // Process uploaded files from form_data.files
   let uploaded_files = process_files(form_data.files)
 
   ctx
-  |> inertia_wisp.assign_prop("uploaded_files", serialize_files(uploaded_files))
-  |> inertia_wisp.render("UploadSuccess")
+  |> inertia.assign_prop("uploaded_files", serialize_files(uploaded_files))
+  |> inertia.render("UploadSuccess")
 }
 ```
 

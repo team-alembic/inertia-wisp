@@ -1,12 +1,56 @@
+//// @internal
+////
+//// Server-Side Rendering (SSR) coordination for Inertia.js applications.
+////
+//// This module provides the core SSR functionality that enables server-side
+//// rendering of Inertia.js pages for improved SEO, faster initial page loads,
+//// and better user experience. It coordinates between the Gleam server and
+//// a Node.js process pool that handles the actual rendering.
+////
+//// ## How SSR Works
+////
+//// 1. **Process Pool**: Manages a pool of Node.js processes for rendering
+//// 2. **Message Passing**: Sends page data to Node.js processes via JSON
+//// 3. **HTML Generation**: Receives rendered HTML from the frontend framework
+//// 4. **Fallback Handling**: Gracefully falls back to client-side rendering on errors
+////
+//// ## Architecture
+////
+//// ```
+//// Gleam Server -> SSR Supervisor -> Node.js Process Pool -> Frontend Framework
+//// ```
+////
+//// The SSR system uses Erlang's actor model to manage:
+//// - A supervisor that oversees the Node.js processes
+//// - Individual worker processes for parallel rendering
+//// - Message queues for handling rendering requests
+//// - Timeout and error handling for reliability
+////
+//// ## Configuration
+////
+//// SSR requires configuration of:
+//// - Node.js script path for rendering
+//// - Process pool size for concurrency
+//// - Timeout values for request handling
+//// - Module names for component resolution
+////
+//// ## Error Handling
+////
+//// The SSR system is designed to be resilient:
+//// - Failed renders fall back to client-side rendering
+//// - Process crashes are automatically recovered
+//// - Timeouts prevent hanging requests
+//// - Detailed error reporting for debugging
+
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/erlang/process.{type Subject}
 import gleam/int
 import gleam/json
 import gleam/result
-import inertia_wisp/ssr/config
-import inertia_wisp/ssr/supervisor
-import inertia_wisp/types.{type SSRConfig, type SSRMessage}
+import inertia_wisp/internal/ssr/config
+import inertia_wisp/internal/ssr/supervisor
+import inertia_wisp/internal/types.{type SSRConfig, type SSRMessage}
 
 /// Start the SSR supervisor with the given configuration
 pub fn start_supervisor(

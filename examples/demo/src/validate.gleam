@@ -8,34 +8,24 @@ pub type Validator(a) =
   fn(a) -> Result(a, String)
 
 /// A validation result type that accumulates errors
-pub type ValidationResult(a) {
-  Valid(a)
+pub type ValidationResult {
+  Valid
   Invalid(Dict(String, String))
-}
-
-/// Helper to convert ValidationResult to Result
-fn validation_result_to_result(
-  vr: ValidationResult(a),
-) -> Result(a, Dict(String, String)) {
-  case vr {
-    Valid(value) -> Ok(value)
-    Invalid(errors) -> Error(errors)
-  }
 }
 
 /// Simple validate function that works with use syntax
 /// Usage: use <- validate_field("field_name", value, validator)
-pub fn validate_field(
+pub fn field(
   field_name: String,
   value: a,
   validator: Validator(a),
-  continue: fn() -> ValidationResult(b),
-) -> ValidationResult(b) {
+  continue: fn() -> ValidationResult,
+) -> ValidationResult {
   case validator(value) {
     Ok(_) -> continue()
     Error(message) -> {
       case continue() {
-        Valid(_) -> Invalid(dict.from_list([#(field_name, message)]))
+        Valid -> Invalid(dict.from_list([#(field_name, message)]))
         Invalid(existing_errors) ->
           Invalid(dict.insert(existing_errors, field_name, message))
       }
@@ -45,50 +35,39 @@ pub fn validate_field(
 
 /// Validate an optional value using use syntax
 /// Usage: use <- validate_optional_field("field_name", maybe_value, validator)
-pub fn validate_optional_field(
+pub fn optional_field(
   field_name: String,
   value: Option(a),
   validator: Validator(a),
-  continue: fn() -> ValidationResult(b),
-) -> ValidationResult(b) {
+  continue: fn() -> ValidationResult,
+) -> ValidationResult {
   case value {
     option.None -> continue()
     option.Some(val) -> {
-      validate_field(field_name, val, validator, continue)
+      field(field_name, val, validator, continue)
     }
   }
 }
 
 /// Create a valid result
-pub fn validation_valid(value: a) -> ValidationResult(a) {
-  Valid(value)
+pub fn valid() -> ValidationResult {
+  Valid
 }
 
 /// Accumulate errors from multiple validation results
-pub fn accumulate_errors(
-  results: List(ValidationResult(a)),
-) -> ValidationResult(List(a)) {
-  let #(values, all_errors) =
-    list.fold(results, #([], dict.new()), fn(acc, result) {
-      let #(values, errors) = acc
+pub fn accumulate_errors(results: List(ValidationResult)) -> ValidationResult {
+  let all_errors =
+    list.fold(results, dict.new(), fn(errors, result) {
       case result {
-        Valid(value) -> #([value, ..values], errors)
-        Invalid(new_errors) -> #(values, dict.merge(errors, new_errors))
+        Valid -> errors
+        Invalid(new_errors) -> dict.merge(errors, new_errors)
       }
     })
 
-  case dict.size(all_errors) {
-    0 -> Valid(list.reverse(values))
+  case dict.is_empty(all_errors) {
+    True -> Valid
     _ -> Invalid(all_errors)
   }
-}
-
-/// Entry point for validation pipelines
-/// This starts a validation chain and returns the final result
-pub fn validation_pipeline(
-  pipeline: fn() -> ValidationResult(a),
-) -> Result(a, Dict(String, String)) {
-  validation_result_to_result(pipeline())
 }
 
 /// Common validators

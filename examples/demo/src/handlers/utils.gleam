@@ -1,12 +1,12 @@
 import gleam/int
 import gleam/json
-import inertia_wisp
+import inertia_wisp/inertia
 import types/user.{type User}
 
 // Common authentication and CSRF props used across all handlers
 pub fn assign_common_props(context) {
   context
-  |> inertia_wisp.assign_always_props([
+  |> inertia.assign_always_props([
     #(
       "auth",
       json.object([

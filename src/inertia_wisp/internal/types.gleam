@@ -1,3 +1,32 @@
+//// @internal
+////
+//// Core type definitions for the Inertia.js Wisp adapter.
+////
+//// This module defines all the essential types used throughout the Inertia.js
+//// implementation, including:
+////
+//// - Page objects that represent the data sent to frontend components
+//// - Configuration types for both general settings and SSR
+//// - Context types that carry request state through the application
+//// - Prop management types for lazy evaluation and performance optimization
+//// - SSR (Server-Side Rendering) message and response types
+////
+//// ## Core Types
+////
+//// - `Page`: The main data structure sent to frontend components
+//// - `InertiaContext`: Request context with accumulated props and configuration
+//// - `Config`: Application-wide Inertia configuration
+//// - `SSRConfig`: Server-side rendering configuration
+//// - `Prop` and `PropValue`: Type-safe prop management with lazy evaluation
+////
+//// ## Design Principles
+////
+//// These types are designed to:
+//// - Maintain type safety throughout the request lifecycle
+//// - Support lazy evaluation for performance optimization
+//// - Enable clean separation between always props, regular props, and lazy props
+//// - Provide a foundation for both JSON responses and SSR HTML generation
+
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/erlang/process.{type Subject}
@@ -5,8 +34,11 @@ import gleam/json
 import gleam/option.{type Option}
 import wisp
 
-/// Represents an Inertia.js page object
-/// Page data to be sent to the client
+/// Represents an Inertia.js page object that will be sent to the client.
+/// 
+/// This is the core data structure that contains all the information needed
+/// to render a component on the frontend, including the component name,
+/// props, URL, version info, and history management flags.
 pub type Page {
   Page(
     component: String,
@@ -30,7 +62,14 @@ pub fn encode_page(page: Page) -> json.Json {
   ])
 }
 
-/// Prop value that can be either eager or lazy
+/// Prop inclusion behavior
+pub type Prop {
+  DefaultProp(PropValue)
+  OptionalProp(PropValue)
+  AlwaysProp(PropValue)
+}
+
+/// Prop evaluation strategy
 pub type PropValue {
   EagerProp(value: json.Json)
   LazyProp(evaluate: fn() -> json.Json)
@@ -38,22 +77,7 @@ pub type PropValue {
 
 /// Configuration for the Inertia adapter
 pub type Config {
-  Config(
-    version: String,
-    ssr: Bool,
-    always_props: Dict(String, PropValue),
-    encrypt_history: Bool,
-  )
-}
-
-/// Default configuration
-pub fn default_config() -> Config {
-  Config(
-    version: "1",
-    ssr: False,
-    always_props: dict.new(),
-    encrypt_history: False,
-  )
+  Config(version: String, ssr: Bool, encrypt_history: Bool)
 }
 
 /// Context wrapper for building up props before rendering
@@ -61,8 +85,7 @@ pub type InertiaContext {
   InertiaContext(
     config: Config,
     request: wisp.Request,
-    props: Dict(String, PropValue),
-    always_props: Dict(String, PropValue),
+    props: Dict(String, Prop),
     encrypt_history: Bool,
     clear_history: Bool,
     ssr_supervisor: Option(Subject(SSRMessage)),
@@ -74,7 +97,6 @@ pub fn new_context(config, request) {
     config: config,
     request: request,
     props: dict.new(),
-    always_props: dict.new(),
     encrypt_history: config.encrypt_history,
     clear_history: False,
     ssr_supervisor: option.None,

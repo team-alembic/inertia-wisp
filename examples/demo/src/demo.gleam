@@ -6,9 +6,7 @@ import gleam/list
 import gleam/option
 import handlers/uploads
 import handlers/users
-import inertia_wisp
-import inertia_wisp/ssr
-import inertia_wisp/types.{Config}
+import inertia_wisp/inertia
 import mist
 import wisp
 import wisp/wisp_mist
@@ -31,7 +29,7 @@ pub fn main() {
 
 fn start_ssr_supervisor() {
   let config =
-    types.SSRConfig(
+    inertia.ssr_config(
       enabled: True,
       path: "./static/js",
       module: "ssr",
@@ -41,7 +39,7 @@ fn start_ssr_supervisor() {
       supervisor_name: "InertiaSSR",
     )
 
-  case ssr.start_supervisor(config) {
+  case inertia.start_ssr_supervisor(config) {
     Ok(supervisor) -> {
       wisp.log_info("SSR supervisor started successfully")
       option.Some(supervisor)
@@ -55,14 +53,10 @@ fn start_ssr_supervisor() {
 
 fn handle_request(
   req: wisp.Request,
-  ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
+  ssr_supervisor: option.Option(process.Subject(inertia.SSRMessage)),
 ) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use ctx <- inertia_wisp.inertia_middleware(
-    req,
-    inertia_wisp.default_config(),
-    ssr_supervisor,
-  )
+  use ctx <- inertia.middleware(req, inertia.default_config(), ssr_supervisor)
 
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx)
@@ -81,9 +75,9 @@ fn handle_request(
   }
 }
 
-fn home_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
+fn home_page(req: inertia.InertiaContext) -> wisp.Response {
   req
-  |> inertia_wisp.assign_always_props([
+  |> inertia.assign_always_props([
     #(
       "auth",
       json.object([
@@ -93,33 +87,38 @@ fn home_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
     ),
     #("csrf_token", json.string("abc123xyz")),
   ])
-  |> inertia_wisp.assign_props([
+  |> inertia.assign_props([
     #("message", json.string("Hello from Gleam!")),
     #("timestamp", json.string("2024-01-01T00:00:00Z")),
     #("user_count", json.int(list.length(user_data.get_initial_state().users))),
   ])
-  |> inertia_wisp.render("Home")
+  |> inertia.render("Home")
 }
 
 /// Example of using asset versioning with custom config
-fn versioned_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
+fn versioned_page(req: inertia.InertiaContext) -> wisp.Response {
   // Create config with custom version (in real app, this might come from build system)
-  let config = Config(..inertia_wisp.default_config(), version: "v2.1.0-abc123")
+  let config =
+    inertia.config(
+      version: "v2.1.0-abc123",
+      ssr: req.config.ssr,
+      encrypt_history: req.config.encrypt_history,
+    )
 
   req
-  |> inertia_wisp.set_config(config)
-  |> inertia_wisp.assign_prop("title", json.string("Asset Versioning Demo"))
-  |> inertia_wisp.assign_prop("version", json.string(config.version))
-  |> inertia_wisp.assign_prop(
+  |> inertia.set_config(config)
+  |> inertia.assign_prop("title", json.string("Asset Versioning Demo"))
+  |> inertia.assign_prop("version", json.string(config.version))
+  |> inertia.assign_prop(
     "message",
     json.string("This page uses custom asset versioning"),
   )
-  |> inertia_wisp.render("VersionedPage")
+  |> inertia.render("VersionedPage")
 }
 
-fn about_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
+fn about_page(req: inertia.InertiaContext) -> wisp.Response {
   req
-  |> inertia_wisp.assign_always_props([
+  |> inertia.assign_always_props([
     #(
       "auth",
       json.object([
@@ -129,6 +128,6 @@ fn about_page(req: inertia_wisp.InertiaContext) -> wisp.Response {
     ),
     #("csrf_token", json.string("abc123xyz")),
   ])
-  |> inertia_wisp.assign_prop("page_title", json.string("About Us"))
-  |> inertia_wisp.render("About")
+  |> inertia.assign_prop("page_title", json.string("About Us"))
+  |> inertia.render("About")
 }
