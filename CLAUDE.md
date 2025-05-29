@@ -1,0 +1,1 @@
+Note: For detailed implementation of decoders, especially for JSON data, consult the source code in build/packages/, particularly build/packages/gleam_stdlib/src/gleam/dynamic/decode.gleam. This module provides comprehensive examples and patterns for defining custom decoders.

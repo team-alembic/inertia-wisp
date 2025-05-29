@@ -2,7 +2,7 @@ name = "inertia_wisp"
 version = "0.1.0"
 
 description = "Inertia.js adapter for Gleam and Wisp web framework"
-licences = ["Apache-2.0"]
+licences = ["MIT"]
 repository = { type = "github", user = "your-username", repo = "inertia-wisp" }
 
 [dependencies]
