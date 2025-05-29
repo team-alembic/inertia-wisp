@@ -101,7 +101,7 @@ fn decode_user_request(
 }
 
 fn render_edit_page(req: inertia.InertiaContext, user: User) -> wisp.Response {
-  let user_data = utils.serialize_user_data(user)
+  let user_data = user.user_to_json(user)
 
   req
   |> utils.assign_common_props()

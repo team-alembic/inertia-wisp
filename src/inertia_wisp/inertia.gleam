@@ -61,7 +61,6 @@
 ////   module: "ssr",
 ////   pool_size: 2,
 ////   timeout_ms: 5000,
-////   raise_on_failure: False,
 ////   supervisor_name: "InertiaSSR",
 //// )
 ////
@@ -371,9 +370,10 @@ pub fn assign_always_lazy_prop(
 /// ```gleam
 /// import gleam/dict
 ///
-/// let errors = dict.new()
-///   |> dict.insert("email", "Email is required")
-///   |> dict.insert("password", "Password must be at least 8 characters")
+/// let errors = dict.from_list([
+///   #("email", "Email is required"),
+///   #("password", "Password must be at least 8 characters"),
+/// ])
 ///
 /// ctx |> inertia.assign_errors(errors)
 /// ```
@@ -545,7 +545,6 @@ pub fn external_redirect(to url: String) -> Response {
 ///     module: "default",
 ///     pool_size: 5,
 ///     timeout_ms: 5000,
-///     raise_on_failure: False,
 ///     supervisor_name: "inertia_ssr"
 ///   )
 ///
@@ -601,7 +600,6 @@ pub fn config(
 /// - `module`: The module export to use (usually "ssr")
 /// - `pool_size`: Number of Node.js processes in the pool
 /// - `timeout_ms`: Timeout for SSR requests in milliseconds
-/// - `raise_on_failure`: Whether to raise exceptions on SSR failures
 /// - `supervisor_name`: Name for the supervisor process
 ///
 /// ## Example
@@ -613,7 +611,6 @@ pub fn config(
 ///   module: "default",
 ///   pool_size: 3,
 ///   timeout_ms: 3000,
-///   raise_on_failure: False,
 ///   supervisor_name: "my_app_ssr"
 /// )
 /// ```
@@ -623,7 +620,6 @@ pub fn ssr_config(
   module module: String,
   pool_size pool_size: Int,
   timeout_ms timeout_ms: Int,
-  raise_on_failure raise_on_failure: Bool,
   supervisor_name supervisor_name: String,
 ) -> SSRConfig {
   types.SSRConfig(
@@ -632,7 +628,6 @@ pub fn ssr_config(
     module: module,
     pool_size: pool_size,
     timeout_ms: timeout_ms,
-    raise_on_failure: raise_on_failure,
     supervisor_name: supervisor_name,
   )
 }

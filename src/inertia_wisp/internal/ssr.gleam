@@ -45,10 +45,8 @@
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/erlang/process.{type Subject}
-import gleam/int
 import gleam/json
 import gleam/result
-import inertia_wisp/internal/ssr/config
 import inertia_wisp/internal/ssr/supervisor
 import inertia_wisp/internal/types.{type SSRConfig, type SSRMessage}
 
@@ -56,11 +54,8 @@ import inertia_wisp/internal/types.{type SSRConfig, type SSRMessage}
 pub fn start_supervisor(
   ssr_config: SSRConfig,
 ) -> Result(Subject(SSRMessage), String) {
-  use validated_config <- result.try(validate_config_with_detailed_errors(
-    ssr_config,
-  ))
   use sup <- result.try(
-    supervisor.start_link(validated_config)
+    supervisor.start_link(ssr_config)
     |> result.map_error(fn(_) { "Failed to start supervisor" }),
   )
   use _ <- result.try(
@@ -68,21 +63,6 @@ pub fn start_supervisor(
     |> result.map_error(fn(_) { "Failed to start Node.js workers" }),
   )
   Ok(sup)
-}
-
-fn validate_config_with_detailed_errors(
-  ssr_config: SSRConfig,
-) -> Result(SSRConfig, String) {
-  case config.validate(ssr_config) {
-    Ok(validated_config) -> Ok(validated_config)
-    Error(config.InvalidPoolSize(size)) ->
-      Error("InvalidSSRMessageize: " <> int.to_string(size))
-    Error(config.InvalidTimeout(timeout)) ->
-      Error("Invalid timeout: " <> int.to_string(timeout))
-    Error(config.InvalidModuleName(name)) ->
-      Error("Invalid module name: " <> name)
-    Error(config.InvalidPath(path)) -> Error("Invalid path: " <> path)
-  }
 }
 
 /// Check if SSR is enabled and available
@@ -112,9 +92,10 @@ pub fn render_page_with_supervisor(
       let page_data = create_page_data(component, props, url, version)
       case supervisor.render_page(supervisor, page_data, component) {
         Ok(response) -> types.SSRSuccess(response)
-        Error(_ssr_error) -> {
-          // echo ssr_error
-          handle_render_error("Render failed: ", status.config.raise_on_failure)
+        Error(ssr_error) -> {
+          types.SSRFallback(
+            "SSR render failed: " <> types.ssr_error_to_string(ssr_error),
+          )
         }
       }
     }
@@ -147,30 +128,6 @@ fn create_page_data(
     #(dynamic.string("url"), dynamic.string(url)),
     #(dynamic.string("version"), dynamic.string(version)),
   ])
-}
-
-/// Handle render errors based on configuration
-fn handle_render_error(
-  error_msg: String,
-  raise_on_failure: Bool,
-) -> types.SSRResult {
-  case raise_on_failure {
-    True -> types.SSRError("SSR render failed: " <> error_msg)
-    False -> types.SSRFallback("SSR render failed: " <> error_msg)
-  }
-}
-
-/// Get default SSR configuration
-pub fn get_default_config() -> SSRConfig {
-  config.default()
-}
-
-/// Validate an SSR configuration
-pub fn validate_config(ssr_config: SSRConfig) -> Result(SSRConfig, String) {
-  case config.validate(ssr_config) {
-    Ok(validated) -> Ok(validated)
-    Error(_) -> Error("Invalid configuration")
-  }
 }
 
 /// Get current SSR status

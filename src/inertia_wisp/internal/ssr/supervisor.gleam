@@ -45,11 +45,10 @@ import gleam/erlang/process.{type Subject}
 import gleam/otp/actor
 import gleam/otp/supervisor
 
-import inertia_wisp/internal/ssr/config
 import inertia_wisp/internal/ssr/nodejs_ffi
 import inertia_wisp/internal/types.{
-  type SSRConfig, type SSRError, type SSRMessage, ConfigurationError, GetStatus,
-  NodeJSStartFailed, RenderError, RenderPage, SSRStatus, StartNodeJS, StopNodeJS,
+  type SSRConfig, type SSRError, type SSRMessage, GetStatus, NodeJSStartFailed,
+  RenderError, RenderPage, SSRStatus, StartNodeJS, StopNodeJS,
   SupervisorNotStarted, UpdateConfig,
 }
 
@@ -136,20 +135,9 @@ fn handle_message(
     }
 
     UpdateConfig(new_config, client) -> {
-      case config.validate(new_config) {
-        Ok(validated_config) -> {
-          let new_state = State(..state, config: validated_config)
-          process.send(client, Ok(Nil))
-          actor.continue(new_state)
-        }
-        Error(_) -> {
-          process.send(
-            client,
-            Error(ConfigurationError("Invalid configuration")),
-          )
-          actor.continue(state)
-        }
-      }
+      let new_state = State(..state, config: new_config)
+      process.send(client, Ok(Nil))
+      actor.continue(new_state)
     }
 
     RenderPage(page, _component, client) -> {

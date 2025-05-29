@@ -35,7 +35,7 @@ import gleam/option.{type Option}
 import wisp
 
 /// Represents an Inertia.js page object that will be sent to the client.
-/// 
+///
 /// This is the core data structure that contains all the information needed
 /// to render a component on the frontend, including the component name,
 /// props, URL, version info, and history management flags.
@@ -142,9 +142,15 @@ pub type SSRStatus {
 pub type SSRError {
   SupervisorNotStarted
   NodeJSStartFailed(String)
-  NodeJSStopFailed(String)
-  ConfigurationError(String)
   RenderError(String)
+}
+
+pub fn ssr_error_to_string(error: SSRError) -> String {
+  case error {
+    SupervisorNotStarted -> "SSR supervisor not started"
+    NodeJSStartFailed(message) -> "Failed to start Node.js: " <> message
+    RenderError(message) -> "SSR render failed: " <> message
+  }
 }
 
 /// SSR configuration settings
@@ -160,8 +166,6 @@ pub type SSRConfig {
     pool_size: Int,
     /// Timeout for SSR renders in milliseconds
     timeout_ms: Int,
-    /// Whether to raise exceptions on SSR failure or fallback to CSR
-    raise_on_failure: Bool,
     /// Name for the supervisor process
     supervisor_name: String,
   )

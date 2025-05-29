@@ -35,7 +35,6 @@ fn start_ssr_supervisor() {
       module: "ssr",
       pool_size: 2,
       timeout_ms: 5000,
-      raise_on_failure: False,
       supervisor_name: "InertiaSSR",
     )
 
@@ -57,6 +56,9 @@ fn handle_request(
 ) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
   use ctx <- inertia.middleware(req, inertia.default_config(), ssr_supervisor)
+
+  echo wisp.path_segments(req)
+  echo req.method
 
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx)

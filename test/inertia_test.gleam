@@ -442,7 +442,6 @@ pub fn ssr_config_test() {
       module: "default",
       pool_size: 5,
       timeout_ms: 3000,
-      raise_on_failure: True,
       supervisor_name: "test_ssr",
     )
 
@@ -451,7 +450,6 @@ pub fn ssr_config_test() {
   config.module |> should.equal("default")
   config.pool_size |> should.equal(5)
   config.timeout_ms |> should.equal(3000)
-  config.raise_on_failure |> should.equal(True)
   config.supervisor_name |> should.equal("test_ssr")
 }
 

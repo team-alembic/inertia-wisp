@@ -4,7 +4,7 @@ import gleam/json
 import gleam/option
 import handlers/utils
 import inertia_wisp/inertia
-import types/user.{type CreateUserRequest, CreateUserRequest}
+import types/user.{type CreateUserRequest}
 import validate
 import validators/user_validator
 import wisp
@@ -17,24 +17,12 @@ pub fn create_user_page(req: inertia.InertiaContext) -> wisp.Response {
 
 pub fn create_user(ctx: inertia.InertiaContext) -> wisp.Response {
   use json_data <- wisp.require_json(ctx.request)
+  let request = decode.run(json_data, user.create_user_request_decoder())
 
-  case decode_user_request(json_data) {
+  case request {
     Ok(user_request) -> handle_valid_user_request(ctx, user_request)
     Error(_) -> wisp.bad_request()
   }
-}
-
-fn decode_user_request(
-  json_data: decode.Dynamic,
-) -> Result(CreateUserRequest, List(decode.DecodeError)) {
-  let user_decoder = {
-    use name <- decode.field("name", decode.string)
-    use email <- decode.field("email", decode.string)
-    use token <- decode.field("_token", decode.string)
-    decode.success(CreateUserRequest(name:, email:, token:))
-  }
-
-  decode.run(json_data, user_decoder)
 }
 
 fn handle_valid_user_request(
