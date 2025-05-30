@@ -46,7 +46,7 @@ fn insert_user(
 ) -> wisp.Response {
   case users.create_user(db, user_request.name, user_request.email) {
     Ok(_) -> cont()
-    Error(e) -> {
+    Error(_e) -> {
       let errors = dict.from_list([#("general", "Failed to create user")])
       validation_error_response(ctx, errors)
     }
