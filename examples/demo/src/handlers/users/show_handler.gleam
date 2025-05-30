@@ -1,21 +1,17 @@
 import data/users
 import handlers/utils
 import inertia_wisp/inertia
+import sqlight
 import types/user.{type User}
 import wisp
 
 pub fn show_user_page(
   req: inertia.InertiaContext,
   id_str: String,
+  db: sqlight.Connection,
 ) -> wisp.Response {
-  case utils.parse_user_id(id_str) {
-    Ok(id) -> handle_valid_user_id(req, id)
-    Error(_) -> wisp.not_found()
-  }
-}
-
-fn handle_valid_user_id(req: inertia.InertiaContext, id: Int) -> wisp.Response {
-  case users.find_user_by_id(id) {
+  use id <- utils.require_int(id_str)
+  case users.find_user_by_id(db, id) {
     Ok(user) -> render_user_page(req, user)
     Error(_) -> wisp.not_found()
   }

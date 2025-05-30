@@ -1,6 +1,7 @@
-import data/users
-import gleam/list
+import gleam/dict
+import gleam/dynamic/decode
 import gleam/option
+import sqlight
 import types/user
 import validate
 
@@ -15,33 +16,57 @@ pub fn email_validator(email: String) -> Result(String, String) {
   |> validate.combine([validate.non_empty_string, validate.contains("@")])
 }
 
-pub fn duplicate_email_validator(
-  existing_id: option.Option(Int),
-) -> validate.Validator(String) {
-  fn(email: String) -> Result(String, String) {
-    let matching_user = fn(user: user.User) {
-      user.email == email && option.Some(user.id) != existing_id
-    }
-
-    let is_duplicate =
-      users.get_initial_state().users
-      |> list.any(matching_user)
-
-    case is_duplicate {
-      True -> Error("already exists")
-      False -> Ok(email)
-    }
-  }
-}
-
 // Declarative validation function using the new API - exactly as requested
 pub fn validate_user_input(
   name: String,
   email: String,
-  existing_id: option.Option(Int),
 ) -> validate.ValidationResult {
   use <- validate.field("name", name, name_validator)
   use <- validate.field("email", email, email_validator)
-  use <- validate.field("email", email, duplicate_email_validator(existing_id))
   validate.Valid
+}
+
+pub fn validate_create_request(
+  create_request: user.CreateUserRequest,
+  db: sqlight.Connection,
+) -> validate.ValidationResult {
+  validate.accumulate_errors([
+    validate_user_input(create_request.name, create_request.email),
+    validate_unique_email(option.None, create_request.email, db),
+  ])
+}
+
+pub fn validate_update_request(
+  user: user.User,
+  update_request: user.EditUserRequest,
+  db: sqlight.Connection,
+) -> validate.ValidationResult {
+  validate.accumulate_errors([
+    validate_user_input(update_request.name, update_request.email),
+    validate_unique_email(option.Some(user.id), update_request.email, db),
+  ])
+}
+
+fn validate_unique_email(id: option.Option(Int), email, db) {
+  let #(sql, params) = case id {
+    option.None -> #("SELECT 1 FROM users WHERE email = $1", [
+      sqlight.text(email),
+    ])
+    option.Some(id) -> #("SELECT 1 FROM users WHERE email = $1 AND id != $2", [
+      sqlight.text(email),
+      sqlight.int(id),
+    ])
+  }
+  let result =
+    sqlight.query(
+      sql,
+      on: db,
+      with: params,
+      expecting: decode.at([0], decode.int),
+    )
+
+  case result {
+    Ok([]) -> validate.Valid
+    _ -> validate.Invalid(dict.from_list([#("email", "is already taken")]))
+  }
 }
