@@ -348,3 +348,77 @@ cd examples/typed-demo/src/frontend && npm run build
 - ✅ Successful form submission redirects
 
 This feature demonstrates the complete solution for type-safe form submissions in Inertia Wisp applications, providing a template for building production applications with full-stack type safety.
+
+### Recent Enhancement: Dict Type Projection for Error Handling (May 2025)
+
+**Enhancement**: Added comprehensive Dict type projection support to the TypeScript type system for handling form validation errors.
+
+**Problem Addressed**: The existing type projection system could handle Option<T> → T | null and List<T> → T[], but didn't have support for Dict(String, String) types commonly used for form validation errors from the backend.
+
+**Solution Implemented**:
+1. **Enhanced ProjectGleamType**: Added Dict<K, V> projection support with sophisticated pattern matching:
+   - `Dict(String, String)` → `Record<string, string>` (basic validation errors)
+   - `Dict(String, List(String))` → `Record<string, string[]>` (multi-error fields)
+   - `Dict(String, Option(String))` → `Record<string, string | null>` (optional errors)
+   - `Dict(String, ComplexType)` → `Record<string, ProjectedType>` (nested projections)
+
+2. **Added Specialized Error Types**:
+   ```typescript
+   export type FormErrors = Record<string, string>;
+   export type ValidationErrors = Record<string, string>;
+   export type FieldErrors = Record<string, string>;
+   export type MultiFieldErrors = Record<string, string[]>;
+   export type OptionalFieldErrors = Record<string, string | null>;
+   ```
+
+3. **Form Response Integration**: Created comprehensive types for form submission responses:
+   ```typescript
+   export type FormResponse<T> = {
+     data: GleamToJS<T>;
+     errors: FormErrors;
+     success: boolean;
+   };
+   
+   export type InertiaFormResponse<T> = {
+     props: GleamToJS<T>;
+     errors: FormErrors;
+   };
+   ```
+
+4. **Runtime Utilities**: Added helper functions for creating type-safe error objects:
+   ```typescript
+   export const createFormErrors = (errors: Record<string, string>): FormErrors => errors;
+   export const createMultiFieldErrors = (errors: Record<string, string[]>): MultiFieldErrors => errors;
+   ```
+
+**Files Modified**:
+- ✅ `src/frontend/src/types/gleam-projections.ts` - Enhanced with Dict projection support
+- ✅ Added comprehensive usage documentation and examples
+- ✅ Integrated Dict$ import from gleam_stdlib
+- ✅ Added type guards and validation utilities
+
+**Technical Benefits**:
+- **Complete Type Safety**: Form validation errors now have full type safety from Gleam backend to TypeScript frontend
+- **Inertia.js Integration**: Error types work seamlessly with Inertia.js useForm hook error handling
+- **Developer Experience**: IntelliSense support for error object structure and field names
+- **Flexible Error Patterns**: Support for simple string errors, multi-field errors, and optional error states
+- **Nested Error Support**: Handles complex validation scenarios with nested error structures
+
+**Usage Example**:
+```typescript
+// Backend returns Dict(String, String) for validation errors
+// Frontend receives Record<string, string> with full type safety
+const { data, setData, post, errors } = useForm<CreateUserRequest>({
+  name: "",
+  email: "",
+  bio: null,
+});
+
+// errors is now properly typed as FormErrors = Record<string, string>
+if (errors.email) {
+  // TypeScript knows errors.email is string | undefined
+  console.log("Email error:", errors.email);
+}
+```
+
+This enhancement completes the error handling aspect of Feature 006, ensuring that validation errors from Gleam Dict types are properly projected to TypeScript Record types for seamless frontend integration.

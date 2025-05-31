@@ -231,7 +231,7 @@ pub type ContactFormProps {
   ContactFormProps(
     title: String,
     message: String,
-    errors: option.Option(json.Json),
+    errors: dict.Dict(String, String),
   )
 }
 
@@ -240,7 +240,7 @@ pub fn encode_contact_form_props(props: ContactFormProps) -> json.Json {
   json.object([
     #("title", json.string(props.title)),
     #("message", json.string(props.message)),
-    #("errors", json.nullable(props.errors, fn(e) { e })),
+    #("errors", json.dict(props.errors, fn(e) { e }, json.string)),
   ])
 }
 

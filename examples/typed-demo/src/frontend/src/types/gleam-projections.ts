@@ -1,4 +1,5 @@
 import type { Option$ } from "../../../shared/build/dev/javascript/gleam_stdlib/gleam/option.d.mts";
+import type { Dict$ } from "../../../shared/build/dev/javascript/gleam_stdlib/gleam/dict.d.mts";
 import type { List } from "../../../shared/build/dev/javascript/shared_types/gleam.d.mts";
 import type {
   ContactFormRequest,
@@ -21,10 +22,16 @@ import type {
  * This module provides sophisticated type transformations that automatically convert:
  * - Gleam Option<T> → JavaScript T | null
  * - Gleam List<T> → JavaScript T[]
+ * - Gleam Dict<K, V> → JavaScript Record<K, V>
  * - Gleam classes → Plain JavaScript objects
  *
  * This enables full type safety while maintaining compatibility with JavaScript form libraries
  * like Inertia.js useForm hook, which expects plain objects rather than class instances.
+ *
+ * Dict Projection Examples:
+ * - Dict(String, String) → Record<string, string> (form validation errors)
+ * - Dict(String, Int) → Record<string, number>
+ * - Dict(String, User) → Record<string, ProjectedUser>
  */
 
 // Advanced recursive type projection that handles nested Gleam types
@@ -35,13 +42,23 @@ type ProjectGleamType<T> =
       : null
     : T extends List<infer U>
       ? ProjectGleamType<U>[]
-      : T extends object
-        ? {
-            [K in keyof T as K extends "withFields"
-              ? never
-              : K]: ProjectGleamType<T[K]>;
-          }
-        : T;
+      : T extends Dict$<infer K, infer V>
+        ? K extends string
+          ? V extends string
+            ? Record<string, string>
+            : V extends List<infer U>
+              ? Record<string, ProjectGleamType<U>[]>
+              : V extends Option$<infer W>
+                ? Record<string, ProjectGleamType<W> | null>
+                : Record<string, ProjectGleamType<V>>
+          : Record<string, ProjectGleamType<V>>
+        : T extends object
+          ? {
+              [K in keyof T as K extends "withFields"
+                ? never
+                : K]: ProjectGleamType<T[K]>;
+            }
+          : T;
 
 // Main utility type: Transforms Gleam class to JavaScript-compatible interface
 // Filters out methods (functions) and projects all property types
@@ -82,11 +99,26 @@ export type ContactFormPageData = GleamToJS<ContactFormProps>;
 // Helper type aliases for common projections
 export type JSOption<T> = T | null;
 export type JSList<T> = T[];
+export type JSDict<K extends string, V> = Record<K, V>;
+
+// Specific type aliases for form error handling
+export type FormErrors = Record<string, string>;
+export type ValidationErrors = Record<string, string>;
+export type FieldErrors = Record<string, string>;
+export type MultiFieldErrors = Record<string, string[]>;
+export type OptionalFieldErrors = Record<string, string | null>;
 
 // Expected form data shapes (for documentation):
 // ContactFormData → { name: string, email: string, subject: string, message: string, urgent: boolean | null }
 // CreateUserFormData → { name: string, email: string, bio: string | null }
 // LoginFormData → { email: string, password: string, remember_me: boolean | null }
+//
+// Dict projections (for form validation and error handling):
+// Dict(String, String) → Record<string, string> (validation errors)
+// Dict(String, List(String)) → Record<string, string[]> (multi-error fields)
+// Dict(String, Option(String)) → Record<string, string | null> (optional field errors)
+// Dict(String, Dict(String, String)) → Record<string, Record<string, string>> (nested errors)
+// Dict(String, List(User)) → Record<string, ProjectedUser[]> (complex nested types)
 
 // Utility type for stricter type checking
 export type EnsureFormCompatible<T, U> = T extends U ? T : never;
@@ -117,9 +149,51 @@ export type FormDefaults<T> = {
 };
 
 /**
+ * Usage Examples for Dict Projections
+ * 
+ * // Basic form validation errors
+ * type LoginErrors = GleamToJS<Dict$<string, string>>;
+ * // Result: Record<string, string>
+ * const loginErrors: LoginErrors = {
+ *   email: "Email is required",
+ *   password: "Password must be at least 8 characters"
+ * };
+ * 
+ * // Multiple errors per field
+ * type MultiErrors = GleamToJS<Dict$<string, List<string>>>;
+ * // Result: Record<string, string[]>
+ * const fieldErrors: MultiErrors = {
+ *   password: ["Too short", "Must contain numbers", "Must contain symbols"]
+ * };
+ * 
+ * // Optional field errors
+ * type OptionalErrors = GleamToJS<Dict$<string, Option$<string>>>;
+ * // Result: Record<string, string | null>
+ * const conditionalErrors: OptionalErrors = {
+ *   bio: "Bio is too long",
+ *   avatar: null // No error for this field
+ * };
+ * 
+ * // Nested validation errors (e.g., for nested forms)
+ * type NestedErrors = GleamToJS<Dict$<string, Dict$<string, string>>>;
+ * // Result: Record<string, Record<string, string>>
+ * const addressErrors: NestedErrors = {
+ *   billing: { street: "Required", city: "Invalid" },
+ *   shipping: { zip: "Invalid format" }
+ * };
+ */
+
+/**
  * Runtime utilities (for completeness - actual conversion happens via JSON)
  * These are included to show the bridge between compile-time types and runtime values
  */
+
+// Helper function to create type-safe error objects
+export const createFormErrors = (errors: Record<string, string>): FormErrors => errors;
+
+export const createMultiFieldErrors = (errors: Record<string, string[]>): MultiFieldErrors => errors;
+
+export const createOptionalErrors = (errors: Record<string, string | null>): OptionalFieldErrors => errors;
 
 // Note: These functions are placeholders since actual conversion happens automatically
 // through JSON serialization when forms are submitted to the Gleam backend
@@ -137,12 +211,22 @@ export const validateFormData = <T>(
   return typeof data === "object" && data !== null;
 };
 
+// Type guard for Dict projections
+export const isDictProjection = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
 // Export concrete form data types for easy importing
 export type {
   ContactFormData as ContactForm,
   CreateUserFormData as CreateUserForm,
   UpdateProfileFormData as UpdateProfileForm,
   LoginFormData as LoginForm,
+  FormErrors as Errors,
+  ValidationErrors as ValidationErrs,
+  FieldErrors as FieldErrs,
+  MultiFieldErrors as MultiErrors,
+  OptionalFieldErrors as OptionalErrors,
 };
 
 // Export page data types for easy importing
@@ -159,3 +243,30 @@ export type {
 
 // Convenience type for any page data
 export type PageData<T> = GleamToJS<T>;
+
+// Form response types that combine data and validation errors
+export type FormResponse<T> = {
+  data: GleamToJS<T>;
+  errors: FormErrors;
+  success: boolean;
+};
+
+export type ValidationResponse<T> = {
+  data: GleamToJS<T> | null;
+  errors: ValidationErrors;
+  valid: boolean;
+};
+
+// Common form submission response patterns
+export type SubmissionResponse<T> = {
+  data?: GleamToJS<T>;
+  errors?: FormErrors;
+  message?: string;
+  redirect?: string;
+};
+
+// Type for Inertia.js form responses with errors
+export type InertiaFormResponse<T> = {
+  props: GleamToJS<T>;
+  errors: FormErrors;
+};
