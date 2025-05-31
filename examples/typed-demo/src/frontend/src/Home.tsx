@@ -1,6 +1,11 @@
-import { HomePageProps } from "../../shared/build/dev/javascript/shared_types/types.mjs";
+import { Link } from "@inertiajs/react";
+import {
+  decode_home_page_props,
+  HomePageProps,
+} from "../../shared/build/dev/javascript/shared_types/types.mjs";
+import { withDecodedProps } from "./utils/decoders";
 
-export default function Home(props: HomePageProps) {
+function Home(props: HomePageProps) {
   console.log({ props });
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -116,27 +121,29 @@ export default function Home(props: HomePageProps) {
 
         <div className="text-center mt-12">
           <div className="flex justify-center space-x-4">
-            <a
+            <Link
               href="/user/1"
               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
               View User Profile
-            </a>
-            <a
+            </Link>
+            <Link
               href="/blog/1"
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
             >
               Read Blog Post
-            </a>
-            <a
+            </Link>
+            <Link
               href="/dashboard"
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
               View Dashboard
-            </a>
+            </Link>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+export default withDecodedProps(decode_home_page_props, Home);

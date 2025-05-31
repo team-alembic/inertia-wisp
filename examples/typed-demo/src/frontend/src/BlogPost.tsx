@@ -1,22 +1,38 @@
-import { BlogPostPageProps } from '../../shared/build/dev/javascript/shared_types/types.mjs';
+import {
+  BlogPostPageProps,
+  decode_blog_post_page_props,
+} from "../../shared/build/dev/javascript/shared_types/types.mjs";
+import { withDecodedProps } from "./utils/decoders.js";
+import { unwrapOr } from "./utils/option.js";
 
-export default function BlogPost(props: BlogPostPageProps) {
+function BlogPost(props: BlogPostPageProps) {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <article className="bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="px-8 py-12">
           <header className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{props.title}</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {props.title}
+            </h1>
             <div className="flex items-center justify-between text-sm text-gray-600 mb-6">
               <div className="flex items-center space-x-4">
-                <span>By <span className="font-medium text-gray-800">{props.author}</span></span>
+                <span>
+                  By{" "}
+                  <span className="font-medium text-gray-800">
+                    {props.author}
+                  </span>
+                </span>
                 <span>•</span>
                 <time>{props.published_at}</time>
                 <span>•</span>
-                <span>{props.view_count > 0 ? `${props.view_count.toLocaleString()} views` : 'Views not loaded'}</span>
+                <span>
+                  {unwrapOr(props.view_count, 0) > 0
+                    ? `${unwrapOr(props.view_count, 0).toLocaleString()} views`
+                    : "Views not loaded"}
+                </span>
               </div>
             </div>
-            
+
             <div className="tag-cloud">
               <div className="flex flex-wrap gap-2">
                 {props.tags.toArray().map((tag: string, index: number) => (
@@ -44,7 +60,11 @@ export default function BlogPost(props: BlogPostPageProps) {
               Published on {props.published_at}
             </div>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>{props.view_count > 0 ? `${props.view_count.toLocaleString()} views` : 'Views not loaded'}</span>
+              <span>
+                {unwrapOr(props.view_count, 0) > 0
+                  ? `${unwrapOr(props.view_count, 0).toLocaleString()} views`
+                  : "Views not loaded"}
+              </span>
               <button className="text-blue-600 hover:text-blue-800 font-medium">
                 Share
               </button>
@@ -55,3 +75,5 @@ export default function BlogPost(props: BlogPostPageProps) {
     </div>
   );
 }
+
+export default withDecodedProps(decode_blog_post_page_props, BlogPost);
