@@ -91,9 +91,68 @@ pub type Config =
 pub type InertiaContext =
   types.InertiaContext
 
+/// The new parameterized context object for statically typed props.
+pub type TypedInertiaContext(props) =
+  types.TypedInertiaContext(props)
+
 /// Configuration for server-side rendering.
 pub type SSRConfig =
   types.SSRConfig
+
+// New typed context functions
+
+/// Creates a new typed context with statically typed props.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// type UserPageProps {
+///   UserPageProps(name: String, email: String, id: Int)
+/// }
+/// 
+/// fn encode_user_props(props: UserPageProps) -> json.Json {
+///   json.object([
+///     #("name", json.string(props.name)),
+///     #("email", json.string(props.email)),
+///     #("id", json.int(props.id))
+///   ])
+/// }
+/// 
+/// let ctx = inertia.new_typed_context(
+///   config,
+///   request,
+///   UserPageProps("", "", 0),  // zero value
+///   encode_user_props
+/// )
+/// ```
+pub fn new_typed_context(
+  config: Config,
+  request: Request,
+  props_zero: props,
+  props_encoder: fn(props) -> json.Json,
+) -> TypedInertiaContext(props) {
+  types.new_typed_context(config, request, props_zero, props_encoder)
+}
+
+/// Assigns a prop transformation to a typed context.
+/// 
+/// ## Example
+/// 
+/// ```gleam
+/// ctx
+/// |> inertia.assign_typed_prop("name", UserPageProps(_, name: "Alice"))
+/// |> inertia.assign_typed_prop("id", UserPageProps(_, id: 42))
+/// ```
+pub fn assign_typed_prop(
+  ctx: TypedInertiaContext(props),
+  key: String,
+  transformer: fn(props) -> props,
+) -> TypedInertiaContext(props) {
+  types.TypedInertiaContext(
+    ..ctx,
+    props_transformers: [#(key, transformer), ..ctx.props_transformers],
+  )
+}
 
 /// Messages sent to the SSR supervisor.
 pub type SSRMessage =
@@ -485,6 +544,32 @@ pub fn disable_ssr(ctx: InertiaContext) -> InertiaContext {
 /// ```
 pub fn render(ctx: InertiaContext, component: String) -> Response {
   controller.render(ctx, component)
+}
+
+/// Renders a typed Inertia response with the specified component.
+///
+/// This function works with the new statically typed props system, evaluating
+/// prop transformations based on whether it's a partial reload request.
+///
+/// ## Example
+///
+/// ```gleam
+/// type UserPageProps {
+///   UserPageProps(name: String, email: String, id: Int)
+/// }
+///
+/// fn user_profile(ctx: inertia.TypedInertiaContext(UserPageProps), user_id: Int) -> wisp.Response {
+///   let user = get_user(user_id)
+///
+///   ctx
+///   |> inertia.assign_typed_prop("name", UserPageProps(_, name: user.name))
+///   |> inertia.assign_typed_prop("email", UserPageProps(_, email: user.email))
+///   |> inertia.assign_typed_prop("id", UserPageProps(_, id: user.id))
+///   |> inertia.render_typed("UserProfile")
+/// }
+/// ```
+pub fn render_typed(ctx: TypedInertiaContext(props), component: String) -> Response {
+  controller.render_typed(ctx, component)
 }
 
 /// Performs an Inertia-aware redirect to another URL within your application.

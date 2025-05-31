@@ -1,0 +1,11 @@
+name = "shared_types"
+version = "0.1.0"
+
+description = "Shared type definitions for typed Inertia demo"
+
+[dependencies]
+gleam_stdlib = ">= 0.60.0"
+gleam_json = ">= 3.0.0"
+
+[javascript]
+typescript_declarations = true

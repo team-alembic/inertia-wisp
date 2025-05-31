@@ -16,7 +16,6 @@ import gleam/dict.{type Dict}
 import gleam/json
 import gleam/list
 import gleam/option
-
 import gleam/string
 import gleam/string_tree
 import inertia_wisp/internal/html
@@ -156,11 +155,14 @@ pub fn render(ctx: InertiaContext, component: String) -> Response {
   let url = wisp.path_segments(ctx.request) |> string.join("/")
   let url = "/" <> url
 
+  // Convert Dict props to JSON object
+  let props_json = json.object(dict.to_list(evaluated_props))
+
   // Create page object
   let page =
     types.Page(
       component: component,
-      props: evaluated_props,
+      props: props_json,
       url: url,
       version: ctx.config.version,
       clear_history: ctx.clear_history,
@@ -250,7 +252,7 @@ fn render_html_response_with_ssr_check(
             ssr.render_page(
               supervisor,
               page.component,
-              json.object(dict.to_list(page.props)),
+              page.props,
               page.url,
               page.version,
             )
@@ -333,4 +335,75 @@ pub fn redirect(_req: Request, to url: String) -> Response {
 pub fn external_redirect(to url: String) -> Response {
   wisp.response(409)
   |> wisp.set_header("x-inertia-location", url)
+}
+
+/// Render a typed Inertia response from typed context
+pub fn render_typed(ctx: types.TypedInertiaContext(props), component: String) -> Response {
+  let is_inertia = middleware.is_inertia_request(ctx.request)
+  let partial_data = middleware.get_partial_data(ctx.request)
+
+  // Apply prop transformations based on whether it's a partial request
+  let final_props = evaluate_typed_props(ctx, is_inertia, partial_data)
+  
+  // Encode the final props to JSON
+  let props_json = ctx.props_encoder(final_props)
+
+  let url = wisp.path_segments(ctx.request) |> string.join("/")
+  let url = "/" <> url
+
+  // Create page object
+  let page =
+    types.Page(
+      component: component,
+      props: props_json,
+      url: url,
+      version: ctx.config.version,
+      clear_history: ctx.clear_history,
+      encrypt_history: ctx.encrypt_history,
+    )
+
+  case middleware.is_inertia_request(ctx.request) {
+    True -> render_json_response(page)
+    False -> render_html_response_with_ssr_check(page, 
+      // Convert typed context to regular context for SSR compatibility
+      types.InertiaContext(
+        config: ctx.config,
+        request: ctx.request,
+        props: dict.new(), // Not used in SSR path
+        errors: ctx.errors,
+        encrypt_history: ctx.encrypt_history,
+        clear_history: ctx.clear_history,
+        ssr_supervisor: ctx.ssr_supervisor,
+      )
+    )
+  }
+}
+
+
+
+/// Evaluate typed props based on request type and partial data requirements
+fn evaluate_typed_props(
+  ctx: types.TypedInertiaContext(props),
+  is_inertia: Bool,
+  partial_data: List(String),
+) -> props {
+  case is_inertia && list.length(partial_data) > 0 {
+    // Partial request - only apply transformations for requested props
+    True -> {
+      list.fold(ctx.props_transformers, ctx.props_zero, fn(acc, transformer_pair) {
+        let #(key, transformer) = transformer_pair
+        case list.contains(partial_data, key) {
+          True -> transformer(acc)
+          False -> acc
+        }
+      })
+    }
+    // Full request - apply all transformations
+    False -> {
+      list.fold(ctx.props_transformers, ctx.props_zero, fn(acc, transformer_pair) {
+        let #(_key, transformer) = transformer_pair
+        transformer(acc)
+      })
+    }
+  }
 }

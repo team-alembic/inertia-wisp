@@ -42,7 +42,7 @@ import wisp
 pub type Page {
   Page(
     component: String,
-    props: Dict(String, json.Json),
+    props: json.Json,
     url: String,
     version: String,
     encrypt_history: Bool,
@@ -54,7 +54,7 @@ pub type Page {
 pub fn encode_page(page: Page) -> json.Json {
   json.object([
     #("component", json.string(page.component)),
-    #("props", json.object(dict.to_list(page.props))),
+    #("props", page.props),
     #("url", json.string(page.url)),
     #("version", json.string(page.version)),
     #("encryptHistory", json.bool(page.encrypt_history)),
@@ -93,11 +93,40 @@ pub type InertiaContext {
   )
 }
 
+/// New parameterized context for statically typed props
+pub type TypedInertiaContext(props) {
+  TypedInertiaContext(
+    config: Config,
+    request: wisp.Request,
+    props_transformers: List(#(String, fn(props) -> props)),
+    props_encoder: fn(props) -> json.Json,
+    props_zero: props,
+    errors: Dict(String, String),
+    encrypt_history: Bool,
+    clear_history: Bool,
+    ssr_supervisor: Option(Subject(SSRMessage)),
+  )
+}
+
 pub fn new_context(config, request) {
   InertiaContext(
     config: config,
     request: request,
     props: dict.new(),
+    errors: dict.new(),
+    encrypt_history: config.encrypt_history,
+    clear_history: False,
+    ssr_supervisor: option.None,
+  )
+}
+
+pub fn new_typed_context(config, request, props_zero, props_encoder) {
+  TypedInertiaContext(
+    config: config,
+    request: request,
+    props_transformers: [],
+    props_encoder: props_encoder,
+    props_zero: props_zero,
     errors: dict.new(),
     encrypt_history: config.encrypt_history,
     clear_history: False,
