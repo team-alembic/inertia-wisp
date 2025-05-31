@@ -120,25 +120,60 @@ function Home(props: HomePageProps) {
         </div>
 
         <div className="text-center mt-12">
-          <div className="flex justify-center space-x-4">
-            <Link
-              href="/user/1"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              View User Profile
-            </Link>
-            <Link
-              href="/blog/1"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              Read Blog Post
-            </Link>
-            <Link
-              href="/dashboard"
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-            >
-              View Dashboard
-            </Link>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Demo Pages</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">View Examples</h3>
+              <div className="flex flex-col space-y-3">
+                <Link
+                  href="/user/1"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  View User Profile
+                </Link>
+                <Link
+                  href="/blog/1"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                >
+                  Read Blog Post
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                >
+                  View Dashboard
+                </Link>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Form Examples</h3>
+              <div className="flex flex-col space-y-3">
+                <Link
+                  href="/users/create"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  Create User Form
+                </Link>
+                <Link
+                  href="/users/1/edit"
+                  className="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition-colors"
+                >
+                  Edit Profile Form
+                </Link>
+                <Link
+                  href="/login"
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                >
+                  Login Form
+                </Link>
+                <Link
+                  href="/contact"
+                  className="bg-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-pink-700 transition-colors"
+                >
+                  Contact Form
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

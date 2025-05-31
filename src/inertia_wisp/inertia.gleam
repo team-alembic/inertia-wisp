@@ -71,6 +71,7 @@
 //// ```
 
 
+import gleam/dict
 import gleam/erlang/process
 import gleam/json
 import gleam/option
@@ -291,6 +292,31 @@ pub fn assign_optional_prop(
   transformer: fn(props) -> props,
 ) -> InertiaContext(props) {
   assign_prop_with_include(ctx, key, transformer, types.IncludeOptionally)
+}
+
+/// Assigns validation errors to be displayed in forms.
+///
+/// Errors are automatically included in responses and cleared after successful requests.
+/// The errors should be provided as a Dict(String, String) where keys are field names
+/// and values are error messages.
+///
+/// ## Example
+///
+/// ```gleam
+/// import gleam/dict
+///
+/// let errors = dict.from_list([
+///   #("email", "Email is required"),
+///   #("password", "Password must be at least 8 characters"),
+/// ])
+///
+/// ctx |> inertia.assign_errors(errors)
+/// ```
+pub fn assign_errors(
+  ctx: InertiaContext(props),
+  errors: dict.Dict(String, String),
+) -> InertiaContext(props) {
+  types.InertiaContext(..ctx, errors: errors)
 }
 
 /// Messages sent to the SSR supervisor.

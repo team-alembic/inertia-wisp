@@ -51,7 +51,7 @@ var require_react_production_min = __commonJS({
     var t = Symbol.for("react.provider");
     var u2 = Symbol.for("react.context");
     var v = Symbol.for("react.forward_ref");
-    var w = Symbol.for("react.suspense");
+    var w2 = Symbol.for("react.suspense");
     var x2 = Symbol.for("react.memo");
     var y = Symbol.for("react.lazy");
     var z2 = Symbol.iterator;
@@ -87,14 +87,14 @@ var require_react_production_min = __commonJS({
     function F2() {
     }
     F2.prototype = E2.prototype;
-    function G(a, b3, e) {
+    function G2(a, b3, e) {
       this.props = a;
       this.context = b3;
       this.refs = D2;
       this.updater = e || B2;
     }
-    var H3 = G.prototype = new F2();
-    H3.constructor = G;
+    var H3 = G2.prototype = new F2();
+    H3.constructor = G2;
     C3(H3, E2.prototype);
     H3.isPureReactComponent = true;
     var I2 = Array.isArray;
@@ -228,9 +228,9 @@ var require_react_production_min = __commonJS({
     exports2.Component = E2;
     exports2.Fragment = p;
     exports2.Profiler = r;
-    exports2.PureComponent = G;
+    exports2.PureComponent = G2;
     exports2.StrictMode = q3;
-    exports2.Suspense = w;
+    exports2.Suspense = w2;
     exports2.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = W3;
     exports2.act = X2;
     exports2.cloneElement = function(a, b3, e) {
@@ -2452,7 +2452,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
         }
       b3 || a.push('"');
     }
-    function w(a, b3, c, d) {
+    function w2(a, b3, c, d) {
       switch (c) {
         case "style":
           ua(a, b3, d);
@@ -2536,7 +2536,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                 f2 = g;
                 break;
               default:
-                w(a, d, e, g);
+                w2(a, d, e, g);
             }
         }
       a.push(">");
@@ -2575,7 +2575,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                   case "value":
                     break;
                   default:
-                    w(a, d, l, h);
+                    w2(a, d, l, h);
                 }
             }
           a.push(">");
@@ -2603,7 +2603,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                   case "value":
                     k2 = p;
                   default:
-                    w(a, d, e, p);
+                    w2(a, d, e, p);
                 }
             }
           if (null != g)
@@ -2639,7 +2639,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                 case "dangerouslySetInnerHTML":
                   throw Error("`dangerouslySetInnerHTML` does not make sense on <textarea>.");
                 default:
-                  w(a, d, h, k2);
+                  w2(a, d, h, k2);
               }
           null === e && null !== g && (e = g);
           a.push(">");
@@ -2675,10 +2675,10 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                   e = m;
                   break;
                 default:
-                  w(a, d, g, m);
+                  w2(a, d, g, m);
               }
-          null !== l ? w(a, d, "checked", l) : null !== k2 && w(a, d, "checked", k2);
-          null !== e ? w(a, d, "value", e) : null !== h && w(a, d, "value", h);
+          null !== l ? w2(a, d, "checked", l) : null !== k2 && w2(a, d, "checked", k2);
+          null !== e ? w2(a, d, "value", e) : null !== h && w2(a, d, "value", h);
           a.push("/>");
           return null;
         case "menuitem":
@@ -2690,7 +2690,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                 case "dangerouslySetInnerHTML":
                   throw Error("menuitems cannot have `children` nor `dangerouslySetInnerHTML`.");
                 default:
-                  w(
+                  w2(
                     a,
                     d,
                     B2,
@@ -2711,7 +2711,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                 case "dangerouslySetInnerHTML":
                   throw Error("`dangerouslySetInnerHTML` does not make sense on <title>.");
                 default:
-                  w(a, d, p, g);
+                  w2(a, d, p, g);
               }
           a.push(">");
           return e;
@@ -2729,7 +2729,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                   g = h;
                   break;
                 default:
-                  w(a, d, k2, h);
+                  w2(a, d, k2, h);
               }
           a.push(">");
           if (null != g) {
@@ -2764,7 +2764,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
                 case "dangerouslySetInnerHTML":
                   throw Error(b3 + " is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`.");
                 default:
-                  w(a, d, C3, e);
+                  w2(a, d, C3, e);
               }
           a.push("/>");
           return null;
@@ -3044,20 +3044,20 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
     function ib(a, b3, c) {
       var d = a.id;
       a = a.overflow;
-      var f2 = 32 - G(d) - 1;
+      var f2 = 32 - G2(d) - 1;
       d &= ~(1 << f2);
       c += 1;
-      var e = 32 - G(b3) + f2;
+      var e = 32 - G2(b3) + f2;
       if (30 < e) {
         var g = f2 - f2 % 5;
         e = (d & (1 << g) - 1).toString(32);
         d >>= g;
         f2 -= g;
-        return { id: 1 << 32 - G(b3) + f2 | c << f2 | d, overflow: e + a };
+        return { id: 1 << 32 - G2(b3) + f2 | c << f2 | d, overflow: e + a };
       }
       return { id: 1 << e | c << f2 | d, overflow: a };
     }
-    var G = Math.clz32 ? Math.clz32 : jb;
+    var G2 = Math.clz32 ? Math.clz32 : jb;
     var kb = Math.log;
     var lb = Math.LN2;
     function jb(a) {
@@ -3195,7 +3195,7 @@ var require_react_dom_server_legacy_node_production_min = __commonJS({
       var a = ob.treeContext;
       var b3 = a.overflow;
       a = a.id;
-      a = (a & ~(1 << 32 - G(a) - 1)).toString(32) + b3;
+      a = (a & ~(1 << 32 - G2(a) - 1)).toString(32) + b3;
       var c = R;
       if (null === c)
         throw Error("Invalid hook call. Hooks can only be called inside of the body of a function component.");
@@ -3917,7 +3917,7 @@ var require_react_dom_server_node_production_min = __commonJS({
       a = a.write(b3);
       q3 = q3 && a;
     }
-    function w(a, b3) {
+    function w2(a, b3) {
       r(a, b3);
       return q3;
     }
@@ -4110,31 +4110,31 @@ var require_react_dom_server_node_production_min = __commonJS({
     function xa(a, b3, c, d) {
       return "" + b3 + ("s" === c ? "\\u0073" : "\\u0053") + d;
     }
-    function G(a, b3) {
+    function G2(a, b3) {
       return { insertionMode: a, selectedValue: b3 };
     }
     function ya(a, b3, c) {
       switch (b3) {
         case "select":
-          return G(1, null != c.value ? c.value : c.defaultValue);
+          return G2(1, null != c.value ? c.value : c.defaultValue);
         case "svg":
-          return G(2, null);
+          return G2(2, null);
         case "math":
-          return G(3, null);
+          return G2(3, null);
         case "foreignObject":
-          return G(1, null);
+          return G2(1, null);
         case "table":
-          return G(4, null);
+          return G2(4, null);
         case "thead":
         case "tbody":
         case "tfoot":
-          return G(5, null);
+          return G2(5, null);
         case "colgroup":
-          return G(7, null);
+          return G2(7, null);
         case "tr":
-          return G(6, null);
+          return G2(6, null);
       }
-      return 4 <= a.insertionMode || 0 === a.insertionMode ? G(1, null) : a;
+      return 4 <= a.insertionMode || 0 === a.insertionMode ? G2(1, null) : a;
     }
     var za = x2("<!-- -->");
     function Aa(a, b3, c, d) {
@@ -4557,7 +4557,7 @@ var require_react_dom_server_node_production_min = __commonJS({
       if (null === c)
         throw Error("An ID must have been assigned before we can complete the boundary.");
       r(a, c);
-      return w(a, Wa);
+      return w2(a, Wa);
     }
     var db = x2('<div hidden id="');
     var eb = x2('">');
@@ -4584,22 +4584,22 @@ var require_react_dom_server_node_production_min = __commonJS({
       switch (c.insertionMode) {
         case 0:
         case 1:
-          return r(a, db), r(a, b3.segmentPrefix), r(a, d.toString(16)), w(a, eb);
+          return r(a, db), r(a, b3.segmentPrefix), r(a, d.toString(16)), w2(a, eb);
         case 2:
-          return r(a, gb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w(a, hb);
+          return r(a, gb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w2(a, hb);
         case 3:
-          return r(a, jb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w(a, kb);
+          return r(a, jb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w2(a, kb);
         case 4:
-          return r(a, mb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w(a, nb);
+          return r(a, mb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w2(a, nb);
         case 5:
-          return r(a, pb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w(a, qb);
+          return r(a, pb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w2(a, qb);
         case 6:
-          return r(a, sb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w(a, tb);
+          return r(a, sb), r(a, b3.segmentPrefix), r(a, d.toString(16)), w2(a, tb);
         case 7:
           return r(a, vb), r(
             a,
             b3.segmentPrefix
-          ), r(a, d.toString(16)), w(a, wb);
+          ), r(a, d.toString(16)), w2(a, wb);
         default:
           throw Error("Unknown insertion mode. This is a bug in React.");
       }
@@ -4608,19 +4608,19 @@ var require_react_dom_server_node_production_min = __commonJS({
       switch (b3.insertionMode) {
         case 0:
         case 1:
-          return w(a, fb);
+          return w2(a, fb);
         case 2:
-          return w(a, ib);
+          return w2(a, ib);
         case 3:
-          return w(a, lb);
+          return w2(a, lb);
         case 4:
-          return w(a, ob);
+          return w2(a, ob);
         case 5:
-          return w(a, rb);
+          return w2(a, rb);
         case 6:
-          return w(a, ub);
+          return w2(a, ub);
         case 7:
-          return w(a, xb);
+          return w2(a, xb);
         default:
           throw Error("Unknown insertion mode. This is a bug in React.");
       }
@@ -5377,7 +5377,7 @@ var require_react_dom_server_node_production_min = __commonJS({
           r(b3, a.placeholderPrefix);
           a = d.toString(16);
           r(b3, a);
-          return w(b3, Ta);
+          return w2(b3, Ta);
         case 1:
           c.status = 2;
           var f2 = true;
@@ -5391,7 +5391,7 @@ var require_react_dom_server_node_production_min = __commonJS({
           }
           for (; e < d.length - 1; e++)
             r(b3, d[e]);
-          e < d.length && (f2 = w(b3, d[e]));
+          e < d.length && (f2 = w2(b3, d[e]));
           return f2;
         default:
           throw Error("Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React.");
@@ -5403,7 +5403,7 @@ var require_react_dom_server_node_production_min = __commonJS({
         return ed(a, b3, c);
       d.parentFlushed = true;
       if (d.forceClientRender)
-        d = d.errorDigest, w(b3, Xa), r(b3, Za), d && (r(b3, ab), r(b3, F2(d)), r(b3, $a)), w(b3, bb), ed(a, b3, c);
+        d = d.errorDigest, w2(b3, Xa), r(b3, Za), d && (r(b3, ab), r(b3, F2(d)), r(b3, $a)), w2(b3, bb), ed(a, b3, c);
       else if (0 < d.pendingTasks) {
         d.rootSegmentID = a.nextSegmentId++;
         0 < d.completedSegments.length && a.partialBoundaries.push(d);
@@ -5416,13 +5416,13 @@ var require_react_dom_server_node_production_min = __commonJS({
       } else if (d.byteSize > a.progressiveChunkSize)
         d.rootSegmentID = a.nextSegmentId++, a.completedBoundaries.push(d), cb(b3, a.responseState, d.id), ed(a, b3, c);
       else {
-        w(b3, Ua);
+        w2(b3, Ua);
         c = d.completedSegments;
         if (1 !== c.length)
           throw Error("A previously unvisited boundary must have exactly one root segment. This is a bug in React.");
         fd(a, b3, c[0]);
       }
-      return w(b3, Ya);
+      return w2(b3, Ya);
     }
     function gd(a, b3, c) {
       yb(b3, a.responseState, c.formatContext, c.id);
@@ -5445,7 +5445,7 @@ var require_react_dom_server_node_production_min = __commonJS({
       r(b3, Hb);
       r(b3, a.segmentPrefix);
       r(b3, c);
-      return w(b3, Ib);
+      return w2(b3, Ib);
     }
     function id(a, b3, c, d) {
       if (2 === d.status)
@@ -5466,7 +5466,7 @@ var require_react_dom_server_node_production_min = __commonJS({
       r(b3, Cb);
       r(b3, a.placeholderPrefix);
       r(b3, f2);
-      return w(b3, Db);
+      return w2(b3, Db);
     }
     function dd(a, b3) {
       k2 = new Uint8Array(2048);
@@ -5480,7 +5480,7 @@ var require_react_dom_server_node_production_min = __commonJS({
           var d = a.responseState.bootstrapChunks;
           for (c = 0; c < d.length - 1; c++)
             r(b3, d[c]);
-          c < d.length && w(b3, d[c]);
+          c < d.length && w2(b3, d[c]);
         }
         var f2 = a.clientRenderedBoundaries, e;
         for (e = 0; e < f2.length; e++) {
@@ -5498,7 +5498,7 @@ var require_react_dom_server_node_production_min = __commonJS({
           if (p || v)
             r(d, Nb), r(d, Pb(p || ""));
           v && (r(d, Nb), r(d, Pb(v)));
-          if (!w(d, Mb)) {
+          if (!w2(d, Mb)) {
             a.destination = null;
             e++;
             f2.splice(0, e);
@@ -5622,7 +5622,7 @@ var require_react_dom_server_node_production_min = __commonJS({
         sentClientRenderFunction: false
       };
       e = b3 ? b3.namespaceURI : void 0;
-      e = G("http://www.w3.org/2000/svg" === e ? 2 : "http://www.w3.org/1998/Math/MathML" === e ? 3 : 0, null);
+      e = G2("http://www.w3.org/2000/svg" === e ? 2 : "http://www.w3.org/1998/Math/MathML" === e ? 3 : 0, null);
       f2 = b3 ? b3.progressiveChunkSize : void 0;
       d = b3 ? b3.onError : void 0;
       h = b3 ? b3.onAllReady : void 0;
@@ -27910,7 +27910,7 @@ function matchHeaderValue(context, value2, header, filter2, isHeaderNameFilter) 
   }
 }
 function formatHeader(header) {
-  return header.trim().toLowerCase().replace(/([a-z\d])(\w*)/g, (w, char, str) => {
+  return header.trim().toLowerCase().replace(/([a-z\d])(\w*)/g, (w2, char, str) => {
     return char.toUpperCase() + str;
   });
 }
@@ -33407,7 +33407,7 @@ var init_index_esm = __esm({
       }, onFinish: y = () => {
       }, onCancel: ne = () => {
       }, onSuccess: U = () => {
-      }, onError: G = () => {
+      }, onError: G2 = () => {
       }, queryStringArrayFormat: A = "brackets" } = {}) {
         let S2 = typeof e == "string" ? b(e) : e;
         if ((I(r) || v) && !(r instanceof FormData) && (r = k(r)), !(r instanceof FormData)) {
@@ -33419,7 +33419,7 @@ var init_index_esm = __esm({
           return;
         this.activeVisit && this.cancelVisit(this.activeVisit, { interrupted: true }), this.saveScrollPositions();
         let M2 = this.createVisitId();
-        this.activeVisit = { ...R, onCancelToken: L, onBefore: d, onStart: p, onProgress: x2, onFinish: y, onCancel: ne, onSuccess: U, onError: G, queryStringArrayFormat: A, cancelToken: new AbortController() }, L({ cancel: () => {
+        this.activeVisit = { ...R, onCancelToken: L, onBefore: d, onStart: p, onProgress: x2, onFinish: y, onCancel: ne, onSuccess: U, onError: G2, queryStringArrayFormat: A, cancelToken: new AbortController() }, L({ cancel: () => {
           this.activeVisit && this.cancelVisit(this.activeVisit, { cancelled: true });
         } }), X(R), p(R);
         let j = !!(g.length || m.length);
@@ -33430,21 +33430,21 @@ var init_index_esm = __esm({
             return Promise.reject({ response: n });
           let a = n.data;
           j && a.component === this.page.component && (a.props = { ...this.page.props, ...a.props }), l = this.resolvePreserveOption(l, a), h = this.resolvePreserveOption(h, a), h && window.history.state?.rememberedState && a.component === this.page.component && (a.rememberedState = window.history.state.rememberedState);
-          let w = S2, V2 = b(a.url);
-          return w.hash && !V2.hash && E(w).href === V2.href && (V2.hash = w.hash, a.url = V2.href), this.setPage(a, { visitId: M2, replace: s, preserveScroll: l, preserveState: h });
+          let w2 = S2, V2 = b(a.url);
+          return w2.hash && !V2.hash && E(w2).href === V2.href && (V2.hash = w2.hash, a.url = V2.href), this.setPage(a, { visitId: M2, replace: s, preserveScroll: l, preserveState: h });
         }).then(() => {
           let n = this.page.props.errors || {};
           if (Object.keys(n).length > 0) {
             let a = o ? n[o] ? n[o] : {} : n;
-            return q(a), G(a);
+            return q(a), G2(a);
           }
           return B(this.page), U(this.page);
         }).catch((n) => {
           if (this.isInertiaResponse(n.response))
             return this.setPage(n.response.data, { visitId: M2 });
           if (this.isLocationVisitResponse(n.response)) {
-            let a = b(n.response.headers["x-inertia-location"]), w = S2;
-            w.hash && !a.hash && E(w).href === a.href && (a.hash = w.hash), this.locationVisit(a, l === true);
+            let a = b(n.response.headers["x-inertia-location"]), w2 = S2;
+            w2.hash && !a.hash && E(w2).href === a.href && (a.hash = w2.hash), this.locationVisit(a, l === true);
           } else if (n.response)
             W(n.response) && _.show(n.response.data);
           else
@@ -34279,6 +34279,74 @@ async function W2({ id: l = "app", resolve: p, setup: a, title: i, progress: n =
     let r = await d((0, import_react.createElement)("div", { id: l, "data-page": JSON.stringify(f2) }, s));
     return { head: e, body: r };
   }
+}
+function w(l, p) {
+  let [a, i] = (0, import_react8.useState)(() => {
+    let n = Ne.restore(p);
+    return n !== void 0 ? n : l;
+  });
+  return (0, import_react8.useEffect)(() => {
+    Ne.remember(a, p);
+  }, [a, p]), [a, i];
+}
+function G(l, p) {
+  let a = (0, import_react7.useRef)(null), i = typeof l == "string" ? l : null, [n, F2] = (0, import_react7.useState)((typeof l == "string" ? p : l) || {}), d = (0, import_react7.useRef)(null), y = (0, import_react7.useRef)(null), [u2, f2] = i ? w(n, `${i}:data`) : (0, import_react7.useState)(n), [c, e] = i ? w({}, `${i}:errors`) : (0, import_react7.useState)({}), [s, r] = (0, import_react7.useState)(false), [g, T2] = (0, import_react7.useState)(false), [O2, k2] = (0, import_react7.useState)(null), [L, R] = (0, import_react7.useState)(false), [B2, I2] = (0, import_react7.useState)(false), A = (0, import_react7.useRef)((o) => o);
+  (0, import_react7.useEffect)(() => (a.current = true, () => {
+    a.current = false;
+  }), []);
+  let v = (0, import_react7.useCallback)((o, P2, t = {}) => {
+    let h = { ...t, onCancelToken: (m) => {
+      if (d.current = m, t.onCancelToken)
+        return t.onCancelToken(m);
+    }, onBefore: (m) => {
+      if (R(false), I2(false), clearTimeout(y.current), t.onBefore)
+        return t.onBefore(m);
+    }, onStart: (m) => {
+      if (T2(true), t.onStart)
+        return t.onStart(m);
+    }, onProgress: (m) => {
+      if (k2(m), t.onProgress)
+        return t.onProgress(m);
+    }, onSuccess: (m) => {
+      if (a.current && (T2(false), k2(null), e({}), r(false), R(true), I2(true), y.current = setTimeout(() => {
+        a.current && I2(false);
+      }, 2e3)), t.onSuccess)
+        return t.onSuccess(m);
+    }, onError: (m) => {
+      if (a.current && (T2(false), k2(null), e(m), r(true)), t.onError)
+        return t.onError(m);
+    }, onCancel: () => {
+      if (a.current && (T2(false), k2(null)), t.onCancel)
+        return t.onCancel();
+    }, onFinish: () => {
+      if (a.current && (T2(false), k2(null)), d.current = null, t.onFinish)
+        return t.onFinish();
+    } };
+    o === "delete" ? Ne.delete(P2, { ...h, data: A.current(u2) }) : Ne[o](P2, A.current(u2), h);
+  }, [u2, e]), j = (0, import_react7.useCallback)((o, P2) => {
+    f2(typeof o == "string" ? (t) => ({ ...t, [o]: P2 }) : typeof o == "function" ? (t) => o(t) : o);
+  }, [f2]), U = (0, import_react7.useCallback)((o, P2) => {
+    F2(typeof o > "u" ? () => u2 : (t) => ({ ...t, ...typeof o == "string" ? { [o]: P2 } : o }));
+  }, [u2, F2]), E2 = (0, import_react7.useCallback)((...o) => {
+    o.length === 0 ? f2(n) : f2((P2) => Object.keys(n).filter((t) => o.includes(t)).reduce((t, h) => (t[h] = n[h], t), { ...P2 }));
+  }, [f2, n]), Y2 = (0, import_react7.useCallback)((o, P2) => {
+    e((t) => {
+      let h = { ...t, ...typeof o == "string" ? { [o]: P2 } : o };
+      return r(Object.keys(h).length > 0), h;
+    });
+  }, [e, r]), Z2 = (0, import_react7.useCallback)((...o) => {
+    e((P2) => {
+      let t = Object.keys(P2).reduce((h, m) => ({ ...h, ...o.length > 0 && !o.includes(m) ? { [m]: P2[m] } : {} }), {});
+      return r(Object.keys(t).length > 0), t;
+    });
+  }, [e, r]), D2 = (o) => (P2, t) => {
+    v(o, P2, t);
+  }, ee2 = (0, import_react7.useCallback)(D2("get"), [v]), te2 = (0, import_react7.useCallback)(D2("post"), [v]), re2 = (0, import_react7.useCallback)(D2("put"), [v]), oe2 = (0, import_react7.useCallback)(D2("patch"), [v]), ne = (0, import_react7.useCallback)(D2("delete"), [v]), ae2 = (0, import_react7.useCallback)(() => {
+    d.current && d.current.cancel();
+  }, []), se2 = (0, import_react7.useCallback)((o) => {
+    A.current = o;
+  }, []);
+  return { data: u2, setData: j, isDirty: !(0, import_lodash.default)(u2, n), errors: c, hasErrors: s, processing: g, progress: O2, wasSuccessful: L, recentlySuccessful: B2, transform: se2, setDefaults: U, reset: E2, setError: Y2, clearErrors: Z2, submit: v, get: ee2, post: te2, put: re2, patch: oe2, delete: ne, cancel: ae2 };
 }
 var import_react, import_react2, import_react3, import_react4, import_react5, import_react6, import_lodash, import_react7, import_react8, import_react9, V, M, K2, H2, C2, J2, xe;
 var init_index_esm2 = __esm({
@@ -37366,11 +37434,11 @@ var require_react_jsx_runtime_development = __commonJS({
             return jsxWithValidation(type, props, key, false);
           }
         }
-        var jsx6 = jsxWithValidationDynamic;
-        var jsxs6 = jsxWithValidationStatic;
+        var jsx14 = jsxWithValidationDynamic;
+        var jsxs10 = jsxWithValidationStatic;
         exports2.Fragment = REACT_FRAGMENT_TYPE;
-        exports2.jsx = jsx6;
-        exports2.jsxs = jsxs6;
+        exports2.jsx = jsx14;
+        exports2.jsxs = jsxs10;
       })();
     }
   }
@@ -37447,39 +37515,299 @@ var init_BlogPost = __esm({
   }
 });
 
+// src/forms/ContactFormComponent.tsx
+var ContactFormComponent_exports = {};
+__export(ContactFormComponent_exports, {
+  default: () => ContactFormComponent
+});
+function ContactFormComponent({ title, message, errors }) {
+  const { data, setData, post, processing } = G({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+    urgent: null
+  });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    post("/contact");
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "max-w-2xl mx-auto p-6", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-white shadow-lg rounded-lg overflow-hidden", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-gradient-to-r from-teal-500 to-green-600 px-6 py-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h1", { className: "text-3xl font-bold text-white", children: title }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-teal-100 mt-2", children: message })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "px-6 py-8", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("form", { onSubmit: handleSubmit, className: "space-y-6", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700 mb-2", children: "Name" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "input",
+          {
+            type: "text",
+            id: "name",
+            value: data.name,
+            onChange: (e) => setData("name", e.target.value),
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors?.name ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Enter your full name"
+          }
+        ),
+        errors?.name && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.name })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "email", className: "block text-sm font-medium text-gray-700 mb-2", children: "Email" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "input",
+          {
+            type: "email",
+            id: "email",
+            value: data.email,
+            onChange: (e) => setData("email", e.target.value),
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors?.email ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Enter your email address"
+          }
+        ),
+        errors?.email && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.email })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "subject", className: "block text-sm font-medium text-gray-700 mb-2", children: "Subject" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "input",
+          {
+            type: "text",
+            id: "subject",
+            value: data.subject,
+            onChange: (e) => setData("subject", e.target.value),
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors?.subject ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "What is this about?"
+          }
+        ),
+        errors?.subject && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.subject })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "message", className: "block text-sm font-medium text-gray-700 mb-2", children: "Message" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "textarea",
+          {
+            id: "message",
+            value: data.message,
+            onChange: (e) => setData("message", e.target.value),
+            rows: 6,
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors?.message ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Tell us how we can help you"
+          }
+        ),
+        errors?.message && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.message })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "input",
+          {
+            type: "checkbox",
+            id: "urgent",
+            checked: data.urgent === true,
+            onChange: (e) => setData("urgent", e.target.checked ? true : null),
+            className: "h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "urgent", className: "ml-2 block text-sm text-gray-700", children: "This is urgent" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center pt-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: () => window.history.back(),
+            className: "px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500",
+            children: "Cancel"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "button",
+          {
+            type: "submit",
+            disabled: processing,
+            className: "px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed",
+            children: processing ? "Sending..." : "Send Message"
+          }
+        )
+      ] })
+    ] }) })
+  ] }) });
+}
+var import_jsx_runtime2;
+var init_ContactFormComponent = __esm({
+  "src/forms/ContactFormComponent.tsx"() {
+    "use strict";
+    init_index_esm2();
+    import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+  }
+});
+
+// src/ContactForm.tsx
+var ContactForm_exports = {};
+__export(ContactForm_exports, {
+  default: () => ContactForm
+});
+function ContactForm({ title, message, features, errors }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(ContactFormComponent, { title, message, errors });
+}
+var import_jsx_runtime3;
+var init_ContactForm = __esm({
+  "src/ContactForm.tsx"() {
+    "use strict";
+    init_ContactFormComponent();
+    import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+  }
+});
+
+// src/forms/CreateUserForm.tsx
+var CreateUserForm_exports = {};
+__export(CreateUserForm_exports, {
+  default: () => CreateUserForm
+});
+function CreateUserForm({ title, message, errors }) {
+  const { data, setData, post, processing } = G({
+    name: "",
+    email: "",
+    bio: null
+  });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    post("/users");
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "max-w-2xl mx-auto p-6", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "bg-white shadow-lg rounded-lg overflow-hidden", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "bg-gradient-to-r from-green-500 to-blue-600 px-6 py-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h1", { className: "text-3xl font-bold text-white", children: title }),
+      /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-green-100 mt-2", children: message })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "px-6 py-8", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("form", { onSubmit: handleSubmit, className: "space-y-6", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700 mb-2", children: "Name" }),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          "input",
+          {
+            type: "text",
+            id: "name",
+            value: data.name,
+            onChange: (e) => setData("name", e.target.value),
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.name ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Enter your full name"
+          }
+        ),
+        errors?.name && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.name })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("label", { htmlFor: "email", className: "block text-sm font-medium text-gray-700 mb-2", children: "Email" }),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          "input",
+          {
+            type: "email",
+            id: "email",
+            value: data.email,
+            onChange: (e) => setData("email", e.target.value),
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.email ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Enter your email address"
+          }
+        ),
+        errors?.email && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.email })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("label", { htmlFor: "bio", className: "block text-sm font-medium text-gray-700 mb-2", children: "Bio (Optional)" }),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          "textarea",
+          {
+            id: "bio",
+            value: data.bio || "",
+            onChange: (e) => setData("bio", e.target.value || null),
+            rows: 4,
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.bio ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Tell us about yourself (optional)"
+          }
+        ),
+        errors?.bio && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.bio })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex justify-between items-center pt-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: () => window.history.back(),
+            className: "px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500",
+            children: "Cancel"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+          "button",
+          {
+            type: "submit",
+            disabled: processing,
+            className: "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed",
+            children: processing ? "Creating..." : "Create User"
+          }
+        )
+      ] })
+    ] }) })
+  ] }) });
+}
+var import_jsx_runtime4;
+var init_CreateUserForm = __esm({
+  "src/forms/CreateUserForm.tsx"() {
+    "use strict";
+    init_index_esm2();
+    import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+  }
+});
+
+// src/CreateUser.tsx
+var CreateUser_exports = {};
+__export(CreateUser_exports, {
+  default: () => CreateUser
+});
+function CreateUser({ title, message, errors }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(CreateUserForm, { title, message, errors });
+}
+var import_jsx_runtime5;
+var init_CreateUser = __esm({
+  "src/CreateUser.tsx"() {
+    "use strict";
+    init_CreateUserForm();
+    import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+  }
+});
+
 // src/Dashboard.tsx
 var Dashboard_exports = {};
 __export(Dashboard_exports, {
   default: () => Dashboard_default
 });
 function Dashboard(props) {
-  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "max-w-6xl mx-auto p-6", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mb-8", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h1", { className: "text-3xl font-bold text-gray-900 mb-2", children: "Dashboard" }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-gray-600", children: "Welcome to your admin dashboard" })
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "max-w-6xl mx-auto p-6", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mb-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("h1", { className: "text-3xl font-bold text-gray-900 mb-2", children: "Dashboard" }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-gray-600", children: "Welcome to your admin dashboard" })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "dashboard-card rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "Total Users" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "stat-number text-3xl font-bold", children: props.user_count.toLocaleString() })
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "dashboard-card rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "Total Users" }),
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "stat-number text-3xl font-bold", children: props.user_count.toLocaleString() })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { d: "M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" }) }) })
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" }) }) })
       ] }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-gradient-to-br from-green-400 to-green-600 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "Total Posts" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "stat-number text-3xl font-bold", children: props.post_count.toLocaleString() })
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-gradient-to-br from-green-400 to-green-600 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "Total Posts" }),
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "stat-number text-3xl font-bold", children: props.post_count.toLocaleString() })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { d: "M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { d: "M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" })
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" }),
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { d: "M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" })
         ] }) })
       ] }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "New Signups" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "stat-number text-3xl font-bold", children: unwrapOr(
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "New Signups" }),
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "stat-number text-3xl font-bold", children: unwrapOr(
             map4(
               props.recent_signups,
               (x2) => x2.countLength()
@@ -37487,7 +37815,7 @@ function Dashboard(props) {
             0
           ) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
           "path",
           {
             fillRule: "evenodd",
@@ -37496,12 +37824,12 @@ function Dashboard(props) {
           }
         ) }) })
       ] }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "System Status" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-sm font-semibold", children: props.system_status })
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "System Status" }),
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-sm font-semibold", children: props.system_status })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
           "path",
           {
             fillRule: "evenodd",
@@ -37511,10 +37839,10 @@ function Dashboard(props) {
         ) }) })
       ] }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "grid grid-cols-1 lg:grid-cols-2 gap-6", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-white rounded-lg shadow-lg p-6", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { className: "text-xl font-semibold text-gray-900 mb-4", children: "Recent Signups" }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "space-y-3", children: unwrapOr(
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-1 lg:grid-cols-2 gap-6", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "bg-white rounded-lg shadow-lg p-6", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("h2", { className: "text-xl font-semibold text-gray-900 mb-4", children: "Recent Signups" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-3", children: unwrapOr(
           map4(
             props.recent_signups,
             (x2) => x2.atLeastLength(1)
@@ -37523,53 +37851,53 @@ function Dashboard(props) {
         ) ? unwrapOr(
           map4(props.recent_signups, (x2) => x2.toArray()),
           []
-        ).map((email, index4) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+        ).map((email, index4) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
           "div",
           {
             className: "flex items-center justify-between p-3 bg-gray-50 rounded-lg",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center space-x-3", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium", children: email.charAt(0).toUpperCase() }),
-                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-gray-900 font-medium", children: email })
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-3", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium", children: email.charAt(0).toUpperCase() }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-gray-900 font-medium", children: email })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full", children: "New" })
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full", children: "New" })
             ]
           },
           index4
-        )) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-gray-500 italic text-center py-4", children: "No recent signups data loaded. This is an optional prop that's only included when specifically requested." }) })
+        )) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-gray-500 italic text-center py-4", children: "No recent signups data loaded. This is an optional prop that's only included when specifically requested." }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-white rounded-lg shadow-lg p-6", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { className: "text-xl font-semibold text-gray-900 mb-4", children: "System Overview" }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "space-y-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between p-4 bg-green-50 rounded-lg", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center space-x-3", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-3 h-3 bg-green-500 rounded-full" }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "font-medium text-gray-900", children: "Server Status" })
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "bg-white rounded-lg shadow-lg p-6", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("h2", { className: "text-xl font-semibold text-gray-900 mb-4", children: "System Overview" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "space-y-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between p-4 bg-green-50 rounded-lg", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-3", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-3 h-3 bg-green-500 rounded-full" }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-medium text-gray-900", children: "Server Status" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-green-700 font-semibold", children: "Online" })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-green-700 font-semibold", children: "Online" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between p-4 bg-blue-50 rounded-lg", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center space-x-3", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-3 h-3 bg-blue-500 rounded-full" }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "font-medium text-gray-900", children: "Database" })
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between p-4 bg-blue-50 rounded-lg", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-3", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-3 h-3 bg-blue-500 rounded-full" }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-medium text-gray-900", children: "Database" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-blue-700 font-semibold", children: "Connected" })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-blue-700 font-semibold", children: "Connected" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between p-4 bg-purple-50 rounded-lg", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center space-x-3", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-3 h-3 bg-purple-500 rounded-full" }),
-              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "font-medium text-gray-900", children: "Cache" })
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between p-4 bg-purple-50 rounded-lg", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-3", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-3 h-3 bg-purple-500 rounded-full" }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-medium text-gray-900", children: "Cache" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-purple-700 font-semibold", children: "Active" })
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-purple-700 font-semibold", children: "Active" })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mt-6 p-4 bg-gray-50 rounded-lg", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { className: "text-sm text-gray-600", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Status:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-6 p-4 bg-gray-50 rounded-lg", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("p", { className: "text-sm text-gray-600", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("strong", { children: "Status:" }),
             " ",
             props.system_status
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { className: "text-xs text-gray-500 mt-1", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("p", { className: "text-xs text-gray-500 mt-1", children: [
             "Last updated: ",
             (/* @__PURE__ */ new Date()).toLocaleString()
           ] })
@@ -37578,15 +37906,163 @@ function Dashboard(props) {
     ] })
   ] });
 }
-var import_jsx_runtime2, Dashboard_default;
+var import_jsx_runtime6, Dashboard_default;
 var init_Dashboard = __esm({
   "src/Dashboard.tsx"() {
     "use strict";
     init_types();
     init_decoders();
     init_option2();
-    import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
+    import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
     Dashboard_default = withDecodedProps(decode_dashboard_page_props, Dashboard);
+  }
+});
+
+// src/forms/EditProfileForm.tsx
+var EditProfileForm_exports = {};
+__export(EditProfileForm_exports, {
+  default: () => EditProfileForm
+});
+function EditProfileForm({ user, errors }) {
+  const { data, setData, put, processing } = G({
+    name: user.name,
+    bio: user.bio,
+    interests: user.interests || []
+  });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    put(`/users/${user.id}`);
+  };
+  const handleInterestChange = (index4, value2) => {
+    const newInterests = [...data.interests];
+    newInterests[index4] = value2;
+    setData("interests", newInterests);
+  };
+  const addInterest = () => {
+    setData("interests", [...data.interests, ""]);
+  };
+  const removeInterest = (index4) => {
+    const newInterests = data.interests.filter((_2, i) => i !== index4);
+    setData("interests", newInterests);
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "max-w-2xl mx-auto p-6", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "bg-white shadow-lg rounded-lg overflow-hidden", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h1", { className: "text-3xl font-bold text-white", children: "Edit Profile" }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "text-purple-100 mt-2", children: "Update your profile information" })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "px-6 py-8", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("form", { onSubmit: handleSubmit, className: "space-y-6", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700 mb-2", children: "Name" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "input",
+          {
+            type: "text",
+            id: "name",
+            value: data.name,
+            onChange: (e) => setData("name", e.target.value),
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.name ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Enter your full name"
+          }
+        ),
+        errors?.name && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.name })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("label", { htmlFor: "bio", className: "block text-sm font-medium text-gray-700 mb-2", children: "Bio" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "textarea",
+          {
+            id: "bio",
+            value: data.bio,
+            onChange: (e) => setData("bio", e.target.value),
+            rows: 4,
+            className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.bio ? "border-red-500" : "border-gray-300"}`,
+            placeholder: "Tell us about yourself"
+          }
+        ),
+        errors?.bio && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.bio })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("label", { className: "block text-sm font-medium text-gray-700 mb-2", children: "Interests" }),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "space-y-2", children: [
+          data.interests.map((interest, index4) => /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center space-x-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "input",
+              {
+                type: "text",
+                value: interest,
+                onChange: (e) => handleInterestChange(index4, e.target.value),
+                className: "flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                placeholder: "Enter an interest"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              "button",
+              {
+                type: "button",
+                onClick: () => removeInterest(index4),
+                className: "px-3 py-2 text-red-600 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500",
+                children: "Remove"
+              }
+            )
+          ] }, index4)),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: addInterest,
+              className: "px-4 py-2 text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500",
+              children: "Add Interest"
+            }
+          )
+        ] }),
+        errors?.interests && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.interests })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex justify-between items-center pt-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "button",
+          {
+            type: "button",
+            onClick: () => window.history.back(),
+            className: "px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500",
+            children: "Cancel"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          "button",
+          {
+            type: "submit",
+            disabled: processing,
+            className: "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed",
+            children: processing ? "Updating..." : "Update Profile"
+          }
+        )
+      ] })
+    ] }) })
+  ] }) });
+}
+var import_jsx_runtime7;
+var init_EditProfileForm = __esm({
+  "src/forms/EditProfileForm.tsx"() {
+    "use strict";
+    init_index_esm2();
+    import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+  }
+});
+
+// src/EditProfile.tsx
+var EditProfile_exports = {};
+__export(EditProfile_exports, {
+  default: () => EditProfile
+});
+function EditProfile({ user, errors }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(EditProfileForm, { user, errors });
+}
+var import_jsx_runtime8;
+var init_EditProfile = __esm({
+  "src/EditProfile.tsx"() {
+    "use strict";
+    init_EditProfileForm();
+    import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
   }
 });
 
@@ -37597,66 +38073,66 @@ __export(Home_exports, {
 });
 function Home(props) {
   console.log({ props });
-  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "max-w-4xl mx-auto p-6", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "text-center py-12", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h1", { className: "text-5xl font-bold text-gray-900 mb-4", children: props.title }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-xl text-gray-600 mb-12", children: props.message })
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "max-w-4xl mx-auto p-6", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "text-center py-12", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h1", { className: "text-5xl font-bold text-gray-900 mb-4", children: props.title }),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-xl text-gray-600 mb-12", children: props.message })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-8 mb-12", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-8 mb-12", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center mb-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             "svg",
             {
               className: "w-6 h-6 text-white",
               fill: "currentColor",
               viewBox: "0 0 20 20",
-              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Type Safety" })
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Type Safety" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Enjoy compile-time type safety across your entire stack with shared Gleam and TypeScript definitions." })
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-gray-600", children: "Enjoy compile-time type safety across your entire stack with shared Gleam and TypeScript definitions." })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center mb-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             "svg",
             {
               className: "w-6 h-6 text-white",
               fill: "currentColor",
               viewBox: "0 0 20 20",
-              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" })
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Shared Types" })
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Shared Types" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Define your data structures once in Gleam and automatically generate TypeScript types for your frontend." })
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-gray-600", children: "Define your data structures once in Gleam and automatically generate TypeScript types for your frontend." })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center mb-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             "svg",
             {
               className: "w-6 h-6 text-white",
               fill: "currentColor",
               viewBox: "0 0 20 20",
-              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 4l-6 4-6-4h12z" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 4l-6 4-6-4h12z" })
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Transformations" })
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Transformations" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Build your props incrementally using transformation functions while maintaining full type safety." })
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-gray-600", children: "Build your props incrementally using transformation functions while maintaining full type safety." })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center mb-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             "svg",
             {
               className: "w-6 h-6 text-white",
               fill: "currentColor",
               viewBox: "0 0 20 20",
-              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
                 "path",
                 {
                   fillRule: "evenodd",
@@ -37666,55 +38142,219 @@ function Home(props) {
               )
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Partial Reloads" })
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Partial Reloads" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Keep all the benefits of Inertia.js partial reloads while enjoying static type checking." })
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("p", { className: "text-gray-600", children: "Keep all the benefits of Inertia.js partial reloads while enjoying static type checking." })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h2", { className: "text-2xl font-bold text-gray-900 mb-6", children: "Features" }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: props.features.toArray().map((feature, index4) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center space-x-3", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-2 h-2 bg-blue-500 rounded-full" }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-gray-700", children: feature })
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h2", { className: "text-2xl font-bold text-gray-900 mb-6", children: "Features" }),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: props.features.toArray().map((feature, index4) => /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-3", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-2 h-2 bg-blue-500 rounded-full" }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-gray-700", children: feature })
       ] }, index4)) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "text-center mt-12", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex justify-center space-x-4", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-        xe,
-        {
-          href: "/user/1",
-          className: "bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors",
-          children: "View User Profile"
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-        xe,
-        {
-          href: "/blog/1",
-          className: "bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors",
-          children: "Read Blog Post"
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-        xe,
-        {
-          href: "/dashboard",
-          className: "bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors",
-          children: "View Dashboard"
-        }
-      )
-    ] }) })
+    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "text-center mt-12", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h2", { className: "text-2xl font-bold text-gray-900 mb-6", children: "Demo Pages" }),
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-lg font-semibold text-gray-800 mb-4", children: "View Examples" }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-col space-y-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/user/1",
+                className: "bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors",
+                children: "View User Profile"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/blog/1",
+                className: "bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors",
+                children: "Read Blog Post"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/dashboard",
+                className: "bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors",
+                children: "View Dashboard"
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-lg font-semibold text-gray-800 mb-4", children: "Form Examples" }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-col space-y-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/users/create",
+                className: "bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors",
+                children: "Create User Form"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/users/1/edit",
+                className: "bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition-colors",
+                children: "Edit Profile Form"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/login",
+                className: "bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors",
+                children: "Login Form"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+              xe,
+              {
+                href: "/contact",
+                className: "bg-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-pink-700 transition-colors",
+                children: "Contact Form"
+              }
+            )
+          ] })
+        ] })
+      ] })
+    ] })
   ] }) });
 }
-var import_jsx_runtime3, Home_default;
+var import_jsx_runtime9, Home_default;
 var init_Home = __esm({
   "src/Home.tsx"() {
     "use strict";
     init_index_esm2();
     init_types();
     init_decoders();
-    import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
+    import_jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
     Home_default = withDecodedProps(decode_home_page_props, Home);
+  }
+});
+
+// src/forms/LoginForm.tsx
+var LoginForm_exports = {};
+__export(LoginForm_exports, {
+  default: () => LoginForm
+});
+function LoginForm({ title, message, demo_info, errors }) {
+  const { data, setData, post, processing } = G({
+    email: "",
+    password: "",
+    remember_me: null
+  });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    post("/login");
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "max-w-md mx-auto p-6", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "bg-white shadow-lg rounded-lg overflow-hidden", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h1", { className: "text-3xl font-bold text-white", children: title }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "text-indigo-100 mt-2", children: message })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "px-6 py-8", children: [
+      demo_info && demo_info.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h3", { className: "text-sm font-medium text-blue-800 mb-2", children: "Demo Information:" }),
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ul", { className: "text-sm text-blue-700 space-y-1", children: demo_info.map((info, index4) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("li", { children: info }, index4)) })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("form", { onSubmit: handleSubmit, className: "space-y-6", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("label", { htmlFor: "email", className: "block text-sm font-medium text-gray-700 mb-2", children: "Email" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+            "input",
+            {
+              type: "email",
+              id: "email",
+              value: data.email,
+              onChange: (e) => setData("email", e.target.value),
+              className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors?.email ? "border-red-500" : "border-gray-300"}`,
+              placeholder: "Enter your email"
+            }
+          ),
+          errors?.email && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.email })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("label", { htmlFor: "password", className: "block text-sm font-medium text-gray-700 mb-2", children: "Password" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+            "input",
+            {
+              type: "password",
+              id: "password",
+              value: data.password,
+              onChange: (e) => setData("password", e.target.value),
+              className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors?.password ? "border-red-500" : "border-gray-300"}`,
+              placeholder: "Enter your password"
+            }
+          ),
+          errors?.password && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.password })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+            "input",
+            {
+              type: "checkbox",
+              id: "remember_me",
+              checked: data.remember_me === true,
+              onChange: (e) => setData("remember_me", e.target.checked ? true : null),
+              className: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("label", { htmlFor: "remember_me", className: "ml-2 block text-sm text-gray-700", children: "Remember me" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex justify-between items-center pt-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: () => window.history.back(),
+              className: "px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500",
+              children: "Back"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+            "button",
+            {
+              type: "submit",
+              disabled: processing,
+              className: "px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed",
+              children: processing ? "Signing in..." : "Sign In"
+            }
+          )
+        ] })
+      ] })
+    ] })
+  ] }) });
+}
+var import_jsx_runtime10;
+var init_LoginForm = __esm({
+  "src/forms/LoginForm.tsx"() {
+    "use strict";
+    init_index_esm2();
+    import_jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
+  }
+});
+
+// src/Login.tsx
+var Login_exports = {};
+__export(Login_exports, {
+  default: () => Login
+});
+function Login({ title, message, features, errors }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(LoginForm, { title, message, demo_info: features, errors });
+}
+var import_jsx_runtime11;
+var init_Login = __esm({
+  "src/Login.tsx"() {
+    "use strict";
+    init_LoginForm();
+    import_jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
   }
 });
 
@@ -37724,51 +38364,51 @@ __export(UserProfile_exports, {
   default: () => UserProfile_default
 });
 function UserProfile(props) {
-  return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "max-w-4xl mx-auto p-6", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "bg-white shadow-lg rounded-lg overflow-hidden", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h1", { className: "text-3xl font-bold text-white", children: props.name }),
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-blue-100 mt-2", children: props.email })
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "max-w-4xl mx-auto p-6", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "bg-white shadow-lg rounded-lg overflow-hidden", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h1", { className: "text-3xl font-bold text-white", children: props.name }),
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-blue-100 mt-2", children: props.email })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "px-6 py-8", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h2", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Profile Information" }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-sm font-medium text-gray-500", children: "User ID" }),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-gray-900", children: props.id })
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "px-6 py-8", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h2", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Profile Information" }),
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-sm font-medium text-gray-500", children: "User ID" }),
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-gray-900", children: props.id })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-sm font-medium text-gray-500", children: "Email" }),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-gray-900", children: props.email })
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-sm font-medium text-gray-500", children: "Email" }),
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-gray-900", children: props.email })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-sm font-medium text-gray-500", children: "Bio" }),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-gray-900", children: props.bio })
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "text-sm font-medium text-gray-500", children: "Bio" }),
+            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-gray-900", children: props.bio })
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h2", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Interests" }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "flex flex-wrap gap-2", children: isSome(props.interests) && value(props.interests).countLength() > 0 ? value(props.interests).toArray().map((interest, index4) => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h2", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Interests" }),
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "flex flex-wrap gap-2", children: isSome(props.interests) && value(props.interests).countLength() > 0 ? value(props.interests).toArray().map((interest, index4) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
           "span",
           {
             className: "px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full",
             children: interest
           },
           index4
-        )) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-gray-500 italic", children: "No interests loaded. This is an optional prop that's only included when specifically requested." }) })
+        )) : /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-gray-500 italic", children: "No interests loaded. This is an optional prop that's only included when specifically requested." }) })
       ] })
     ] }) })
   ] }) });
 }
-var import_jsx_runtime4, UserProfile_default;
+var import_jsx_runtime12, UserProfile_default;
 var init_UserProfile = __esm({
   "src/UserProfile.tsx"() {
     "use strict";
     init_types();
     init_decoders();
     init_option2();
-    import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+    import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
     UserProfile_default = withDecodedProps(decode_user_profile_page_props, UserProfile);
   }
 });
@@ -37799,7 +38439,7 @@ var require_scheduler_production_min = __commonJS({
       if (c !== b3) {
         a[0] = c;
         a:
-          for (var d = 0, e = a.length, w = e >>> 1; d < w; ) {
+          for (var d = 0, e = a.length, w2 = e >>> 1; d < w2; ) {
             var m = 2 * (d + 1) - 1, C3 = a[m], n = m + 1, x2 = a[n];
             if (0 > g(C3, c))
               n < e && 0 > g(x2, C3) ? (a[d] = x2, a[n] = c, d = n) : (a[d] = C3, a[m] = c, d = m);
@@ -37841,7 +38481,7 @@ var require_scheduler_production_min = __commonJS({
     var E2 = "function" === typeof clearTimeout ? clearTimeout : null;
     var F2 = "undefined" !== typeof setImmediate ? setImmediate : null;
     "undefined" !== typeof navigator && void 0 !== navigator.scheduling && void 0 !== navigator.scheduling.isInputPending && navigator.scheduling.isInputPending.bind(navigator.scheduling);
-    function G(a) {
+    function G2(a) {
       for (var b3 = h(t); null !== b3; ) {
         if (null === b3.callback)
           k2(t);
@@ -37854,7 +38494,7 @@ var require_scheduler_production_min = __commonJS({
     }
     function H3(a) {
       B2 = false;
-      G(a);
+      G2(a);
       if (!A)
         if (null !== h(r))
           A = true, I2(J3);
@@ -37869,7 +38509,7 @@ var require_scheduler_production_min = __commonJS({
       z2 = true;
       var c = y;
       try {
-        G(b3);
+        G2(b3);
         for (v = h(r); null !== v && (!(v.expirationTime > b3) || a && !M2()); ) {
           var d = v.callback;
           if ("function" === typeof d) {
@@ -37878,19 +38518,19 @@ var require_scheduler_production_min = __commonJS({
             var e = d(v.expirationTime <= b3);
             b3 = exports2.unstable_now();
             "function" === typeof e ? v.callback = e : v === h(r) && k2(r);
-            G(b3);
+            G2(b3);
           } else
             k2(r);
           v = h(r);
         }
         if (null !== v)
-          var w = true;
+          var w2 = true;
         else {
           var m = h(t);
           null !== m && K3(H3, m.startTime - b3);
-          w = false;
+          w2 = false;
         }
-        return w;
+        return w2;
       } finally {
         v = null, y = c, z2 = false;
       }
@@ -40571,13 +41211,13 @@ var require_react_dom_production_min = __commonJS({
             }
             var t = 0 !== (b3 & 4), J3 = !t && "scroll" === a, x2 = t ? null !== h2 ? h2 + "Capture" : null : h2;
             t = [];
-            for (var w = d2, u2; null !== w; ) {
-              u2 = w;
+            for (var w2 = d2, u2; null !== w2; ) {
+              u2 = w2;
               var F2 = u2.stateNode;
-              5 === u2.tag && null !== F2 && (u2 = F2, null !== x2 && (F2 = Kb(w, x2), null != F2 && t.push(tf(w, F2, u2))));
+              5 === u2.tag && null !== F2 && (u2 = F2, null !== x2 && (F2 = Kb(w2, x2), null != F2 && t.push(tf(w2, F2, u2))));
               if (J3)
                 break;
-              w = w.return;
+              w2 = w2.return;
             }
             0 < t.length && (h2 = new k3(h2, n, null, c, e2), g2.push({ event: h2, listeners: t }));
           }
@@ -40599,32 +41239,32 @@ var require_react_dom_production_min = __commonJS({
                 t = Bd;
                 F2 = "onMouseLeave";
                 x2 = "onMouseEnter";
-                w = "mouse";
+                w2 = "mouse";
                 if ("pointerout" === a || "pointerover" === a)
-                  t = Td, F2 = "onPointerLeave", x2 = "onPointerEnter", w = "pointer";
+                  t = Td, F2 = "onPointerLeave", x2 = "onPointerEnter", w2 = "pointer";
                 J3 = null == k3 ? h2 : ue(k3);
                 u2 = null == n ? h2 : ue(n);
-                h2 = new t(F2, w + "leave", k3, c, e2);
+                h2 = new t(F2, w2 + "leave", k3, c, e2);
                 h2.target = J3;
                 h2.relatedTarget = u2;
                 F2 = null;
-                Wc(e2) === d2 && (t = new t(x2, w + "enter", n, c, e2), t.target = u2, t.relatedTarget = J3, F2 = t);
+                Wc(e2) === d2 && (t = new t(x2, w2 + "enter", n, c, e2), t.target = u2, t.relatedTarget = J3, F2 = t);
                 J3 = F2;
                 if (k3 && n)
                   b: {
                     t = k3;
                     x2 = n;
-                    w = 0;
+                    w2 = 0;
                     for (u2 = t; u2; u2 = vf(u2))
-                      w++;
+                      w2++;
                     u2 = 0;
                     for (F2 = x2; F2; F2 = vf(F2))
                       u2++;
-                    for (; 0 < w - u2; )
-                      t = vf(t), w--;
-                    for (; 0 < u2 - w; )
+                    for (; 0 < w2 - u2; )
+                      t = vf(t), w2--;
+                    for (; 0 < u2 - w2; )
                       x2 = vf(x2), u2--;
-                    for (; w--; ) {
+                    for (; w2--; ) {
                       if (t === x2 || null !== x2 && t === x2.alternate)
                         break b;
                       t = vf(t);
@@ -40864,7 +41504,7 @@ var require_react_dom_production_min = __commonJS({
     function E2(a) {
       0 > Tf || (a.current = Sf[Tf], Sf[Tf] = null, Tf--);
     }
-    function G(a, b3) {
+    function G2(a, b3) {
       Tf++;
       Sf[Tf] = a.current;
       a.current = b3;
@@ -40897,8 +41537,8 @@ var require_react_dom_production_min = __commonJS({
     function ag(a, b3, c) {
       if (H3.current !== Vf)
         throw Error(p(168));
-      G(H3, b3);
-      G(Wf, c);
+      G2(H3, b3);
+      G2(Wf, c);
     }
     function bg(a, b3, c) {
       var d = a.stateNode;
@@ -40914,16 +41554,16 @@ var require_react_dom_production_min = __commonJS({
     function cg(a) {
       a = (a = a.stateNode) && a.__reactInternalMemoizedMergedChildContext || Vf;
       Xf = H3.current;
-      G(H3, a);
-      G(Wf, Wf.current);
+      G2(H3, a);
+      G2(Wf, Wf.current);
       return true;
     }
     function dg(a, b3, c) {
       var d = a.stateNode;
       if (!d)
         throw Error(p(169));
-      c ? (a = bg(a, b3, Xf), d.__reactInternalMemoizedMergedChildContext = a, E2(Wf), E2(H3), G(H3, a)) : E2(Wf);
-      G(Wf, c);
+      c ? (a = bg(a, b3, Xf), d.__reactInternalMemoizedMergedChildContext = a, E2(Wf), E2(H3), G2(H3, a)) : E2(Wf);
+      G2(Wf, c);
     }
     var eg = null;
     var fg = false;
@@ -41281,33 +41921,33 @@ var require_react_dom_production_min = __commonJS({
         return null;
       }
       function n(e2, g2, h2, k3) {
-        for (var l2 = null, m2 = null, u2 = g2, w = g2 = 0, x2 = null; null !== u2 && w < h2.length; w++) {
-          u2.index > w ? (x2 = u2, u2 = null) : x2 = u2.sibling;
-          var n2 = r(e2, u2, h2[w], k3);
+        for (var l2 = null, m2 = null, u2 = g2, w2 = g2 = 0, x2 = null; null !== u2 && w2 < h2.length; w2++) {
+          u2.index > w2 ? (x2 = u2, u2 = null) : x2 = u2.sibling;
+          var n2 = r(e2, u2, h2[w2], k3);
           if (null === n2) {
             null === u2 && (u2 = x2);
             break;
           }
           a && u2 && null === n2.alternate && b3(e2, u2);
-          g2 = f2(n2, g2, w);
+          g2 = f2(n2, g2, w2);
           null === m2 ? l2 = n2 : m2.sibling = n2;
           m2 = n2;
           u2 = x2;
         }
-        if (w === h2.length)
-          return c(e2, u2), I2 && tg(e2, w), l2;
+        if (w2 === h2.length)
+          return c(e2, u2), I2 && tg(e2, w2), l2;
         if (null === u2) {
-          for (; w < h2.length; w++)
-            u2 = q3(e2, h2[w], k3), null !== u2 && (g2 = f2(u2, g2, w), null === m2 ? l2 = u2 : m2.sibling = u2, m2 = u2);
-          I2 && tg(e2, w);
+          for (; w2 < h2.length; w2++)
+            u2 = q3(e2, h2[w2], k3), null !== u2 && (g2 = f2(u2, g2, w2), null === m2 ? l2 = u2 : m2.sibling = u2, m2 = u2);
+          I2 && tg(e2, w2);
           return l2;
         }
-        for (u2 = d(e2, u2); w < h2.length; w++)
-          x2 = y(u2, e2, w, h2[w], k3), null !== x2 && (a && null !== x2.alternate && u2.delete(null === x2.key ? w : x2.key), g2 = f2(x2, g2, w), null === m2 ? l2 = x2 : m2.sibling = x2, m2 = x2);
+        for (u2 = d(e2, u2); w2 < h2.length; w2++)
+          x2 = y(u2, e2, w2, h2[w2], k3), null !== x2 && (a && null !== x2.alternate && u2.delete(null === x2.key ? w2 : x2.key), g2 = f2(x2, g2, w2), null === m2 ? l2 = x2 : m2.sibling = x2, m2 = x2);
         a && u2.forEach(function(a2) {
           return b3(e2, a2);
         });
-        I2 && tg(e2, w);
+        I2 && tg(e2, w2);
         return l2;
       }
       function t(e2, g2, h2, k3) {
@@ -41317,15 +41957,15 @@ var require_react_dom_production_min = __commonJS({
         h2 = l2.call(h2);
         if (null == h2)
           throw Error(p(151));
-        for (var u2 = l2 = null, m2 = g2, w = g2 = 0, x2 = null, n2 = h2.next(); null !== m2 && !n2.done; w++, n2 = h2.next()) {
-          m2.index > w ? (x2 = m2, m2 = null) : x2 = m2.sibling;
+        for (var u2 = l2 = null, m2 = g2, w2 = g2 = 0, x2 = null, n2 = h2.next(); null !== m2 && !n2.done; w2++, n2 = h2.next()) {
+          m2.index > w2 ? (x2 = m2, m2 = null) : x2 = m2.sibling;
           var t2 = r(e2, m2, n2.value, k3);
           if (null === t2) {
             null === m2 && (m2 = x2);
             break;
           }
           a && m2 && null === t2.alternate && b3(e2, m2);
-          g2 = f2(t2, g2, w);
+          g2 = f2(t2, g2, w2);
           null === u2 ? l2 = t2 : u2.sibling = t2;
           u2 = t2;
           m2 = x2;
@@ -41334,19 +41974,19 @@ var require_react_dom_production_min = __commonJS({
           return c(
             e2,
             m2
-          ), I2 && tg(e2, w), l2;
+          ), I2 && tg(e2, w2), l2;
         if (null === m2) {
-          for (; !n2.done; w++, n2 = h2.next())
-            n2 = q3(e2, n2.value, k3), null !== n2 && (g2 = f2(n2, g2, w), null === u2 ? l2 = n2 : u2.sibling = n2, u2 = n2);
-          I2 && tg(e2, w);
+          for (; !n2.done; w2++, n2 = h2.next())
+            n2 = q3(e2, n2.value, k3), null !== n2 && (g2 = f2(n2, g2, w2), null === u2 ? l2 = n2 : u2.sibling = n2, u2 = n2);
+          I2 && tg(e2, w2);
           return l2;
         }
-        for (m2 = d(e2, m2); !n2.done; w++, n2 = h2.next())
-          n2 = y(m2, e2, w, n2.value, k3), null !== n2 && (a && null !== n2.alternate && m2.delete(null === n2.key ? w : n2.key), g2 = f2(n2, g2, w), null === u2 ? l2 = n2 : u2.sibling = n2, u2 = n2);
+        for (m2 = d(e2, m2); !n2.done; w2++, n2 = h2.next())
+          n2 = y(m2, e2, w2, n2.value, k3), null !== n2 && (a && null !== n2.alternate && m2.delete(null === n2.key ? w2 : n2.key), g2 = f2(n2, g2, w2), null === u2 ? l2 = n2 : u2.sibling = n2, u2 = n2);
         a && m2.forEach(function(a2) {
           return b3(e2, a2);
         });
-        I2 && tg(e2, w);
+        I2 && tg(e2, w2);
         return l2;
       }
       function J3(a2, d2, f3, h2) {
@@ -41645,9 +42285,9 @@ var require_react_dom_production_min = __commonJS({
       return a;
     }
     function yh(a, b3) {
-      G(wh, b3);
-      G(vh, a);
-      G(uh, th);
+      G2(wh, b3);
+      G2(vh, a);
+      G2(uh, th);
       a = b3.nodeType;
       switch (a) {
         case 9:
@@ -41658,7 +42298,7 @@ var require_react_dom_production_min = __commonJS({
           a = 8 === a ? b3.parentNode : b3, b3 = a.namespaceURI || null, a = a.tagName, b3 = lb(b3, a);
       }
       E2(uh);
-      G(uh, b3);
+      G2(uh, b3);
     }
     function zh() {
       E2(uh);
@@ -41669,7 +42309,7 @@ var require_react_dom_production_min = __commonJS({
       xh(wh.current);
       var b3 = xh(uh.current);
       var c = lb(b3, a.type);
-      b3 !== c && (G(vh, a), G(uh, c));
+      b3 !== c && (G2(vh, a), G2(uh, c));
     }
     function Bh(a) {
       vh.current === a && (E2(uh), E2(vh));
@@ -42407,17 +43047,17 @@ var require_react_dom_production_min = __commonJS({
       var d = b3.pendingProps, e = d.children, f2 = null !== a ? a.memoizedState : null;
       if ("hidden" === d.mode)
         if (0 === (b3.mode & 1))
-          b3.memoizedState = { baseLanes: 0, cachePool: null, transitions: null }, G(ej, fj), fj |= c;
+          b3.memoizedState = { baseLanes: 0, cachePool: null, transitions: null }, G2(ej, fj), fj |= c;
         else {
           if (0 === (c & 1073741824))
-            return a = null !== f2 ? f2.baseLanes | c : c, b3.lanes = b3.childLanes = 1073741824, b3.memoizedState = { baseLanes: a, cachePool: null, transitions: null }, b3.updateQueue = null, G(ej, fj), fj |= a, null;
+            return a = null !== f2 ? f2.baseLanes | c : c, b3.lanes = b3.childLanes = 1073741824, b3.memoizedState = { baseLanes: a, cachePool: null, transitions: null }, b3.updateQueue = null, G2(ej, fj), fj |= a, null;
           b3.memoizedState = { baseLanes: 0, cachePool: null, transitions: null };
           d = null !== f2 ? f2.baseLanes : c;
-          G(ej, fj);
+          G2(ej, fj);
           fj |= d;
         }
       else
-        null !== f2 ? (d = f2.baseLanes | c, b3.memoizedState = null) : d = c, G(ej, fj), fj |= d;
+        null !== f2 ? (d = f2.baseLanes | c, b3.memoizedState = null) : d = c, G2(ej, fj), fj |= d;
       Xi(a, b3, e, c);
       return b3.child;
     }
@@ -42519,7 +43159,7 @@ var require_react_dom_production_min = __commonJS({
         f2 = true, b3.flags &= -129;
       else if (null === a || null !== a.memoizedState)
         e |= 1;
-      G(L, e & 1);
+      G2(L, e & 1);
       if (null === a) {
         Eg(b3);
         a = b3.memoizedState;
@@ -42708,7 +43348,7 @@ var require_react_dom_production_min = __commonJS({
             }
         d &= 1;
       }
-      G(L, d);
+      G2(L, d);
       if (0 === (b3.mode & 1))
         b3.memoizedState = null;
       else
@@ -42782,21 +43422,21 @@ var require_react_dom_production_min = __commonJS({
           break;
         case 10:
           var d = b3.type._context, e = b3.memoizedProps.value;
-          G(Wg, d._currentValue);
+          G2(Wg, d._currentValue);
           d._currentValue = e;
           break;
         case 13:
           d = b3.memoizedState;
           if (null !== d) {
             if (null !== d.dehydrated)
-              return G(L, L.current & 1), b3.flags |= 128, null;
+              return G2(L, L.current & 1), b3.flags |= 128, null;
             if (0 !== (c & b3.child.childLanes))
               return oj(a, b3, c);
-            G(L, L.current & 1);
+            G2(L, L.current & 1);
             a = Zi(a, b3, c);
             return null !== a ? a.sibling : null;
           }
-          G(L, L.current & 1);
+          G2(L, L.current & 1);
           break;
         case 19:
           d = 0 !== (c & b3.childLanes);
@@ -42807,7 +43447,7 @@ var require_react_dom_production_min = __commonJS({
           }
           e = b3.memoizedState;
           null !== e && (e.rendering = null, e.tail = null, e.lastEffect = null);
-          G(L, L.current);
+          G2(L, L.current);
           if (d)
             break;
           else
@@ -43262,7 +43902,7 @@ var require_react_dom_production_min = __commonJS({
                     d = c;
                     for (c = b3.child; null !== c; )
                       f2 = c, a = d, f2.flags &= 14680066, g = f2.alternate, null === g ? (f2.childLanes = 0, f2.lanes = a, f2.child = null, f2.subtreeFlags = 0, f2.memoizedProps = null, f2.memoizedState = null, f2.updateQueue = null, f2.dependencies = null, f2.stateNode = null) : (f2.childLanes = g.childLanes, f2.lanes = g.lanes, f2.child = g.child, f2.subtreeFlags = 0, f2.deletions = null, f2.memoizedProps = g.memoizedProps, f2.memoizedState = g.memoizedState, f2.updateQueue = g.updateQueue, f2.type = g.type, a = g.dependencies, f2.dependencies = null === a ? null : { lanes: a.lanes, firstContext: a.firstContext }), c = c.sibling;
-                    G(L, L.current & 1 | 2);
+                    G2(L, L.current & 1 | 2);
                     return b3.child;
                   }
                   a = a.sibling;
@@ -43279,7 +43919,7 @@ var require_react_dom_production_min = __commonJS({
             f2.isBackwards ? (g.sibling = b3.child, b3.child = g) : (c = f2.last, null !== c ? c.sibling = g : b3.child = g, f2.last = g);
           }
           if (null !== f2.tail)
-            return b3 = f2.tail, f2.rendering = b3, f2.tail = b3.sibling, f2.renderingStartTime = B2(), b3.sibling = null, c = L.current, G(L, d ? c & 1 | 2 : c & 1), b3;
+            return b3 = f2.tail, f2.rendering = b3, f2.tail = b3.sibling, f2.renderingStartTime = B2(), b3.sibling = null, c = L.current, G2(L, d ? c & 1 | 2 : c & 1), b3;
           S2(b3);
           return null;
         case 22:
@@ -43419,8 +44059,8 @@ var require_react_dom_production_min = __commonJS({
                     break;
                   case 1:
                     if (null !== n) {
-                      var t = n.memoizedProps, J3 = n.memoizedState, x2 = b3.stateNode, w = x2.getSnapshotBeforeUpdate(b3.elementType === b3.type ? t : Ci(b3.type, t), J3);
-                      x2.__reactInternalSnapshotBeforeUpdate = w;
+                      var t = n.memoizedProps, J3 = n.memoizedState, x2 = b3.stateNode, w2 = x2.getSnapshotBeforeUpdate(b3.elementType === b3.type ? t : Ci(b3.type, t), J3);
+                      x2.__reactInternalSnapshotBeforeUpdate = w2;
                     }
                     break;
                   case 3:
@@ -44552,8 +45192,8 @@ var require_react_dom_production_min = __commonJS({
                   break a;
                 case 1:
                   h = k2;
-                  var w = f2.type, u2 = f2.stateNode;
-                  if (0 === (f2.flags & 128) && ("function" === typeof w.getDerivedStateFromError || null !== u2 && "function" === typeof u2.componentDidCatch && (null === Ri || !Ri.has(u2)))) {
+                  var w2 = f2.type, u2 = f2.stateNode;
+                  if (0 === (f2.flags & 128) && ("function" === typeof w2.getDerivedStateFromError || null !== u2 && "function" === typeof u2.componentDidCatch && (null === Ri || !Ri.has(u2)))) {
                     f2.flags |= 65536;
                     b3 &= -b3;
                     f2.lanes |= b3;
@@ -44814,15 +45454,15 @@ var require_react_dom_production_min = __commonJS({
                     V2 = f2.return;
                   }
             }
-            var w = a.current;
-            for (V2 = w; null !== V2; ) {
+            var w2 = a.current;
+            for (V2 = w2; null !== V2; ) {
               g = V2;
               var u2 = g.child;
               if (0 !== (g.subtreeFlags & 2064) && null !== u2)
                 u2.return = g, V2 = u2;
               else
                 b:
-                  for (g = w; null !== V2; ) {
+                  for (g = w2; null !== V2; ) {
                     h = V2;
                     if (0 !== (h.flags & 2048))
                       try {
@@ -45046,7 +45686,7 @@ var require_react_dom_production_min = __commonJS({
             e = b3.pendingProps;
             f2 = b3.memoizedProps;
             g = e.value;
-            G(Wg, d._currentValue);
+            G2(Wg, d._currentValue);
             d._currentValue = g;
             if (null !== f2)
               if (He(f2.value, g)) {
@@ -66844,9 +67484,17 @@ var init_ = __esm({
   'import("./**/*.tsx") in src/main.tsx'() {
     globImport_tsx = __glob({
       "./BlogPost.tsx": () => Promise.resolve().then(() => (init_BlogPost(), BlogPost_exports)),
+      "./ContactForm.tsx": () => Promise.resolve().then(() => (init_ContactForm(), ContactForm_exports)),
+      "./CreateUser.tsx": () => Promise.resolve().then(() => (init_CreateUser(), CreateUser_exports)),
       "./Dashboard.tsx": () => Promise.resolve().then(() => (init_Dashboard(), Dashboard_exports)),
+      "./EditProfile.tsx": () => Promise.resolve().then(() => (init_EditProfile(), EditProfile_exports)),
       "./Home.tsx": () => Promise.resolve().then(() => (init_Home(), Home_exports)),
+      "./Login.tsx": () => Promise.resolve().then(() => (init_Login(), Login_exports)),
       "./UserProfile.tsx": () => Promise.resolve().then(() => (init_UserProfile(), UserProfile_exports)),
+      "./forms/ContactFormComponent.tsx": () => Promise.resolve().then(() => (init_ContactFormComponent(), ContactFormComponent_exports)),
+      "./forms/CreateUserForm.tsx": () => Promise.resolve().then(() => (init_CreateUserForm(), CreateUserForm_exports)),
+      "./forms/EditProfileForm.tsx": () => Promise.resolve().then(() => (init_EditProfileForm(), EditProfileForm_exports)),
+      "./forms/LoginForm.tsx": () => Promise.resolve().then(() => (init_LoginForm(), LoginForm_exports)),
       "./main.tsx": () => Promise.resolve().then(() => (init_main(), main_exports)),
       "./ssr.tsx": () => Promise.resolve().then(() => (init_ssr(), ssr_exports))
     });
@@ -66855,13 +67503,13 @@ var init_ = __esm({
 
 // src/main.tsx
 var main_exports = {};
-var import_client, import_jsx_runtime5;
+var import_client, import_jsx_runtime13;
 var init_main = __esm({
   "src/main.tsx"() {
     "use strict";
     init_index_esm2();
     import_client = __toESM(require_client(), 1);
-    import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+    import_jsx_runtime13 = __toESM(require_jsx_runtime(), 1);
     init_();
     W2({
       resolve: async (name) => {
@@ -66870,7 +67518,7 @@ var init_main = __esm({
           return component.default || component;
         } catch (error) {
           console.error(`Component '${name}' not found:`, error);
-          return () => /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
+          return () => /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
             "Component '",
             name,
             "' not found"
@@ -66881,7 +67529,7 @@ var init_main = __esm({
         if (!el) {
           throw new Error("Root element not found");
         }
-        (0, import_client.createRoot)(el).render(/* @__PURE__ */ (0, import_jsx_runtime5.jsx)(App, { ...props }));
+        (0, import_client.createRoot)(el).render(/* @__PURE__ */ (0, import_jsx_runtime13.jsx)(App, { ...props }));
       }
     });
   }
@@ -66893,9 +67541,17 @@ var init_2 = __esm({
   'import("./**/*.tsx") in src/ssr.tsx'() {
     globImport_tsx2 = __glob({
       "./BlogPost.tsx": () => Promise.resolve().then(() => (init_BlogPost(), BlogPost_exports)),
+      "./ContactForm.tsx": () => Promise.resolve().then(() => (init_ContactForm(), ContactForm_exports)),
+      "./CreateUser.tsx": () => Promise.resolve().then(() => (init_CreateUser(), CreateUser_exports)),
       "./Dashboard.tsx": () => Promise.resolve().then(() => (init_Dashboard(), Dashboard_exports)),
+      "./EditProfile.tsx": () => Promise.resolve().then(() => (init_EditProfile(), EditProfile_exports)),
       "./Home.tsx": () => Promise.resolve().then(() => (init_Home(), Home_exports)),
+      "./Login.tsx": () => Promise.resolve().then(() => (init_Login(), Login_exports)),
       "./UserProfile.tsx": () => Promise.resolve().then(() => (init_UserProfile(), UserProfile_exports)),
+      "./forms/ContactFormComponent.tsx": () => Promise.resolve().then(() => (init_ContactFormComponent(), ContactFormComponent_exports)),
+      "./forms/CreateUserForm.tsx": () => Promise.resolve().then(() => (init_CreateUserForm(), CreateUserForm_exports)),
+      "./forms/EditProfileForm.tsx": () => Promise.resolve().then(() => (init_EditProfileForm(), EditProfileForm_exports)),
+      "./forms/LoginForm.tsx": () => Promise.resolve().then(() => (init_LoginForm(), LoginForm_exports)),
       "./main.tsx": () => Promise.resolve().then(() => (init_main(), main_exports)),
       "./ssr.tsx": () => Promise.resolve().then(() => (init_ssr(), ssr_exports))
     });
@@ -66918,16 +67574,16 @@ function render(page) {
         return component.default || component;
       } catch (error) {
         console.error(`SSR: Component '${name}' not found:`, error);
-        return () => import_react13.default.createElement("div", {}, `Component '${name}' not found`);
+        return () => import_react17.default.createElement("div", {}, `Component '${name}' not found`);
       }
     },
-    setup: ({ App, props }) => import_react13.default.createElement(App, props)
+    setup: ({ App, props }) => import_react17.default.createElement(App, props)
   });
 }
-var import_react13, import_server;
+var import_react17, import_server;
 var init_ssr = __esm({
   "src/ssr.tsx"() {
-    import_react13 = __toESM(require_react(), 1);
+    import_react17 = __toESM(require_react(), 1);
     import_server = __toESM(require_server_node(), 1);
     init_index_esm2();
     init_2();

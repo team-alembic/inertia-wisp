@@ -1,7 +1,9 @@
+import gleam/option
 import inertia_wisp/inertia
 import types.{
-  BlogPostPageProps, DashboardPageProps, UserProfilePageProps,
-  encode_blog_post_props, encode_dashboard_props, encode_user_profile_props,
+  BlogPostPageProps, DashboardPageProps, HomePageProps, UserProfilePageProps,
+  encode_blog_post_props, encode_dashboard_props, encode_home_page_props,
+  encode_user_profile_props,
 }
 import wisp
 
@@ -28,7 +30,7 @@ pub fn user_profile_handler(
   // Transform to typed context
   let typed_ctx = ctx
     |> inertia.set_props(
-      UserProfilePageProps("", "", 0, [], ""), // zero value
+      UserProfilePageProps("", "", 0, option.None, ""), // zero value
       encode_user_profile_props,
     )
 
@@ -43,7 +45,7 @@ pub fn user_profile_handler(
   |> inertia.assign_prop("email", fn(props) { UserProfilePageProps(..props, email: user.email) })
   |> inertia.assign_prop("bio", fn(props) { UserProfilePageProps(..props, bio: user.bio) })
   // Optional props (only included when specifically requested - good for expensive data)
-  |> inertia.assign_optional_prop("interests", fn(props) { UserProfilePageProps(..props, interests: user.interests) })
+  |> inertia.assign_optional_prop("interests", fn(props) { UserProfilePageProps(..props, interests: option.Some(user.interests)) })
   |> inertia.render("UserProfile")
 }
 
@@ -54,7 +56,7 @@ pub fn blog_post_handler(
 ) -> wisp.Response {
   let typed_ctx = ctx
     |> inertia.set_props(
-      BlogPostPageProps("", "", "", "", [], 0), // zero value
+      BlogPostPageProps("", "", "", "", [], option.None), // zero value
       encode_blog_post_props,
     )
 
@@ -68,7 +70,7 @@ pub fn blog_post_handler(
   |> inertia.assign_prop("content", fn(props) { BlogPostPageProps(..props, content: "Gleam is a friendly language for building type-safe systems that can run anywhere. With its friendly syntax, first-class error handling, and powerful type system, Gleam makes it easy to build reliable software.") })
   |> inertia.assign_prop("tags", fn(props) { BlogPostPageProps(..props, tags: ["gleam", "functional-programming", "web-development"]) })
   // Analytics data - only load when specifically requested (expensive query)
-  |> inertia.assign_optional_prop("view_count", fn(props) { BlogPostPageProps(..props, view_count: 1250) })
+  |> inertia.assign_optional_prop("view_count", fn(props) { BlogPostPageProps(..props, view_count: option.Some(1250)) })
   |> inertia.render("BlogPost")
 }
 
@@ -78,7 +80,7 @@ pub fn dashboard_handler(
 ) -> wisp.Response {
   let typed_ctx = ctx
     |> inertia.set_props(
-      DashboardPageProps(0, 0, [], ""), // zero value
+      DashboardPageProps(0, 0, option.None, ""), // zero value
       encode_dashboard_props,
     )
 
@@ -90,6 +92,82 @@ pub fn dashboard_handler(
   |> inertia.assign_prop("user_count", fn(props) { DashboardPageProps(..props, user_count: 1247) })
   |> inertia.assign_prop("post_count", fn(props) { DashboardPageProps(..props, post_count: 89) })
   // Detailed data - only loaded when admin specifically requests it (potentially expensive query)
-  |> inertia.assign_optional_prop("recent_signups", fn(props) { DashboardPageProps(..props, recent_signups: ["alice@example.com", "bob@test.com", "carol@demo.org"]) })
+  |> inertia.assign_optional_prop("recent_signups", fn(props) { DashboardPageProps(..props, recent_signups: option.Some(["alice@example.com", "bob@test.com", "carol@demo.org"])) })
   |> inertia.render("Dashboard")
+}
+
+// ===== FORM PAGE HANDLERS =====
+
+// Create user form page
+pub fn create_user_page_handler(
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
+) -> wisp.Response {
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      HomePageProps("", "", []), // reuse simple props
+      encode_home_page_props,
+    )
+
+  typed_ctx
+  |> inertia.assign_always_prop("title", fn(props) { HomePageProps(..props, title: "Create New User") })
+  |> inertia.assign_prop("message", fn(props) { HomePageProps(..props, message: "Fill out the form below to create a new user account.") })
+  |> inertia.assign_prop("features", fn(props) { HomePageProps(..props, features: []) })
+  |> inertia.render("CreateUser")
+}
+
+// Edit profile form page
+pub fn edit_profile_page_handler(
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  _user_id: String,
+) -> wisp.Response {
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      UserProfilePageProps("", "", 0, option.None, ""), // zero value
+      encode_user_profile_props,
+    )
+
+  // Simulate fetching user data for editing
+  let user = get_user_by_id(1) // Would parse user_id in real app
+  
+  typed_ctx
+  |> inertia.assign_always_prop("name", fn(props) { UserProfilePageProps(..props, name: user.name) })
+  |> inertia.assign_always_prop("id", fn(props) { UserProfilePageProps(..props, id: user.id) })
+  |> inertia.assign_prop("email", fn(props) { UserProfilePageProps(..props, email: user.email) })
+  |> inertia.assign_prop("bio", fn(props) { UserProfilePageProps(..props, bio: user.bio) })
+  |> inertia.assign_prop("interests", fn(props) { UserProfilePageProps(..props, interests: option.Some(user.interests)) })
+  |> inertia.render("EditProfile")
+}
+
+// Login form page
+pub fn login_page_handler(
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
+) -> wisp.Response {
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      HomePageProps("", "", []), // reuse simple props
+      encode_home_page_props,
+    )
+
+  typed_ctx
+  |> inertia.assign_always_prop("title", fn(props) { HomePageProps(..props, title: "Login") })
+  |> inertia.assign_prop("message", fn(props) { HomePageProps(..props, message: "Please sign in to your account.") })
+  |> inertia.assign_prop("features", fn(props) { HomePageProps(..props, features: ["Demo credentials: demo@example.com / password123"]) })
+  |> inertia.render("Login")
+}
+
+// Contact form page
+pub fn contact_page_handler(
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
+) -> wisp.Response {
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      HomePageProps("", "", []), // reuse simple props
+      encode_home_page_props,
+    )
+
+  typed_ctx
+  |> inertia.assign_always_prop("title", fn(props) { HomePageProps(..props, title: "Contact Us") })
+  |> inertia.assign_prop("message", fn(props) { HomePageProps(..props, message: "We'd love to hear from you. Send us a message!") })
+  |> inertia.assign_prop("features", fn(props) { HomePageProps(..props, features: []) })
+  |> inertia.render("ContactForm")
 }

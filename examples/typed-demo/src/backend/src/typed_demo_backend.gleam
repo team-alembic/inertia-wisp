@@ -2,6 +2,7 @@ import gleam/erlang/process
 import gleam/http
 import gleam/int
 import gleam/option
+import form_handlers
 import handlers
 import inertia_wisp/inertia
 import mist
@@ -61,6 +62,20 @@ fn handle_request(
     ["user", user_id], http.Get -> handlers.user_profile_handler(ctx, parse_int(user_id))
     ["blog", post_id], http.Get -> handlers.blog_post_handler(ctx, parse_int(post_id))
     ["dashboard"], http.Get -> handlers.dashboard_handler(ctx)
+    
+    // Form submission routes
+    ["users"], http.Post -> form_handlers.create_user_handler(ctx, req)
+    ["users", user_id], http.Put -> form_handlers.update_profile_handler(ctx, req, user_id)
+    ["users", user_id], http.Patch -> form_handlers.update_profile_handler(ctx, req, user_id)
+    ["login"], http.Post -> form_handlers.login_handler(ctx, req)
+    ["contact"], http.Post -> form_handlers.contact_form_handler(ctx, req)
+    
+    // Form page routes (GET)
+    ["users", "create"], http.Get -> handlers.create_user_page_handler(ctx)
+    ["users", user_id, "edit"], http.Get -> handlers.edit_profile_page_handler(ctx, user_id)
+    ["login"], http.Get -> handlers.login_page_handler(ctx)
+    ["contact"], http.Get -> handlers.contact_page_handler(ctx)
+    
     _, _ -> wisp.not_found()
   }
 }
