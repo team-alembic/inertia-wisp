@@ -1,11 +1,11 @@
 import gleam/erlang/process
 import gleam/http
 import gleam/int
-import gleam/json
 import gleam/option
 import handlers
 import inertia_wisp/inertia
 import mist
+import types.{HomePageProps, encode_home_page_props}
 import wisp
 import wisp/wisp_mist
 
@@ -54,13 +54,13 @@ fn handle_request(
   ssr_supervisor: option.Option(process.Subject(inertia.SSRMessage)),
 ) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use ctx <- inertia.middleware(req, inertia.default_config(), ssr_supervisor)
+  use ctx <- inertia.empty_middleware(req, inertia.default_config(), ssr_supervisor)
   
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx)
-    ["user", user_id], http.Get -> handlers.user_profile_handler(ctx.request, ctx.config, parse_int(user_id))
-    ["blog", post_id], http.Get -> handlers.blog_post_handler(ctx.request, ctx.config, parse_int(post_id))
-    ["dashboard"], http.Get -> handlers.dashboard_handler(ctx.request, ctx.config)
+    ["user", user_id], http.Get -> handlers.user_profile_handler(ctx, parse_int(user_id))
+    ["blog", post_id], http.Get -> handlers.blog_post_handler(ctx, parse_int(post_id))
+    ["dashboard"], http.Get -> handlers.dashboard_handler(ctx)
     _, _ -> wisp.not_found()
   }
 }
@@ -72,15 +72,26 @@ fn parse_int(s: String) -> Int {
   }
 }
 
-fn home_page(ctx: inertia.InertiaContext) -> wisp.Response {
-  ctx
-  |> inertia.assign_prop("title", json.string("Typed Props Demo"))
-  |> inertia.assign_prop("message", json.string("Welcome to the statically typed props demo!"))
-  |> inertia.assign_prop("features", json.array([
-    json.string("Compile-time type safety"),
-    json.string("Shared Gleam/TypeScript types"),
-    json.string("Transformation-based props"),
-    json.string("Partial reload support")
-  ], fn(x) { x }))
+fn home_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      HomePageProps("", "", []), // zero value
+      encode_home_page_props,
+    )
+
+  typed_ctx
+  // Always included - essential app info that should always be available
+  |> inertia.assign_always_prop("title", fn(props) { HomePageProps(..props, title: "Typed Props Demo") })
+  // Default inclusion - main content included in initial load and when requested
+  |> inertia.assign_prop("message", fn(props) { HomePageProps(..props, message: "Welcome to the statically typed props demo!") })
+  // Default inclusion - features list is core content for home page
+  |> inertia.assign_prop("features", fn(props) { HomePageProps(..props, features: [
+    "🔒 Compile-time type safety across full stack",
+    "📝 Shared Gleam/TypeScript types with single source of truth",
+    "🔄 Transformation-based props with immutable updates", 
+    "⚡ Partial reload support with selective prop loading",
+    "🎯 Zero runtime overhead - all type checking at compile time",
+    "🛡️ Prevents runtime errors from type mismatches"
+  ]) })
   |> inertia.render("Home")
 }

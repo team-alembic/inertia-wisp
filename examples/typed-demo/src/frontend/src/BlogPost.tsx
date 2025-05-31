@@ -1,4 +1,4 @@
-import { BlogPostPageProps } from '../../shared/build/dev/javascript/shared_types/types';
+import { BlogPostPageProps } from '../../shared/build/dev/javascript/shared_types/types.mjs';
 
 export default function BlogPost(props: BlogPostPageProps) {
   return (
@@ -13,13 +13,13 @@ export default function BlogPost(props: BlogPostPageProps) {
                 <span>•</span>
                 <time>{props.published_at}</time>
                 <span>•</span>
-                <span>{props.view_count.toLocaleString()} views</span>
+                <span>{props.view_count > 0 ? `${props.view_count.toLocaleString()} views` : 'Views not loaded'}</span>
               </div>
             </div>
             
             <div className="tag-cloud">
               <div className="flex flex-wrap gap-2">
-                {props.tags.map((tag, index) => (
+                {props.tags.toArray().map((tag: string, index: number) => (
                   <span
                     key={index}
                     className="tag px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium"
@@ -44,7 +44,7 @@ export default function BlogPost(props: BlogPostPageProps) {
               Published on {props.published_at}
             </div>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>{props.view_count.toLocaleString()} views</span>
+              <span>{props.view_count > 0 ? `${props.view_count.toLocaleString()} views` : 'Views not loaded'}</span>
               <button className="text-blue-600 hover:text-blue-800 font-medium">
                 Share
               </button>

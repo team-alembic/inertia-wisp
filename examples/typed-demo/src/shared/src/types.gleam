@@ -1,3 +1,4 @@
+import gleam/dynamic/decode
 import gleam/json
 
 // User profile page props
@@ -56,12 +57,33 @@ pub type DashboardPageProps {
   )
 }
 
-// Encoder for DashboardPageProps  
+// Encoder for DashboardPageProps
 pub fn encode_dashboard_props(props: DashboardPageProps) -> json.Json {
   json.object([
     #("user_count", json.int(props.user_count)),
     #("post_count", json.int(props.post_count)),
     #("recent_signups", json.array(props.recent_signups, json.string)),
     #("system_status", json.string(props.system_status)),
+  ])
+}
+
+// Home page props
+pub type HomePageProps {
+  HomePageProps(title: String, message: String, features: List(String))
+}
+
+pub fn home_page_props_decoder() -> decode.Decoder(HomePageProps) {
+  use title <- decode.field("title", decode.string)
+  use message <- decode.field("message", decode.string)
+  use features <- decode.field("features", decode.list(decode.string))
+  decode.success(HomePageProps(title:, message:, features:))
+}
+
+// Encoder for HomePageProps
+pub fn encode_home_page_props(props: HomePageProps) -> json.Json {
+  json.object([
+    #("title", json.string(props.title)),
+    #("message", json.string(props.message)),
+    #("features", json.array(props.features, json.string)),
   ])
 }

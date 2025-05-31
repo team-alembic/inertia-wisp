@@ -22,71 +22,74 @@ fn get_user_by_id(id: Int) -> User {
 
 // User profile handler using typed props
 pub fn user_profile_handler(
-  request: wisp.Request,
-  config: inertia.Config,
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
   user_id: Int,
 ) -> wisp.Response {
-  // Create typed context with zero values and encoder
-  let ctx = inertia.new_typed_context(
-    config,
-    request,
-    UserProfilePageProps("", "", 0, [], ""), // zero value
-    encode_user_profile_props,
-  )
+  // Transform to typed context
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      UserProfilePageProps("", "", 0, [], ""), // zero value
+      encode_user_profile_props,
+    )
 
   // Simulate fetching user data
   let user = get_user_by_id(user_id)
   
-  ctx
-  |> inertia.assign_typed_prop("name", fn(props) { UserProfilePageProps(..props, name: user.name) })
-  |> inertia.assign_typed_prop("email", fn(props) { UserProfilePageProps(..props, email: user.email) })
-  |> inertia.assign_typed_prop("id", fn(props) { UserProfilePageProps(..props, id: user.id) })
-  |> inertia.assign_typed_prop("bio", fn(props) { UserProfilePageProps(..props, bio: user.bio) })
-  |> inertia.assign_typed_prop("interests", fn(props) { UserProfilePageProps(..props, interests: user.interests) })
-  |> inertia.render_typed("UserProfile")
+  typed_ctx
+  // Always included props (essential user data)
+  |> inertia.assign_always_prop("name", fn(props) { UserProfilePageProps(..props, name: user.name) })
+  |> inertia.assign_always_prop("id", fn(props) { UserProfilePageProps(..props, id: user.id) })
+  // Default props (included in initial load and when requested)
+  |> inertia.assign_prop("email", fn(props) { UserProfilePageProps(..props, email: user.email) })
+  |> inertia.assign_prop("bio", fn(props) { UserProfilePageProps(..props, bio: user.bio) })
+  // Optional props (only included when specifically requested - good for expensive data)
+  |> inertia.assign_optional_prop("interests", fn(props) { UserProfilePageProps(..props, interests: user.interests) })
+  |> inertia.render("UserProfile")
 }
 
 // Blog post handler
 pub fn blog_post_handler(
-  request: wisp.Request,
-  config: inertia.Config,
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
   _post_id: Int,
 ) -> wisp.Response {
-  let ctx = inertia.new_typed_context(
-    config,
-    request,
-    BlogPostPageProps("", "", "", "", [], 0), // zero value
-    encode_blog_post_props,
-  )
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      BlogPostPageProps("", "", "", "", [], 0), // zero value
+      encode_blog_post_props,
+    )
 
   // Mock blog post data
-  ctx
-  |> inertia.assign_typed_prop("title", fn(props) { BlogPostPageProps(..props, title: "Getting Started with Gleam") })
-  |> inertia.assign_typed_prop("content", fn(props) { BlogPostPageProps(..props, content: "Gleam is a friendly language for building type-safe systems...") })
-  |> inertia.assign_typed_prop("author", fn(props) { BlogPostPageProps(..props, author: "Alice Johnson") })
-  |> inertia.assign_typed_prop("published_at", fn(props) { BlogPostPageProps(..props, published_at: "2024-01-20") })
-  |> inertia.assign_typed_prop("tags", fn(props) { BlogPostPageProps(..props, tags: ["gleam", "functional-programming", "web-development"]) })
-  |> inertia.assign_typed_prop("view_count", fn(props) { BlogPostPageProps(..props, view_count: 1250) })
-  |> inertia.render_typed("BlogPost")
+  typed_ctx
+  // Essential post metadata - always included
+  |> inertia.assign_always_prop("title", fn(props) { BlogPostPageProps(..props, title: "Getting Started with Gleam") })
+  |> inertia.assign_always_prop("author", fn(props) { BlogPostPageProps(..props, author: "Alice Johnson") })
+  |> inertia.assign_always_prop("published_at", fn(props) { BlogPostPageProps(..props, published_at: "2024-01-20") })
+  // Main content - included by default
+  |> inertia.assign_prop("content", fn(props) { BlogPostPageProps(..props, content: "Gleam is a friendly language for building type-safe systems that can run anywhere. With its friendly syntax, first-class error handling, and powerful type system, Gleam makes it easy to build reliable software.") })
+  |> inertia.assign_prop("tags", fn(props) { BlogPostPageProps(..props, tags: ["gleam", "functional-programming", "web-development"]) })
+  // Analytics data - only load when specifically requested (expensive query)
+  |> inertia.assign_optional_prop("view_count", fn(props) { BlogPostPageProps(..props, view_count: 1250) })
+  |> inertia.render("BlogPost")
 }
 
 // Dashboard handler
 pub fn dashboard_handler(
-  request: wisp.Request,
-  config: inertia.Config,
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
 ) -> wisp.Response {
-  let ctx = inertia.new_typed_context(
-    config,
-    request,
-    DashboardPageProps(0, 0, [], ""), // zero value
-    encode_dashboard_props,
-  )
+  let typed_ctx = ctx
+    |> inertia.set_props(
+      DashboardPageProps(0, 0, [], ""), // zero value
+      encode_dashboard_props,
+    )
 
   // Mock dashboard data
-  ctx
-  |> inertia.assign_typed_prop("user_count", fn(props) { DashboardPageProps(..props, user_count: 1247) })
-  |> inertia.assign_typed_prop("post_count", fn(props) { DashboardPageProps(..props, post_count: 89) })
-  |> inertia.assign_typed_prop("recent_signups", fn(props) { DashboardPageProps(..props, recent_signups: ["alice@example.com", "bob@test.com", "carol@demo.org"]) })
-  |> inertia.assign_typed_prop("system_status", fn(props) { DashboardPageProps(..props, system_status: "All systems operational") })
-  |> inertia.render_typed("Dashboard")
+  typed_ctx
+  // Critical system status - always included for monitoring
+  |> inertia.assign_always_prop("system_status", fn(props) { DashboardPageProps(..props, system_status: "All systems operational") })
+  // Core metrics - included by default for dashboard overview  
+  |> inertia.assign_prop("user_count", fn(props) { DashboardPageProps(..props, user_count: 1247) })
+  |> inertia.assign_prop("post_count", fn(props) { DashboardPageProps(..props, post_count: 89) })
+  // Detailed data - only loaded when admin specifically requests it (potentially expensive query)
+  |> inertia.assign_optional_prop("recent_signups", fn(props) { DashboardPageProps(..props, recent_signups: ["alice@example.com", "bob@test.com", "carol@demo.org"]) })
+  |> inertia.render("Dashboard")
 }

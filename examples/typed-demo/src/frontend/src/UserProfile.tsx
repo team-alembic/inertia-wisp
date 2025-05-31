@@ -1,4 +1,4 @@
-import { UserProfilePageProps } from '../../shared/build/dev/javascript/shared_types/types';
+import { UserProfilePageProps } from '../../shared/build/dev/javascript/shared_types/types.mjs';
 
 export default function UserProfile(props: UserProfilePageProps) {
   return (
@@ -32,14 +32,18 @@ export default function UserProfile(props: UserProfilePageProps) {
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Interests</h2>
               <div className="flex flex-wrap gap-2">
-                {props.interests.map((interest, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                  >
-                    {interest}
-                  </span>
-                ))}
+                {props.interests.toArray().length > 0 ? (
+                  props.interests.toArray().map((interest: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                    >
+                      {interest}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">No interests loaded. This is an optional prop that's only included when specifically requested.</p>
+                )}
               </div>
             </div>
           </div>

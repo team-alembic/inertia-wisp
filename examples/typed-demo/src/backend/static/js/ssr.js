@@ -35275,12 +35275,9 @@ function BlogPost(props) {
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2022" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("time", { children: props.published_at }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2022" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-            props.view_count.toLocaleString(),
-            " views"
-          ] })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: props.view_count > 0 ? `${props.view_count.toLocaleString()} views` : "Views not loaded" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tag-cloud", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-2", children: props.tags.map((tag, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tag-cloud", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex flex-wrap gap-2", children: props.tags.toArray().map((tag, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "span",
           {
             className: "tag px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium",
@@ -35300,10 +35297,7 @@ function BlogPost(props) {
         props.published_at
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "flex items-center space-x-4 text-sm text-gray-600", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-          props.view_count.toLocaleString(),
-          " views"
-        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: props.view_count > 0 ? `${props.view_count.toLocaleString()} views` : "Views not loaded" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "text-blue-600 hover:text-blue-800 font-medium", children: "Share" })
       ] })
     ] }) })
@@ -35349,7 +35343,7 @@ function Dashboard(props) {
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg p-6 text-white", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between", children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-white/80 text-sm font-medium", children: "New Signups" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "stat-number text-3xl font-bold", children: props.recent_signups.length })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "stat-number text-3xl font-bold", children: props.recent_signups.countLength() })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "bg-white/20 p-3 rounded-full", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("svg", { className: "w-6 h-6", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { fillRule: "evenodd", d: "M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z", clipRule: "evenodd" }) }) })
       ] }) }),
@@ -35364,13 +35358,13 @@ function Dashboard(props) {
     /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "grid grid-cols-1 lg:grid-cols-2 gap-6", children: [
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-white rounded-lg shadow-lg p-6", children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { className: "text-xl font-semibold text-gray-900 mb-4", children: "Recent Signups" }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "space-y-3", children: props.recent_signups.map((email, index) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between p-3 bg-gray-50 rounded-lg", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "space-y-3", children: props.recent_signups.toArray().length > 0 ? props.recent_signups.toArray().map((email, index) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center justify-between p-3 bg-gray-50 rounded-lg", children: [
           /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center space-x-3", children: [
             /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium", children: email.charAt(0).toUpperCase() }),
             /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-gray-900 font-medium", children: email })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full", children: "New" })
-        ] }, index)) })
+        ] }, index)) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "text-gray-500 italic text-center py-4", children: "No recent signups data loaded. This is an optional prop that's only included when specifically requested." }) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-white rounded-lg shadow-lg p-6", children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { className: "text-xl font-semibold text-gray-900 mb-4", children: "System Overview" }),
@@ -35426,6 +35420,7 @@ __export(Home_exports, {
   default: () => Home
 });
 function Home(props) {
+  console.log({ props });
   return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "max-w-4xl mx-auto p-6", children: [
     /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "text-center py-12", children: [
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h1", { className: "text-5xl font-bold text-gray-900 mb-4", children: props.title }),
@@ -35434,28 +35429,67 @@ function Home(props) {
     /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-8 mb-12", children: [
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("svg", { className: "w-6 h-6 text-white", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" }) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "svg",
+            {
+              className: "w-6 h-6 text-white",
+              fill: "currentColor",
+              viewBox: "0 0 20 20",
+              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })
+            }
+          ) }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Type Safety" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Enjoy compile-time type safety across your entire stack with shared Gleam and TypeScript definitions." })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("svg", { className: "w-6 h-6 text-white", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" }) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "svg",
+            {
+              className: "w-6 h-6 text-white",
+              fill: "currentColor",
+              viewBox: "0 0 20 20",
+              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" })
+            }
+          ) }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Shared Types" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Define your data structures once in Gleam and automatically generate TypeScript types for your frontend." })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("svg", { className: "w-6 h-6 text-white", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 4l-6 4-6-4h12z" }) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "svg",
+            {
+              className: "w-6 h-6 text-white",
+              fill: "currentColor",
+              viewBox: "0 0 20 20",
+              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 4l-6 4-6-4h12z" })
+            }
+          ) }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Transformations" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Build your props incrementally using transformation functions while maintaining full type safety." })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center mb-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("svg", { className: "w-6 h-6 text-white", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { fillRule: "evenodd", d: "M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z", clipRule: "evenodd" }) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "svg",
+            {
+              className: "w-6 h-6 text-white",
+              fill: "currentColor",
+              viewBox: "0 0 20 20",
+              children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                "path",
+                {
+                  fillRule: "evenodd",
+                  d: "M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z",
+                  clipRule: "evenodd"
+                }
+              )
+            }
+          ) }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h3", { className: "text-xl font-semibold text-gray-900 ml-4", children: "Partial Reloads" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { className: "text-gray-600", children: "Keep all the benefits of Inertia.js partial reloads while enjoying static type checking." })
@@ -35463,7 +35497,7 @@ function Home(props) {
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-white rounded-xl shadow-lg p-8", children: [
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h2", { className: "text-2xl font-bold text-gray-900 mb-6", children: "Features" }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: props.features.map((feature, index) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center space-x-3", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: props.features.toArray().map((feature, index) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex items-center space-x-3", children: [
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-2 h-2 bg-blue-500 rounded-full" }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-gray-700", children: feature })
       ] }, index)) })
@@ -35535,14 +35569,14 @@ function UserProfile(props) {
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h2", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Interests" }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "flex flex-wrap gap-2", children: props.interests.map((interest, index) => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "flex flex-wrap gap-2", children: props.interests.toArray().length > 0 ? props.interests.toArray().map((interest, index) => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
           "span",
           {
             className: "px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full",
             children: interest
           },
           index
-        )) })
+        )) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-gray-500 italic", children: "No interests loaded. This is an optional prop that's only included when specifically requested." }) })
       ] })
     ] }) })
   ] }) });

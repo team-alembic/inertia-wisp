@@ -1,4 +1,4 @@
-import { DashboardPageProps } from '../../shared/build/dev/javascript/shared_types/types';
+import { DashboardPageProps } from '../../shared/build/dev/javascript/shared_types/types.mjs';
 
 export default function Dashboard(props: DashboardPageProps) {
   return (
@@ -42,7 +42,7 @@ export default function Dashboard(props: DashboardPageProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white/80 text-sm font-medium">New Signups</p>
-              <p className="stat-number text-3xl font-bold">{props.recent_signups.length}</p>
+              <p className="stat-number text-3xl font-bold">{props.recent_signups.countLength()}</p>
             </div>
             <div className="bg-white/20 p-3 rounded-full">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -71,19 +71,23 @@ export default function Dashboard(props: DashboardPageProps) {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Signups</h2>
           <div className="space-y-3">
-            {props.recent_signups.map((email, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    {email.charAt(0).toUpperCase()}
+            {props.recent_signups.toArray().length > 0 ? (
+              props.recent_signups.toArray().map((email: string, index: number) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {email.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-gray-900 font-medium">{email}</span>
                   </div>
-                  <span className="text-gray-900 font-medium">{email}</span>
+                  <span className="text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    New
+                  </span>
                 </div>
-                <span className="text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  New
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-gray-500 italic text-center py-4">No recent signups data loaded. This is an optional prop that's only included when specifically requested.</p>
+            )}
           </div>
         </div>
 
