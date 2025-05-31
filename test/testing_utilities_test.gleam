@@ -15,6 +15,100 @@ pub fn main() {
   gleeunit.main()
 }
 
+// Props type for testing utilities tests
+pub type TestingProps {
+  TestingProps(
+    title: String,
+    string_prop: String,
+    int_prop: Int,
+    bool_prop: Bool,
+    array_prop: List(String),
+    html_string: String,
+    html_number: Int,
+    html_bool: Bool,
+    existing_prop: String,
+    user: User,
+    items: List(Item),
+    quotes: String,
+    apostrophe: String,
+    html_tags: String,
+    ampersand: String,
+  )
+}
+
+pub type User {
+  User(id: Int, name: String, profile: Profile)
+}
+
+pub type Profile {
+  Profile(email: String, settings: Settings)
+}
+
+pub type Settings {
+  Settings(theme: String, notifications: Bool)
+}
+
+pub type Item {
+  Item(id: Int, name: String)
+}
+
+// Encoder for testing props
+pub fn encode_testing_props(props: TestingProps) -> json.Json {
+  json.object([
+    #("title", json.string(props.title)),
+    #("string_prop", json.string(props.string_prop)),
+    #("int_prop", json.int(props.int_prop)),
+    #("bool_prop", json.bool(props.bool_prop)),
+    #("array_prop", json.array(props.array_prop, json.string)),
+    #("html_string", json.string(props.html_string)),
+    #("html_number", json.int(props.html_number)),
+    #("html_bool", json.bool(props.html_bool)),
+    #("existing_prop", json.string(props.existing_prop)),
+    #("user", json.object([
+      #("id", json.int(props.user.id)),
+      #("name", json.string(props.user.name)),
+      #("profile", json.object([
+        #("email", json.string(props.user.profile.email)),
+        #("settings", json.object([
+          #("theme", json.string(props.user.profile.settings.theme)),
+          #("notifications", json.bool(props.user.profile.settings.notifications)),
+        ]))
+      ]))
+    ])),
+    #("items", json.array(props.items, fn(item) {
+      json.object([
+        #("id", json.int(item.id)),
+        #("name", json.string(item.name)),
+      ])
+    })),
+    #("quotes", json.string(props.quotes)),
+    #("apostrophe", json.string(props.apostrophe)),
+    #("html_tags", json.string(props.html_tags)),
+    #("ampersand", json.string(props.ampersand)),
+  ])
+}
+
+// Helper to create initial props
+fn initial_props() -> TestingProps {
+  TestingProps(
+    title: "",
+    string_prop: "",
+    int_prop: 0,
+    bool_prop: False,
+    array_prop: [],
+    html_string: "",
+    html_number: 0,
+    html_bool: False,
+    existing_prop: "",
+    user: User(id: 0, name: "", profile: Profile(email: "", settings: Settings(theme: "", notifications: False))),
+    items: [],
+    quotes: "",
+    apostrophe: "",
+    html_tags: "",
+    ampersand: "",
+  )
+}
+
 // Test inertia_request creation
 
 pub fn inertia_request_creation_test() {
@@ -59,9 +153,11 @@ pub fn json_response_component_extraction_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("title", json.string("Test"))
+    |> inertia.assign_prop("title", fn(props) {
+      TestingProps(..props, title: "Test")
+    })
     |> inertia.render("JsonTestComponent")
   })
   
@@ -72,12 +168,20 @@ pub fn json_response_prop_extraction_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("string_prop", json.string("test string"))
-    |> inertia.assign_prop("int_prop", json.int(42))
-    |> inertia.assign_prop("bool_prop", json.bool(True))
-    |> inertia.assign_prop("array_prop", json.array([json.string("a"), json.string("b")], fn(x) { x }))
+    |> inertia.assign_prop("string_prop", fn(props) {
+      TestingProps(..props, string_prop: "test string")
+    })
+    |> inertia.assign_prop("int_prop", fn(props) {
+      TestingProps(..props, int_prop: 42)
+    })
+    |> inertia.assign_prop("bool_prop", fn(props) {
+      TestingProps(..props, bool_prop: True)
+    })
+    |> inertia.assign_prop("array_prop", fn(props) {
+      TestingProps(..props, array_prop: ["a", "b"])
+    })
     |> inertia.render("PropTestComponent")
   })
   
@@ -91,7 +195,7 @@ pub fn json_response_url_extraction_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
     |> inertia.render("UrlTestComponent")
   })
@@ -112,7 +216,7 @@ pub fn json_response_version_extraction_test() {
   )
   let config = inertia.config(version: "test-version", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
     |> inertia.render("VersionTestComponent")
   })
@@ -126,9 +230,11 @@ pub fn html_response_component_extraction_test() {
   let req = wisp_testing.request(http.Get, "/test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("title", json.string("HTML Test"))
+    |> inertia.assign_prop("title", fn(props) {
+      TestingProps(..props, title: "HTML Test")
+    })
     |> inertia.render("HtmlTestComponent")
   })
   
@@ -139,11 +245,17 @@ pub fn html_response_prop_extraction_test() {
   let req = wisp_testing.request(http.Get, "/test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("html_string", json.string("html test string"))
-    |> inertia.assign_prop("html_number", json.int(123))
-    |> inertia.assign_prop("html_bool", json.bool(False))
+    |> inertia.assign_prop("html_string", fn(props) {
+      TestingProps(..props, html_string: "html test string")
+    })
+    |> inertia.assign_prop("html_number", fn(props) {
+      TestingProps(..props, html_number: 123)
+    })
+    |> inertia.assign_prop("html_bool", fn(props) {
+      TestingProps(..props, html_bool: False)
+    })
     |> inertia.render("HtmlPropTestComponent")
   })
   
@@ -156,7 +268,7 @@ pub fn html_response_url_extraction_test() {
   let req = wisp_testing.request(http.Get, "/html-test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
     |> inertia.render("HtmlUrlTestComponent")
   })
@@ -178,9 +290,11 @@ pub fn missing_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("existing_prop", json.string("exists"))
+    |> inertia.assign_prop("existing_prop", fn(props) {
+      TestingProps(..props, existing_prop: "exists")
+    })
     |> inertia.render("TestComponent")
   })
   
@@ -192,9 +306,11 @@ pub fn wrong_prop_type_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("string_prop", json.string("not a number"))
+    |> inertia.assign_prop("string_prop", fn(props) {
+      TestingProps(..props, string_prop: "not a number")
+    })
     |> inertia.render("TestComponent")
   })
   
@@ -208,21 +324,20 @@ pub fn nested_object_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let user_data = json.object([
-    #("id", json.int(1)),
-    #("name", json.string("John")),
-    #("profile", json.object([
-      #("email", json.string("john@example.com")),
-      #("settings", json.object([
-        #("theme", json.string("dark")),
-        #("notifications", json.bool(True))
-      ]))
-    ]))
-  ])
+  let user_data = User(
+    id: 1,
+    name: "John",
+    profile: Profile(
+      email: "john@example.com",
+      settings: Settings(theme: "dark", notifications: True)
+    )
+  )
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("user", user_data)
+    |> inertia.assign_prop("user", fn(props) {
+      TestingProps(..props, user: user_data)
+    })
     |> inertia.render("UserComponent")
   })
   
@@ -240,15 +355,17 @@ pub fn array_of_objects_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let items = json.array([
-    json.object([#("id", json.int(1)), #("name", json.string("Item 1"))]),
-    json.object([#("id", json.int(2)), #("name", json.string("Item 2"))]),
-    json.object([#("id", json.int(3)), #("name", json.string("Item 3"))])
-  ], fn(x) { x })
+  let items = [
+    Item(id: 1, name: "Item 1"),
+    Item(id: 2, name: "Item 2"),
+    Item(id: 3, name: "Item 3")
+  ]
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("items", items)
+    |> inertia.assign_prop("items", fn(props) {
+      TestingProps(..props, items: items)
+    })
     |> inertia.render("ItemsComponent")
   })
   
@@ -264,12 +381,20 @@ pub fn html_entity_unescaping_test() {
   let req = wisp_testing.request(http.Get, "/test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("quotes", json.string("\"Hello\""))
-    |> inertia.assign_prop("apostrophe", json.string("It's working"))
-    |> inertia.assign_prop("html_tags", json.string("<div>test</div>"))
-    |> inertia.assign_prop("ampersand", json.string("Tom & Jerry"))
+    |> inertia.assign_prop("quotes", fn(props) {
+      TestingProps(..props, quotes: "\"Hello\"")
+    })
+    |> inertia.assign_prop("apostrophe", fn(props) {
+      TestingProps(..props, apostrophe: "It's working")
+    })
+    |> inertia.assign_prop("html_tags", fn(props) {
+      TestingProps(..props, html_tags: "<div>test</div>")
+    })
+    |> inertia.assign_prop("ampersand", fn(props) {
+      TestingProps(..props, ampersand: "Tom & Jerry")
+    })
     |> inertia.render("EscapeTestComponent")
   })
   

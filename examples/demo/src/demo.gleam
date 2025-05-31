@@ -7,7 +7,9 @@ import gleam/option
 import handlers/uploads
 import handlers/users
 import inertia_wisp/inertia
+import inertia_wisp/internal/types
 import mist
+import props
 import sqlight
 import wisp
 import wisp/wisp_mist
@@ -107,23 +109,43 @@ fn home_page(
     Error(_) -> 0
   }
 
-  req
-  |> inertia.assign_always_props([
-    #(
-      "auth",
-      json.object([
-        #("authenticated", json.bool(True)),
-        #("user", json.string("demo_user")),
-      ]),
-    ),
-    #("csrf_token", json.string("abc123xyz")),
-  ])
-  |> inertia.assign_props([
-    #("message", json.string("Hello from Gleam!")),
-    #("timestamp", json.string("2024-01-01T00:00:00Z")),
-    #("user_count", json.int(user_count)),
-  ])
-  |> inertia.render("Home")
+  // Create initial props
+  let initial_props = props.HomeProps(
+    auth: json.null(),
+    csrf_token: "",
+    message: "",
+    timestamp: "",
+    user_count: 0,
+  )
+
+  // Create typed context
+  let typed_ctx = inertia.new_typed_context(
+    req.config,
+    req.request,
+    initial_props,
+    props.encode_home_props,
+  )
+
+  typed_ctx
+  |> inertia.assign_always_typed_prop("auth", fn(props) {
+    props.HomeProps(..props, auth: json.object([
+      #("authenticated", json.bool(True)),
+      #("user", json.string("demo_user")),
+    ]))
+  })
+  |> inertia.assign_always_typed_prop("csrf_token", fn(props) {
+    props.HomeProps(..props, csrf_token: "abc123xyz")
+  })
+  |> inertia.assign_typed_prop("message", fn(props) {
+    props.HomeProps(..props, message: "Hello from Gleam!")
+  })
+  |> inertia.assign_typed_prop("timestamp", fn(props) {
+    props.HomeProps(..props, timestamp: "2024-01-01T00:00:00Z")
+  })
+  |> inertia.assign_typed_prop("user_count", fn(props) {
+    props.HomeProps(..props, user_count: user_count)
+  })
+  |> inertia.render_typed("Home")
 }
 
 /// Example of using asset versioning with custom config

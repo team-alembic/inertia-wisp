@@ -12,6 +12,130 @@ pub fn main() {
   gleeunit.main()
 }
 
+// Props type for main inertia tests
+pub type MainTestProps {
+  MainTestProps(
+    title: String,
+    count: Int,
+    active: Bool,
+    name: String,
+    age: Int,
+    email: String,
+    csrf_token: String,
+    page_data: String,
+    user_id: Int,
+    app_name: String,
+    version: String,
+    expensive_data: List(String),
+    notifications: Int,
+    debug_info: String,
+    admin_stats: AdminStats,
+    posts: List(String),
+    comments: List(String),
+    sidebar: String,
+    specific_data: String,
+    other_data: String,
+    sensitive_data: String,
+    data: String,
+    user: User,
+    settings: Settings,
+    errors: dict.Dict(String, String),
+  )
+}
+
+pub type AdminStats {
+  AdminStats(count: Int)
+}
+
+pub type User {
+  User(id: Int, name: String, profile: Profile, tags: List(String))
+}
+
+pub type Profile {
+  Profile(email: String, verified: Bool)
+}
+
+pub type Settings {
+  Settings(theme: String, notifications: Bool)
+}
+
+// Encoder for main test props
+pub fn encode_main_props(props: MainTestProps) -> json.Json {
+  json.object([
+    #("title", json.string(props.title)),
+    #("count", json.int(props.count)),
+    #("active", json.bool(props.active)),
+    #("name", json.string(props.name)),
+    #("age", json.int(props.age)),
+    #("email", json.string(props.email)),
+    #("csrf_token", json.string(props.csrf_token)),
+    #("page_data", json.string(props.page_data)),
+    #("user_id", json.int(props.user_id)),
+    #("app_name", json.string(props.app_name)),
+    #("version", json.string(props.version)),
+    #("expensive_data", json.array(props.expensive_data, json.string)),
+    #("notifications", json.int(props.notifications)),
+    #("debug_info", json.string(props.debug_info)),
+    #("admin_stats", json.object([
+      #("count", json.int(props.admin_stats.count))
+    ])),
+    #("posts", json.array(props.posts, json.string)),
+    #("comments", json.array(props.comments, json.string)),
+    #("sidebar", json.string(props.sidebar)),
+    #("specific_data", json.string(props.specific_data)),
+    #("other_data", json.string(props.other_data)),
+    #("sensitive_data", json.string(props.sensitive_data)),
+    #("data", json.string(props.data)),
+    #("user", json.object([
+      #("id", json.int(props.user.id)),
+      #("name", json.string(props.user.name)),
+      #("profile", json.object([
+        #("email", json.string(props.user.profile.email)),
+        #("verified", json.bool(props.user.profile.verified)),
+      ])),
+      #("tags", json.array(props.user.tags, json.string)),
+    ])),
+    #("settings", json.object([
+      #("theme", json.string(props.settings.theme)),
+      #("notifications", json.bool(props.settings.notifications)),
+    ])),
+    #("errors", json.object(dict.to_list(props.errors) |> list.map(fn(pair) {
+      #(pair.0, json.string(pair.1))
+    }))),
+  ])
+}
+
+// Helper to create initial props
+fn initial_props() -> MainTestProps {
+  MainTestProps(
+    title: "",
+    count: 0,
+    active: False,
+    name: "",
+    age: 0,
+    email: "",
+    csrf_token: "",
+    page_data: "",
+    user_id: 0,
+    app_name: "",
+    version: "",
+    expensive_data: [],
+    notifications: 0,
+    debug_info: "",
+    admin_stats: AdminStats(count: 0),
+    posts: [],
+    comments: [],
+    sidebar: "",
+    specific_data: "",
+    other_data: "",
+    sensitive_data: "",
+    data: "",
+    user: User(id: 0, name: "", profile: Profile(email: "", verified: False), tags: []),
+    settings: Settings(theme: "", notifications: False),
+    errors: dict.new(),
+  )
+}
+
 // Test configuration functions
 
 pub fn default_config_test() {
@@ -36,9 +160,11 @@ pub fn render_basic_component_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("title", json.string("Test Page"))
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Test Page")
+      })
       |> inertia.render("TestComponent")
     })
 
@@ -52,11 +178,17 @@ pub fn render_with_multiple_props_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("title", json.string("Multiple Props"))
-      |> inertia.assign_prop("count", json.int(42))
-      |> inertia.assign_prop("active", json.bool(True))
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Multiple Props")
+      })
+      |> inertia.assign_prop("count", fn(props) {
+        MainTestProps(..props, count: 42)
+      })
+      |> inertia.assign_prop("active", fn(props) {
+        MainTestProps(..props, active: True)
+      })
       |> inertia.render("MultiPropComponent")
     })
 
@@ -67,30 +199,6 @@ pub fn render_with_multiple_props_test() {
   testing.prop(response, "active", decode.bool) |> should.equal(Ok(True))
 }
 
-pub fn assign_props_batch_test() {
-  let req = testing.inertia_request()
-  let config = inertia.default_config()
-
-  let props = [
-    #("name", json.string("John")),
-    #("age", json.int(30)),
-    #("email", json.string("john@example.com")),
-  ]
-
-  let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
-      ctx
-      |> inertia.assign_props(props)
-      |> inertia.render("UserProfile")
-    })
-
-  testing.component(response) |> should.equal(Ok("UserProfile"))
-  testing.prop(response, "name", decode.string) |> should.equal(Ok("John"))
-  testing.prop(response, "age", decode.int) |> should.equal(Ok(30))
-  testing.prop(response, "email", decode.string)
-  |> should.equal(Ok("john@example.com"))
-}
-
 // Test always props
 
 pub fn assign_always_prop_test() {
@@ -98,10 +206,14 @@ pub fn assign_always_prop_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_always_prop("csrf_token", json.string("abc123"))
-      |> inertia.assign_prop("title", json.string("Page Title"))
+      |> inertia.assign_always_prop("csrf_token", fn(props) {
+        MainTestProps(..props, csrf_token: "abc123")
+      })
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Page Title")
+      })
       |> inertia.render("SecurePage")
     })
 
@@ -112,64 +224,41 @@ pub fn assign_always_prop_test() {
   |> should.equal(Ok("Page Title"))
 }
 
-pub fn assign_always_props_batch_test() {
-  let req = testing.inertia_request()
-  let config = inertia.default_config()
+// Test expensive computation props (replaces lazy props)
 
-  let always_props = [
-    #("user_id", json.int(123)),
-    #("app_name", json.string("Test App")),
-    #("version", json.string("1.0.0")),
-  ]
-
-  let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
-      ctx
-      |> inertia.assign_always_props(always_props)
-      |> inertia.assign_prop("page_data", json.string("specific data"))
-      |> inertia.render("AppLayout")
-    })
-
-  testing.component(response) |> should.equal(Ok("AppLayout"))
-  testing.prop(response, "user_id", decode.int) |> should.equal(Ok(123))
-  testing.prop(response, "app_name", decode.string)
-  |> should.equal(Ok("Test App"))
-  testing.prop(response, "version", decode.string) |> should.equal(Ok("1.0.0"))
-  testing.prop(response, "page_data", decode.string)
-  |> should.equal(Ok("specific data"))
-}
-
-// Test lazy props
-
-pub fn assign_lazy_prop_test() {
+pub fn assign_expensive_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_lazy_prop("expensive_data", fn() {
-        json.array([json.string("item1"), json.string("item2")], fn(x) { x })
+      |> inertia.assign_prop("expensive_data", fn(props) {
+        MainTestProps(..props, expensive_data: ["item1", "item2"])
       })
-      |> inertia.assign_prop("title", json.string("Lazy Props"))
-      |> inertia.render("LazyComponent")
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Expensive Props")
+      })
+      |> inertia.render("ExpensiveComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("LazyComponent"))
+  testing.component(response) |> should.equal(Ok("ExpensiveComponent"))
   testing.prop(response, "title", decode.string)
-  |> should.equal(Ok("Lazy Props"))
+  |> should.equal(Ok("Expensive Props"))
   testing.prop(response, "expensive_data", decode.list(decode.string))
   |> should.equal(Ok(["item1", "item2"]))
 }
 
-pub fn assign_always_lazy_prop_test() {
+pub fn assign_always_expensive_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_always_lazy_prop("notifications", fn() { json.int(5) })
+      |> inertia.assign_always_prop("notifications", fn(props) {
+        MainTestProps(..props, notifications: 5)
+      })
       |> inertia.render("Dashboard")
     })
 
@@ -184,10 +273,14 @@ pub fn assign_optional_prop_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_optional_prop("debug_info", json.string("debug data"))
-      |> inertia.assign_prop("title", json.string("Optional Props"))
+      |> inertia.assign_optional_prop("debug_info", fn(props) {
+        MainTestProps(..props, debug_info: "debug data")
+      })
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Optional Props")
+      })
       |> inertia.render("DebugPage")
     })
 
@@ -198,24 +291,26 @@ pub fn assign_optional_prop_test() {
   testing.prop(response, "debug_info", decode.string) |> should.be_error()
 }
 
-pub fn assign_optional_lazy_prop_test() {
+pub fn assign_optional_expensive_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_optional_lazy_prop("admin_stats", fn() {
-        json.object([#("count", json.int(100))])
+      |> inertia.assign_optional_prop("admin_stats", fn(props) {
+        MainTestProps(..props, admin_stats: AdminStats(count: 100))
       })
-      |> inertia.assign_prop("title", json.string("Admin Panel"))
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Admin Panel")
+      })
       |> inertia.render("AdminDashboard")
     })
 
   testing.component(response) |> should.equal(Ok("AdminDashboard"))
   testing.prop(response, "title", decode.string)
   |> should.equal(Ok("Admin Panel"))
-  // Optional lazy props should not be included unless specifically requested
+  // Optional props should not be included unless specifically requested
   testing.prop(response, "admin_stats", decode.dynamic) |> should.be_error()
 }
 
@@ -228,17 +323,17 @@ pub fn partial_data_request_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop(
-        "posts",
-        json.array([json.string("post1")], fn(x) { x }),
-      )
-      |> inertia.assign_prop(
-        "comments",
-        json.array([json.string("comment1")], fn(x) { x }),
-      )
-      |> inertia.assign_prop("sidebar", json.string("sidebar content"))
+      |> inertia.assign_prop("posts", fn(props) {
+        MainTestProps(..props, posts: ["post1"])
+      })
+      |> inertia.assign_prop("comments", fn(props) {
+        MainTestProps(..props, comments: ["comment1"])
+      })
+      |> inertia.assign_prop("sidebar", fn(props) {
+        MainTestProps(..props, sidebar: "sidebar content")
+      })
       |> inertia.render("BlogPage")
     })
 
@@ -258,11 +353,17 @@ pub fn partial_data_with_always_props_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_always_prop("csrf_token", json.string("token123"))
-      |> inertia.assign_prop("specific_data", json.string("requested data"))
-      |> inertia.assign_prop("other_data", json.string("not requested"))
+      |> inertia.assign_always_prop("csrf_token", fn(props) {
+        MainTestProps(..props, csrf_token: "token123")
+      })
+      |> inertia.assign_prop("specific_data", fn(props) {
+        MainTestProps(..props, specific_data: "requested data")
+      })
+      |> inertia.assign_prop("other_data", fn(props) {
+        MainTestProps(..props, other_data: "not requested")
+      })
       |> inertia.render("PartialPage")
     })
 
@@ -276,7 +377,7 @@ pub fn partial_data_with_always_props_test() {
   testing.prop(response, "other_data", decode.string) |> should.be_error()
 }
 
-// Test error handling
+// Test error handling (now using regular props)
 
 pub fn assign_errors_test() {
   let req = testing.inertia_request()
@@ -288,10 +389,14 @@ pub fn assign_errors_test() {
     |> dict.insert("password", "Password too short")
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_errors(errors)
-      |> inertia.assign_prop("title", json.string("Form with Errors"))
+      |> inertia.assign_prop("errors", fn(props) {
+        MainTestProps(..props, errors: errors)
+      })
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Form with Errors")
+      })
       |> inertia.render("ContactForm")
     })
 
@@ -308,11 +413,17 @@ pub fn assign_error_single_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
+  let errors = dict.new() |> dict.insert("username", "Username already taken")
+
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_error("username", "Username already taken")
-      |> inertia.assign_prop("title", json.string("Registration"))
+      |> inertia.assign_prop("errors", fn(props) {
+        MainTestProps(..props, errors: errors)
+      })
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Registration")
+      })
       |> inertia.render("RegisterForm")
     })
 
@@ -328,8 +439,8 @@ pub fn redirect_test() {
   let config = inertia.default_config()
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
-      inertia.redirect(ctx, to: "/dashboard")
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(_ctx) {
+      inertia.redirect(req, to: "/dashboard")
     })
 
   response.status |> should.equal(303)
@@ -345,91 +456,23 @@ pub fn external_redirect_test() {
   |> should.equal(True)
 }
 
-// Test history management
+// Test history management (using config instead of context functions)
 
 pub fn encrypt_history_test() {
   let req = testing.inertia_request()
-  let config = inertia.default_config()
+  let config = inertia.config(version: "1", ssr: False, encrypt_history: True)
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("sensitive_data", json.string("secret"))
-      |> inertia.encrypt_history()
+      |> inertia.assign_prop("sensitive_data", fn(props) {
+        MainTestProps(..props, sensitive_data: "secret")
+      })
       |> inertia.render("SecurePage")
     })
 
   testing.component(response) |> should.equal(Ok("SecurePage"))
   testing.encrypt_history(response) |> should.equal(Ok(True))
-}
-
-pub fn clear_history_test() {
-  let req = testing.inertia_request()
-  let config = inertia.default_config()
-
-  let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
-      ctx
-      |> inertia.assign_prop("data", json.string("logged out"))
-      |> inertia.clear_history()
-      |> inertia.render("LoggedOutPage")
-    })
-
-  testing.component(response) |> should.equal(Ok("LoggedOutPage"))
-  testing.clear_history(response) |> should.equal(Ok(True))
-}
-
-// Test SSR configuration
-
-pub fn enable_ssr_test() {
-  let req = testing.inertia_request()
-  let config = inertia.config(version: "1", ssr: False, encrypt_history: False)
-
-  let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
-      let updated_ctx = inertia.enable_ssr(ctx)
-      updated_ctx.config.ssr |> should.equal(True)
-      updated_ctx.config.version |> should.equal("1")
-      updated_ctx.config.encrypt_history |> should.equal(False)
-      inertia.render(updated_ctx, "TestPage")
-    })
-
-  testing.component(response) |> should.equal(Ok("TestPage"))
-}
-
-pub fn disable_ssr_test() {
-  let req = testing.inertia_request()
-  let config = inertia.config(version: "1", ssr: True, encrypt_history: False)
-
-  let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
-      let updated_ctx = inertia.disable_ssr(ctx)
-      updated_ctx.config.ssr |> should.equal(False)
-      updated_ctx.config.version |> should.equal("1")
-      updated_ctx.config.encrypt_history |> should.equal(False)
-      inertia.render(updated_ctx, "TestPage")
-    })
-
-  testing.component(response) |> should.equal(Ok("TestPage"))
-}
-
-pub fn set_config_test() {
-  let req = testing.inertia_request()
-  let initial_config = inertia.default_config()
-
-  let new_config =
-    inertia.config(version: "2.0.0", ssr: True, encrypt_history: True)
-
-  let response =
-    inertia.middleware(req, initial_config, option.None, fn(ctx) {
-      let updated_ctx = inertia.set_config(ctx, new_config)
-      updated_ctx.config.version |> should.equal("2.0.0")
-      updated_ctx.config.ssr |> should.equal(True)
-      updated_ctx.config.encrypt_history |> should.equal(True)
-      inertia.render(updated_ctx, "TestPage")
-    })
-
-  testing.component(response) |> should.equal(Ok("TestPage"))
 }
 
 // Test SSR supervisor configuration
@@ -459,34 +502,24 @@ pub fn complex_props_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
-  let user_data =
-    json.object([
-      #("id", json.int(123)),
-      #("name", json.string("John Doe")),
-      #(
-        "profile",
-        json.object([
-          #("email", json.string("john@example.com")),
-          #("verified", json.bool(True)),
-        ]),
-      ),
-      #(
-        "tags",
-        json.array([json.string("admin"), json.string("user")], fn(x) { x }),
-      ),
-    ])
+  let user_data = User(
+    id: 123,
+    name: "John Doe",
+    profile: Profile(email: "john@example.com", verified: True),
+    tags: ["admin", "user"]
+  )
+
+  let settings_data = Settings(theme: "dark", notifications: False)
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("user", user_data)
-      |> inertia.assign_prop(
-        "settings",
-        json.object([
-          #("theme", json.string("dark")),
-          #("notifications", json.bool(False)),
-        ]),
-      )
+      |> inertia.assign_prop("user", fn(props) {
+        MainTestProps(..props, user: user_data)
+      })
+      |> inertia.assign_prop("settings", fn(props) {
+        MainTestProps(..props, settings: settings_data)
+      })
       |> inertia.render("UserDashboard")
     })
 
@@ -514,9 +547,11 @@ pub fn url_extraction_test() {
   let config = inertia.config(version: "1", ssr: False, encrypt_history: False)
 
   let response =
-    inertia.middleware(req, config, option.None, fn(ctx) {
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("title", json.string("Test"))
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Test")
+      })
       |> inertia.render("TestPage")
     })
 

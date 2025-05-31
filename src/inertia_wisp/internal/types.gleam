@@ -62,43 +62,40 @@ pub fn encode_page(page: Page) -> json.Json {
   ])
 }
 
-/// Prop inclusion behavior
-pub type Prop {
-  DefaultProp(PropValue)
-  OptionalProp(PropValue)
-  AlwaysProp(PropValue)
+/// Prop inclusion behavior - when should this prop be included?
+pub type IncludeProp {
+  /// Always included in both initial renders and partial reloads
+  IncludeAlways
+  /// Included in initial renders and when specifically requested in partial reloads
+  IncludeDefault
+  /// Only included when specifically requested in partial reloads
+  IncludeOptionally
 }
 
-/// Prop evaluation strategy
-pub type PropValue {
-  EagerProp(value: json.Json)
-  LazyProp(evaluate: fn() -> json.Json)
+/// A prop transformation with inclusion behavior for typed contexts
+pub type PropTransform(props) {
+  PropTransform(
+    name: String,
+    transform: fn(props) -> props,
+    include: IncludeProp,
+  )
 }
+
+
 
 /// Configuration for the Inertia adapter
 pub type Config {
   Config(version: String, ssr: Bool, encrypt_history: Bool)
 }
 
-/// Context wrapper for building up props before rendering
-pub type InertiaContext {
+
+
+/// Context for statically typed props
+pub type InertiaContext(props) {
   InertiaContext(
     config: Config,
     request: wisp.Request,
-    props: Dict(String, Prop),
-    errors: Dict(String, String),
-    encrypt_history: Bool,
-    clear_history: Bool,
-    ssr_supervisor: Option(Subject(SSRMessage)),
-  )
-}
-
-/// New parameterized context for statically typed props
-pub type TypedInertiaContext(props) {
-  TypedInertiaContext(
-    config: Config,
-    request: wisp.Request,
-    props_transformers: List(#(String, fn(props) -> props)),
+    prop_transforms: List(PropTransform(props)),
     props_encoder: fn(props) -> json.Json,
     props_zero: props,
     errors: Dict(String, String),
@@ -108,23 +105,13 @@ pub type TypedInertiaContext(props) {
   )
 }
 
-pub fn new_context(config, request) {
+
+
+pub fn new_context(config, request, props_zero, props_encoder) {
   InertiaContext(
     config: config,
     request: request,
-    props: dict.new(),
-    errors: dict.new(),
-    encrypt_history: config.encrypt_history,
-    clear_history: False,
-    ssr_supervisor: option.None,
-  )
-}
-
-pub fn new_typed_context(config, request, props_zero, props_encoder) {
-  TypedInertiaContext(
-    config: config,
-    request: request,
-    props_transformers: [],
+    prop_transforms: [],
     props_encoder: props_encoder,
     props_zero: props_zero,
     errors: dict.new(),

@@ -15,6 +15,126 @@ pub fn main() {
   gleeunit.main()
 }
 
+// Simple props type for testing
+pub type TestProps {
+  TestProps(
+    users: List(String),
+    data: String,
+    api_data: String,
+    title: String,
+    count: Int,
+    empty_string: String,
+    empty_array: List(String),
+    empty_object: dict.Dict(String, String),
+    null_value: option.Option(String),
+    items: List(TestItem),
+    unicode: String,
+    quotes: String,
+    html_entities: String,
+    newlines: String,
+    nested: TestNested,
+    errors: dict.Dict(String, String),
+  )
+}
+
+pub type TestItem {
+  TestItem(id: Int, name: String, data: String)
+}
+
+pub type TestNested {
+  TestNested(level1: TestLevel1)
+}
+
+pub type TestLevel1 {
+  TestLevel1(level2: TestLevel2)
+}
+
+pub type TestLevel2 {
+  TestLevel2(level3: TestLevel3)
+}
+
+pub type TestLevel3 {
+  TestLevel3(level4: TestLevel4)
+}
+
+pub type TestLevel4 {
+  TestLevel4(value: String, array: List(TestNestedItem))
+}
+
+pub type TestNestedItem {
+  TestNestedItem(item: String)
+}
+
+// Encoder for test props
+pub fn encode_test_props(props: TestProps) -> json.Json {
+  json.object([
+    #("users", json.array(props.users, json.string)),
+    #("data", json.string(props.data)),
+    #("api_data", json.string(props.api_data)),
+    #("title", json.string(props.title)),
+    #("count", json.int(props.count)),
+    #("empty_string", json.string(props.empty_string)),
+    #("empty_array", json.array(props.empty_array, json.string)),
+    #("empty_object", json.object(dict.to_list(props.empty_object) |> list.map(fn(pair) {
+      #(pair.0, json.string(pair.1))
+    }))),
+    #("null_value", case props.null_value {
+      option.Some(val) -> json.string(val)
+      option.None -> json.null()
+    }),
+    #("items", json.array(props.items, fn(item) {
+      json.object([
+        #("id", json.int(item.id)),
+        #("name", json.string(item.name)),
+        #("data", json.string(item.data)),
+      ])
+    })),
+    #("unicode", json.string(props.unicode)),
+    #("quotes", json.string(props.quotes)),
+    #("html_entities", json.string(props.html_entities)),
+    #("newlines", json.string(props.newlines)),
+    #("nested", json.object([
+      #("level1", json.object([
+        #("level2", json.object([
+          #("level3", json.object([
+            #("level4", json.object([
+              #("value", json.string(props.nested.level1.level2.level3.level4.value)),
+              #("array", json.array(props.nested.level1.level2.level3.level4.array, fn(nested_item) {
+                json.object([#("item", json.string(nested_item.item))])
+              }))
+            ]))
+          ]))
+        ]))
+      ]))
+    ])),
+    #("errors", json.object(dict.to_list(props.errors) |> list.map(fn(pair) {
+      #(pair.0, json.string(pair.1))
+    }))),
+  ])
+}
+
+// Helper to create initial props
+fn initial_props() -> TestProps {
+  TestProps(
+    users: [],
+    data: "",
+    api_data: "",
+    title: "",
+    count: 0,
+    empty_string: "",
+    empty_array: [],
+    empty_object: dict.new(),
+    null_value: option.None,
+    items: [],
+    unicode: "",
+    quotes: "",
+    html_entities: "",
+    newlines: "",
+    nested: TestNested(TestLevel1(TestLevel2(TestLevel3(TestLevel4("", []))))),
+    errors: dict.new(),
+  )
+}
+
 // Test version mismatch handling
 
 pub fn version_mismatch_forces_redirect_test() {
@@ -31,9 +151,11 @@ pub fn version_mismatch_forces_redirect_test() {
   )
   let config = inertia.config(version: "new-version", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("users", json.array([json.string("user1")], fn(x) { x }))
+    |> inertia.assign_prop("users", fn(props) {
+      TestProps(..props, users: ["user1"])
+    })
     |> inertia.render("UsersList")
   })
   
@@ -55,9 +177,11 @@ pub fn version_match_returns_json_test() {
   )
   let config = inertia.config(version: "v1.0.0", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("users", json.array([json.string("user1")], fn(x) { x }))
+    |> inertia.assign_prop("users", fn(props) {
+      TestProps(..props, users: ["user1"])
+    })
     |> inertia.render("UsersList")
   })
   
@@ -80,9 +204,11 @@ pub fn missing_version_header_test() {
   )
   let config = inertia.config(version: "v1.0.0", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("data", json.string("test data"))
+    |> inertia.assign_prop("data", fn(props) {
+      TestProps(..props, data: "test data")
+    })
     |> inertia.render("TestPage")
   })
   
@@ -97,12 +223,20 @@ pub fn empty_props_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("empty_string", json.string(""))
-    |> inertia.assign_prop("empty_array", json.array([], fn(x) { x }))
-    |> inertia.assign_prop("empty_object", json.object([]))
-    |> inertia.assign_prop("null_value", json.null())
+    |> inertia.assign_prop("empty_string", fn(props) {
+      TestProps(..props, empty_string: "")
+    })
+    |> inertia.assign_prop("empty_array", fn(props) {
+      TestProps(..props, empty_array: [])
+    })
+    |> inertia.assign_prop("empty_object", fn(props) {
+      TestProps(..props, empty_object: dict.new())
+    })
+    |> inertia.assign_prop("null_value", fn(props) {
+      TestProps(..props, null_value: option.None)
+    })
     |> inertia.render("EmptyPropsPage")
   })
   
@@ -120,21 +254,22 @@ pub fn large_props_test() {
   let config = inertia.default_config()
   
   // Create a large array
-  let large_data = json.array(
-    list.range(1, 1000) |> list.map(fn(i) { 
-      json.object([
-        #("id", json.int(i)),
-        #("name", json.string("Item " <> int.to_string(i))),
-        #("data", json.string("Some data for item " <> int.to_string(i)))
-      ])
-    }),
-    fn(x) { x }
-  )
+  let large_data = list.range(1, 1000) |> list.map(fn(i) { 
+    TestItem(
+      id: i,
+      name: "Item " <> int.to_string(i),
+      data: "Some data for item " <> int.to_string(i)
+    )
+  })
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("items", large_data)
-    |> inertia.assign_prop("count", json.int(1000))
+    |> inertia.assign_prop("items", fn(props) {
+      TestProps(..props, items: large_data)
+    })
+    |> inertia.assign_prop("count", fn(props) {
+      TestProps(..props, count: 1000)
+    })
     |> inertia.render("LargeDataPage")
   })
   
@@ -151,12 +286,20 @@ pub fn special_characters_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("unicode", json.string("Hello 世界 🌍"))
-    |> inertia.assign_prop("quotes", json.string("\"Double quotes\" and 'single quotes'"))
-    |> inertia.assign_prop("html_entities", json.string("<script>alert('xss')</script>"))
-    |> inertia.assign_prop("newlines", json.string("Line 1\nLine 2\rLine 3"))
+    |> inertia.assign_prop("unicode", fn(props) {
+      TestProps(..props, unicode: "Hello 世界 🌍")
+    })
+    |> inertia.assign_prop("quotes", fn(props) {
+      TestProps(..props, quotes: "\"Double quotes\" and 'single quotes'")
+    })
+    |> inertia.assign_prop("html_entities", fn(props) {
+      TestProps(..props, html_entities: "<script>alert('xss')</script>")
+    })
+    |> inertia.assign_prop("newlines", fn(props) {
+      TestProps(..props, newlines: "Line 1\nLine 2\rLine 3")
+    })
     |> inertia.render("SpecialCharsPage")
   })
   
@@ -180,9 +323,11 @@ pub fn json_request_without_inertia_header_test() {
   )
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("api_data", json.string("API response"))
+    |> inertia.assign_prop("api_data", fn(props) {
+      TestProps(..props, api_data: "API response")
+    })
     |> inertia.render("ApiPage")
   })
   
@@ -198,12 +343,20 @@ pub fn prop_overwriting_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("title", json.string("Original Title"))
-    |> inertia.assign_prop("title", json.string("Updated Title"))
-    |> inertia.assign_prop("count", json.int(1))
-    |> inertia.assign_prop("count", json.int(2))
+    |> inertia.assign_prop("title", fn(props) {
+      TestProps(..props, title: "Original Title")
+    })
+    |> inertia.assign_prop("title", fn(props) {
+      TestProps(..props, title: "Updated Title")
+    })
+    |> inertia.assign_prop("count", fn(props) {
+      TestProps(..props, count: 1)
+    })
+    |> inertia.assign_prop("count", fn(props) {
+      TestProps(..props, count: 2)
+    })
     |> inertia.render("OverwritePage")
   })
   
@@ -213,56 +366,64 @@ pub fn prop_overwriting_test() {
   testing.prop(response, "count", decode.int) |> should.equal(Ok(2))
 }
 
-// Test mixed prop types (always, regular, lazy, optional)
+// Test mixed prop types (always, regular, optional)
 
 pub fn mixed_prop_types_partial_request_test() {
   let req = testing.inertia_request()
-    |> testing.partial_data(["regular_prop", "lazy_prop"])
+    |> testing.partial_data(["title", "data"])
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_always_prop("always_prop", json.string("always included"))
-    |> inertia.assign_prop("regular_prop", json.string("included in partial"))
-    |> inertia.assign_prop("other_regular_prop", json.string("not requested"))
-    |> inertia.assign_lazy_prop("lazy_prop", fn() { json.string("lazy included") })
-    |> inertia.assign_lazy_prop("other_lazy_prop", fn() { json.string("lazy not requested") })
-    |> inertia.assign_optional_prop("optional_prop", json.string("never included"))
-    |> inertia.assign_always_lazy_prop("always_lazy_prop", fn() { json.string("always lazy") })
+    |> inertia.assign_always_prop("users", fn(props) {
+      TestProps(..props, users: ["always included"])
+    })
+    |> inertia.assign_prop("title", fn(props) {
+      TestProps(..props, title: "included in partial")
+    })
+    |> inertia.assign_prop("count", fn(props) {
+      TestProps(..props, count: 999)
+    })
+    |> inertia.assign_prop("data", fn(props) {
+      TestProps(..props, data: "data included")
+    })
+    |> inertia.assign_optional_prop("api_data", fn(props) {
+      TestProps(..props, api_data: "never included")
+    })
     |> inertia.render("MixedPropsPage")
   })
   
   testing.component(response) |> should.equal(Ok("MixedPropsPage"))
   
   // Always props should be included
-  testing.prop(response, "always_prop", decode.string) |> should.equal(Ok("always included"))
-  testing.prop(response, "always_lazy_prop", decode.string) |> should.equal(Ok("always lazy"))
+  testing.prop(response, "users", decode.list(decode.string)) |> should.equal(Ok(["always included"]))
   
   // Requested props should be included
-  testing.prop(response, "regular_prop", decode.string) |> should.equal(Ok("included in partial"))
-  testing.prop(response, "lazy_prop", decode.string) |> should.equal(Ok("lazy included"))
+  testing.prop(response, "title", decode.string) |> should.equal(Ok("included in partial"))
+  testing.prop(response, "data", decode.string) |> should.equal(Ok("data included"))
   
   // Non-requested props should not be included
-  testing.prop(response, "other_regular_prop", decode.string) |> should.be_error()
-  testing.prop(response, "other_lazy_prop", decode.string) |> should.be_error()
-  testing.prop(response, "optional_prop", decode.string) |> should.be_error()
+  testing.prop(response, "count", decode.int) |> should.be_error()
+  testing.prop(response, "api_data", decode.string) |> should.be_error()
 }
 
-// Test error accumulation
+// Test error accumulation (simulated with regular props since assign_error was removed)
 
 pub fn multiple_errors_accumulation_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let errors = dict.new()
+    |> dict.insert("field1", "Updated Error 1")
+    |> dict.insert("field2", "Error 2")
+    |> dict.insert("field3", "Error 3")
+    |> dict.insert("field4", "Error 4")
+  
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_error("field1", "Error 1")
-    |> inertia.assign_error("field2", "Error 2")
-    |> inertia.assign_errors(dict.from_list([
-      #("field3", "Error 3"),
-      #("field4", "Error 4")
-    ]))
-    |> inertia.assign_error("field1", "Updated Error 1")  // Should overwrite
+    |> inertia.assign_prop("errors", fn(props) {
+      TestProps(..props, errors: errors)
+    })
     |> inertia.render("ErrorsPage")
   })
   
@@ -279,25 +440,27 @@ pub fn deeply_nested_data_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let nested_data = json.object([
-    #("level1", json.object([
-      #("level2", json.object([
-        #("level3", json.object([
-          #("level4", json.object([
-            #("value", json.string("deep value")),
-            #("array", json.array([
-              json.object([#("item", json.string("nested item 1"))]),
-              json.object([#("item", json.string("nested item 2"))])
-            ], fn(x) { x }))
-          ]))
-        ]))
-      ]))
-    ]))
-  ])
+  let nested_data = TestNested(
+    TestLevel1(
+      TestLevel2(
+        TestLevel3(
+          TestLevel4(
+            value: "deep value",
+            array: [
+              TestNestedItem(item: "nested item 1"),
+              TestNestedItem(item: "nested item 2")
+            ]
+          )
+        )
+      )
+    )
+  )
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("nested", nested_data)
+    |> inertia.assign_prop("nested", fn(props) {
+      TestProps(..props, nested: nested_data)
+    })
     |> inertia.render("NestedDataPage")
   })
   
@@ -308,27 +471,21 @@ pub fn deeply_nested_data_test() {
     |> should.equal(Ok(["nested item 1", "nested item 2"]))
 }
 
-// Test context modification chains
+// Test context modification chains (simplified since context modification functions were removed)
 
 pub fn context_modification_chain_test() {
   let req = testing.inertia_request()
-  let config = inertia.config(version: "1", ssr: False, encrypt_history: False)
+  let config = inertia.config(version: "1", ssr: True, encrypt_history: True)
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.set_config(inertia.config(version: "2.0.0", ssr: True, encrypt_history: True))
-    |> inertia.enable_ssr()
-    |> inertia.encrypt_history()
-    |> inertia.clear_history()
-    |> inertia.assign_prop("data", json.string("chained modifications"))
+    |> inertia.assign_prop("data", fn(props) {
+      TestProps(..props, data: "chained modifications")
+    })
     |> inertia.render("ChainedPage")
   })
   
   testing.component(response) |> should.equal(Ok("ChainedPage"))
   testing.prop(response, "data", decode.string) |> should.equal(Ok("chained modifications"))
-  testing.version(response) |> should.equal(Ok("2.0.0"))
-  
-  // Check that history flags are set in JSON
-  testing.encrypt_history(response) |> should.equal(Ok(True))
-  testing.clear_history(response) |> should.equal(Ok(True))
+  testing.version(response) |> should.equal(Ok("1"))
 }
