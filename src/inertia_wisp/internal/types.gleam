@@ -81,6 +81,18 @@ pub type PropTransform(props) {
   )
 }
 
+/// Empty props type for middleware-before-routing pattern
+/// This allows middleware to create a context without knowing the specific prop types
+/// that will be used by individual route handlers
+pub type EmptyProps {
+  EmptyProps
+}
+
+/// Encoder for EmptyProps - always produces an empty JSON object
+pub fn encode_empty_props(_props: EmptyProps) -> json.Json {
+  json.object([])
+}
+
 
 
 /// Configuration for the Inertia adapter

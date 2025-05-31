@@ -16,7 +16,7 @@ pub type AboutProps {
   AboutProps(
     auth: json.Json,
     csrf_token: String,
-    title: String,
+    page_title: String,
     description: String,
   )
 }
@@ -56,6 +56,18 @@ pub type UploadProps {
   )
 }
 
+/// Props for demo features page showcasing inclusion strategies
+pub type DemoFeaturesProps {
+  DemoFeaturesProps(
+    auth: json.Json,
+    csrf_token: String,
+    title: String,
+    description: String,
+    expensive_data: json.Json,
+    performance_info: json.Json,
+  )
+}
+
 /// Encoder for HomeProps
 pub fn encode_home_props(props: HomeProps) -> json.Json {
   json.object([
@@ -72,7 +84,7 @@ pub fn encode_about_props(props: AboutProps) -> json.Json {
   json.object([
     #("auth", props.auth),
     #("csrf_token", json.string(props.csrf_token)),
-    #("title", json.string(props.title)),
+    #("page_title", json.string(props.page_title)),
     #("description", json.string(props.description)),
   ])
 }
@@ -109,5 +121,17 @@ pub fn encode_upload_props(props: UploadProps) -> json.Json {
     #("max_size_mb", json.int(props.max_size_mb)),
     #("success", json.string(props.success)),
     #("uploaded_files", props.uploaded_files),
+  ])
+}
+
+/// Encoder for DemoFeaturesProps
+pub fn encode_demo_features_props(props: DemoFeaturesProps) -> json.Json {
+  json.object([
+    #("auth", props.auth),
+    #("csrf_token", json.string(props.csrf_token)),
+    #("title", json.string(props.title)),
+    #("description", json.string(props.description)),
+    #("expensive_data", props.expensive_data),
+    #("performance_info", props.performance_info),
   ])
 }

@@ -95,6 +95,12 @@ pub type InertiaContext(props) =
 pub type SSRConfig =
   types.SSRConfig
 
+/// Empty props type for middleware-before-routing pattern.
+/// This allows middleware to create a context without knowing the specific prop types
+/// that will be used by individual route handlers.
+pub type EmptyProps =
+  types.EmptyProps
+
 // New typed context functions
 
 /// Creates a new typed context with statically typed props.
@@ -133,6 +139,59 @@ pub fn new_context(
   props_encoder: fn(props) -> json.Json,
 ) -> InertiaContext(props) {
   types.new_context(config, request, props_zero, props_encoder)
+}
+
+/// Creates an empty context for middleware-before-routing pattern.
+/// Returns an InertiaContext(EmptyProps) that can be transformed to specific prop types
+/// using `set_props()` in individual route handlers.
+///
+/// ## Example
+///
+/// ```gleam
+/// // In middleware (before routing)
+/// let empty_ctx = inertia.empty_context(config, request)
+///
+/// // In route handler
+/// let typed_ctx = empty_ctx |> inertia.set_props(HomeProps(...))
+/// ```
+pub fn empty_context(
+  config: Config,
+  request: Request,
+) -> InertiaContext(types.EmptyProps) {
+  types.new_context(config, request, types.EmptyProps, types.encode_empty_props)
+}
+
+/// Transforms an InertiaContext(EmptyProps) to InertiaContext(SpecificProps).
+/// This allows the middleware-before-routing pattern while maintaining type safety.
+///
+/// ## Example
+///
+/// ```gleam
+/// fn home_page(ctx: InertiaContext(EmptyProps)) -> Response {
+///   let home_props = HomeProps(title: "", user_count: 0)
+///   
+///   ctx
+///   |> inertia.set_props(home_props, encode_home_props)
+///   |> inertia.assign_prop("title", fn(props) { HomeProps(..props, title: "Welcome") })
+///   |> inertia.render("Home")
+/// }
+/// ```
+pub fn set_props(
+  ctx: InertiaContext(types.EmptyProps),
+  props_zero: props,
+  props_encoder: fn(props) -> json.Json,
+) -> InertiaContext(props) {
+  types.InertiaContext(
+    config: ctx.config,
+    request: ctx.request,
+    prop_transforms: [],
+    props_encoder: props_encoder,
+    props_zero: props_zero,
+    errors: ctx.errors,
+    encrypt_history: ctx.encrypt_history,
+    clear_history: ctx.clear_history,
+    ssr_supervisor: ctx.ssr_supervisor,
+  )
 }
 
 /// Assigns a prop transformation to a typed context.
@@ -328,6 +387,32 @@ pub fn middleware(
   handler: fn(InertiaContext(props)) -> Response,
 ) -> Response {
   middleware.typed_middleware(req, config, ssr_supervisor, props_zero, props_encoder, handler)
+}
+
+/// Simplified middleware for the empty props pattern.
+/// Creates an InertiaContext(EmptyProps) and passes it to your handler.
+/// Use this for the elegant middleware-before-routing pattern.
+///
+/// ## Example
+///
+/// ```gleam
+/// pub fn handle_request(req: wisp.Request) -> wisp.Response {
+///   use ctx <- inertia.empty_middleware(req, config, ssr_supervisor)
+///   
+///   case wisp.path_segments(req) {
+///     [] -> home_page(ctx)         // ctx |> set_props(HomeProps(...))
+///     ["users"] -> users_page(ctx) // ctx |> set_props(UserProps(...))
+///     _ -> wisp.not_found()
+///   }
+/// }
+/// ```
+pub fn empty_middleware(
+  req: Request,
+  config: types.Config,
+  ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
+  handler: fn(InertiaContext(types.EmptyProps)) -> Response,
+) -> Response {
+  middleware.typed_middleware(req, config, ssr_supervisor, types.EmptyProps, types.encode_empty_props, handler)
 }
 
 // Controller functions
