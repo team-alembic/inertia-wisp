@@ -1,17 +1,6 @@
-
 import EditProfileForm from "./forms/EditProfileForm";
+import type { EditProfileFormPageData } from "./types/gleam-projections";
 
-interface EditProfilePageProps {
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    bio: string;
-    interests?: string[] | null;
-  };
-  errors?: Record<string, string> | undefined;
-}
-
-export default function EditProfile({ user, errors }: EditProfilePageProps) {
-  return <EditProfileForm user={user} errors={errors} />;
+export default function EditProfile(props: EditProfileFormPageData) {
+  return <EditProfileForm user={props.user as any} errors={props.errors as any} />;
 }

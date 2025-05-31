@@ -1,13 +1,6 @@
-
 import ContactFormComponent from "./forms/ContactFormComponent";
+import type { ContactFormPageData } from "./types/gleam-projections";
 
-interface ContactFormPageProps {
-  title: string;
-  message: string;
-  features: string[];
-  errors?: Record<string, string> | undefined;
-}
-
-export default function ContactForm({ title, message, features, errors }: ContactFormPageProps) {
-  return <ContactFormComponent title={title} message={message} errors={errors} />;
+export default function ContactForm(props: ContactFormPageData) {
+  return <ContactFormComponent title={props.title} message={props.message} errors={props.errors} />;
 }

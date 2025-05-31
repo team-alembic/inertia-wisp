@@ -1,11 +1,6 @@
-import {
-  BlogPostPageProps,
-  decode_blog_post_page_props,
-} from "../../shared/build/dev/javascript/shared_types/types.mjs";
-import { withDecodedProps } from "./utils/decoders.js";
-import { unwrapOr } from "./utils/option.js";
+import type { BlogPostPageData } from "./types/gleam-projections";
 
-function BlogPost(props: BlogPostPageProps) {
+export default function BlogPost(props: BlogPostPageData) {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <article className="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -26,8 +21,8 @@ function BlogPost(props: BlogPostPageProps) {
                 <time>{props.published_at}</time>
                 <span>•</span>
                 <span>
-                  {unwrapOr(props.view_count, 0) > 0
-                    ? `${unwrapOr(props.view_count, 0).toLocaleString()} views`
+                  {props.view_count && props.view_count > 0
+                    ? `${props.view_count.toLocaleString()} views`
                     : "Views not loaded"}
                 </span>
               </div>
@@ -35,7 +30,7 @@ function BlogPost(props: BlogPostPageProps) {
 
             <div className="tag-cloud">
               <div className="flex flex-wrap gap-2">
-                {props.tags.toArray().map((tag: string, index: number) => (
+                {props.tags.map((tag: string, index: number) => (
                   <span
                     key={index}
                     className="tag px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium"
@@ -61,8 +56,8 @@ function BlogPost(props: BlogPostPageProps) {
             </div>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <span>
-                {unwrapOr(props.view_count, 0) > 0
-                  ? `${unwrapOr(props.view_count, 0).toLocaleString()} views`
+                {props.view_count && props.view_count > 0
+                  ? `${props.view_count.toLocaleString()} views`
                   : "Views not loaded"}
               </span>
               <button className="text-blue-600 hover:text-blue-800 font-medium">
@@ -75,5 +70,3 @@ function BlogPost(props: BlogPostPageProps) {
     </div>
   );
 }
-
-export default withDecodedProps(decode_blog_post_page_props, BlogPost);

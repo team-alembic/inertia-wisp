@@ -1,11 +1,6 @@
-import {
-  decode_user_profile_page_props,
-  UserProfilePageProps,
-} from "../../shared/build/dev/javascript/shared_types/types.mjs";
-import { withDecodedProps } from "./utils/decoders.js";
-import * as option from "./utils/option.js";
+import type { UserProfilePageData } from "./types/gleam-projections";
 
-function UserProfile(props: UserProfilePageProps) {
+export default function UserProfile(props: UserProfilePageData) {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -45,19 +40,15 @@ function UserProfile(props: UserProfilePageProps) {
                 Interests
               </h2>
               <div className="flex flex-wrap gap-2">
-                {option.isSome(props.interests) &&
-                option.value(props.interests).countLength() > 0 ? (
-                  option
-                    .value(props.interests)
-                    .toArray()
-                    .map((interest: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                      >
-                        {interest}
-                      </span>
-                    ))
+                {props.interests && props.interests.length > 0 ? (
+                  props.interests.map((interest: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                    >
+                      {interest}
+                    </span>
+                  ))
                 ) : (
                   <p className="text-gray-500 italic">
                     No interests loaded. This is an optional prop that's only
@@ -72,5 +63,3 @@ function UserProfile(props: UserProfilePageProps) {
     </div>
   );
 }
-
-export default withDecodedProps(decode_user_profile_page_props, UserProfile);

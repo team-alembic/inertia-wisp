@@ -1,11 +1,7 @@
 import { Link } from "@inertiajs/react";
-import {
-  decode_home_page_props,
-  HomePageProps,
-} from "../../shared/build/dev/javascript/shared_types/types.mjs";
-import { withDecodedProps } from "./utils/decoders";
+import type { HomePageData } from "./types/gleam-projections";
 
-function Home(props: HomePageProps) {
+export default function Home(props: HomePageData) {
   console.log({ props });
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -110,7 +106,7 @@ function Home(props: HomePageProps) {
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {props.features.toArray().map((feature: string, index: number) => (
+            {props.features.map((feature: string, index: number) => (
               <div key={index} className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <span className="text-gray-700">{feature}</span>
@@ -180,5 +176,3 @@ function Home(props: HomePageProps) {
     </div>
   );
 }
-
-export default withDecodedProps(decode_home_page_props, Home);

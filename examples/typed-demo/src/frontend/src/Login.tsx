@@ -1,13 +1,6 @@
-
 import LoginForm from "./forms/LoginForm";
+import type { LoginFormPageData } from "./types/gleam-projections";
 
-interface LoginPageProps {
-  title: string;
-  message: string;
-  features: string[];
-  errors?: Record<string, string> | undefined;
-}
-
-export default function Login({ title, message, features, errors }: LoginPageProps) {
-  return <LoginForm title={title} message={message} demo_info={features} errors={errors} />;
+export default function Login(props: LoginFormPageData) {
+  return <LoginForm title={props.title} message={props.message} demo_info={props.demo_info} errors={props.errors} />;
 }

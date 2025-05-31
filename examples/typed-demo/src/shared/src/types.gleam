@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/dynamic/decode
 import gleam/json
 import gleam/option
@@ -193,7 +194,7 @@ pub fn encode_create_user_form_props(props: CreateUserFormProps) -> json.Json {
 pub type EditProfileFormProps {
   EditProfileFormProps(
     user: UserProfilePageProps,
-    errors: option.Option(json.Json),
+    errors: dict.Dict(String, String),
   )
 }
 
@@ -201,7 +202,7 @@ pub type EditProfileFormProps {
 pub fn encode_edit_profile_form_props(props: EditProfileFormProps) -> json.Json {
   json.object([
     #("user", encode_user_profile_props(props.user)),
-    #("errors", json.nullable(props.errors, fn(e) { e })),
+    #("errors", json.dict(props.errors, fn(s) { s }, json.string)),
   ])
 }
 
@@ -247,20 +248,12 @@ pub fn encode_contact_form_props(props: ContactFormProps) -> json.Json {
 
 // Create user request
 pub type CreateUserRequest {
-  CreateUserRequest(
-    name: String,
-    email: String,
-    bio: option.Option(String),
-  )
+  CreateUserRequest(name: String, email: String, bio: option.Option(String))
 }
 
 // Update profile request
 pub type UpdateProfileRequest {
-  UpdateProfileRequest(
-    name: String,
-    bio: String,
-    interests: List(String),
-  )
+  UpdateProfileRequest(name: String, bio: String, interests: List(String))
 }
 
 // Login request
@@ -409,7 +402,13 @@ pub fn login_request_zero() -> LoginRequest {
 }
 
 pub fn contact_form_request_zero() -> ContactFormRequest {
-  ContactFormRequest(name: "", email: "", subject: "", message: "", urgent: option.None)
+  ContactFormRequest(
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+    urgent: option.None,
+  )
 }
 
 // ===== RESPONSE TYPES FOR FORM SUBMISSIONS =====
@@ -425,18 +424,12 @@ pub type FormSuccessResponse {
 
 // Validation error for individual fields
 pub type ValidationError {
-  ValidationError(
-    field: String,
-    message: String,
-  )
+  ValidationError(field: String, message: String)
 }
 
 // Error response for form submissions
 pub type FormErrorResponse {
-  FormErrorResponse(
-    message: String,
-    errors: List(ValidationError),
-  )
+  FormErrorResponse(message: String, errors: List(ValidationError))
 }
 
 // ===== RESPONSE ENCODERS =====

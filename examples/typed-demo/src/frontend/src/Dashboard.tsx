@@ -1,12 +1,6 @@
-import { List } from "../../shared/build/dev/javascript/prelude.mjs";
-import {
-  DashboardPageProps,
-  decode_dashboard_page_props,
-} from "../../shared/build/dev/javascript/shared_types/types.mjs";
-import { withDecodedProps } from "./utils/decoders.js";
-import * as option from "./utils/option.js";
+import type { DashboardPageData } from "./types/gleam-projections";
 
-function Dashboard(props: DashboardPageProps) {
+export default function Dashboard(props: DashboardPageData) {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
@@ -53,12 +47,7 @@ function Dashboard(props: DashboardPageProps) {
             <div>
               <p className="text-white/80 text-sm font-medium">New Signups</p>
               <p className="stat-number text-3xl font-bold">
-                {option.unwrapOr(
-                  option.map(props.recent_signups, (x: List<string>) =>
-                    x.countLength(),
-                  ),
-                  0,
-                )}
+                {props.recent_signups ? props.recent_signups.length : 0}
               </p>
             </div>
             <div className="bg-white/20 p-3 rounded-full">
@@ -98,33 +87,23 @@ function Dashboard(props: DashboardPageProps) {
             Recent Signups
           </h2>
           <div className="space-y-3">
-            {option.unwrapOr(
-              option.map(props.recent_signups, (x: List<string>) =>
-                x.atLeastLength(1),
-              ),
-              false,
-            ) ? (
-              option
-                .unwrapOr(
-                  option.map(props.recent_signups, (x) => x.toArray()),
-                  [],
-                )
-                .map((email: string, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {email.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-gray-900 font-medium">{email}</span>
+            {props.recent_signups && props.recent_signups.length > 0 ? (
+              props.recent_signups.map((email: string, index: number) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {email.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                      New
-                    </span>
+                    <span className="text-gray-900 font-medium">{email}</span>
                   </div>
-                ))
+                  <span className="text-xs text-gray-500 bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    New
+                  </span>
+                </div>
+              ))
             ) : (
               <p className="text-gray-500 italic text-center py-4">
                 No recent signups data loaded. This is an optional prop that's
@@ -177,5 +156,3 @@ function Dashboard(props: DashboardPageProps) {
     </div>
   );
 }
-
-export default withDecodedProps(decode_dashboard_page_props, Dashboard);
