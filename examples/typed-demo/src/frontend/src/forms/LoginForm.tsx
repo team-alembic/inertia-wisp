@@ -1,16 +1,21 @@
-import React, { FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
 import { LoginRequest } from "../../../shared/build/dev/javascript/shared_types/types.mjs";
+import type { GleamToJS } from "../types/gleam-projections";
 
 interface LoginFormProps {
   title: string;
   message: string;
   demo_info: string[];
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
+// TypeScript projection of LoginRequest to JavaScript-compatible interface
+// This automatically converts Option<T> to T | null and maintains type safety
+type LoginFormData = GleamToJS<LoginRequest>;
+
 export default function LoginForm({ title, message, demo_info, errors }: LoginFormProps) {
-  const { data, setData, post, processing } = useForm<LoginRequest>({
+  const { data, setData, post, processing } = useForm<LoginFormData>({
     email: "",
     password: "",
     remember_me: null,
@@ -85,7 +90,7 @@ export default function LoginForm({ title, message, demo_info, errors }: LoginFo
                 type="checkbox"
                 id="remember_me"
                 checked={data.remember_me === true}
-                onChange={(e) => setData("remember_me", e.target.checked ? true : null)}
+                onChange={(e) => setData("remember_me", e.target.checked || null)}
                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               />
               <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-700">

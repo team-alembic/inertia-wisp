@@ -37520,13 +37520,18 @@ var ContactFormComponent_exports = {};
 __export(ContactFormComponent_exports, {
   default: () => ContactFormComponent
 });
-function ContactFormComponent({ title, message, errors }) {
+function ContactFormComponent({
+  title,
+  message,
+  errors
+}) {
   const { data, setData, post, processing } = G({
     name: "",
     email: "",
     subject: "",
     message: "",
     urgent: null
+    // ✅ JavaScript null automatically becomes Option.None in Gleam
   });
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -37539,7 +37544,14 @@ function ContactFormComponent({ title, message, errors }) {
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "px-6 py-8", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("form", { onSubmit: handleSubmit, className: "space-y-6", children: [
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700 mb-2", children: "Name" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "label",
+          {
+            htmlFor: "name",
+            className: "block text-sm font-medium text-gray-700 mb-2",
+            children: "Name"
+          }
+        ),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
           "input",
           {
@@ -37554,7 +37566,14 @@ function ContactFormComponent({ title, message, errors }) {
         errors?.name && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.name })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "email", className: "block text-sm font-medium text-gray-700 mb-2", children: "Email" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "label",
+          {
+            htmlFor: "email",
+            className: "block text-sm font-medium text-gray-700 mb-2",
+            children: "Email"
+          }
+        ),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
           "input",
           {
@@ -37569,7 +37588,14 @@ function ContactFormComponent({ title, message, errors }) {
         errors?.email && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.email })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "subject", className: "block text-sm font-medium text-gray-700 mb-2", children: "Subject" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "label",
+          {
+            htmlFor: "subject",
+            className: "block text-sm font-medium text-gray-700 mb-2",
+            children: "Subject"
+          }
+        ),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
           "input",
           {
@@ -37584,7 +37610,14 @@ function ContactFormComponent({ title, message, errors }) {
         errors?.subject && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "mt-1 text-sm text-red-600", children: errors.subject })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "message", className: "block text-sm font-medium text-gray-700 mb-2", children: "Message" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "label",
+          {
+            htmlFor: "message",
+            className: "block text-sm font-medium text-gray-700 mb-2",
+            children: "Message"
+          }
+        ),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
           "textarea",
           {
@@ -37605,11 +37638,18 @@ function ContactFormComponent({ title, message, errors }) {
             type: "checkbox",
             id: "urgent",
             checked: data.urgent === true,
-            onChange: (e) => setData("urgent", e.target.checked ? true : null),
+            onChange: (e) => setData("urgent", e.target.checked || null),
             className: "h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { htmlFor: "urgent", className: "ml-2 block text-sm text-gray-700", children: "This is urgent" })
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          "label",
+          {
+            htmlFor: "urgent",
+            className: "ml-2 block text-sm text-gray-700",
+            children: "This is urgent"
+          }
+        )
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center pt-4", children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
@@ -37717,7 +37757,7 @@ function CreateUserForm({ title, message, errors }) {
           "textarea",
           {
             id: "bio",
-            value: data.bio || "",
+            value: data.bio ?? "",
             onChange: (e) => setData("bio", e.target.value || null),
             rows: 4,
             className: `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.bio ? "border-red-500" : "border-gray-300"}`,
@@ -38302,7 +38342,7 @@ function LoginForm({ title, message, demo_info, errors }) {
               type: "checkbox",
               id: "remember_me",
               checked: data.remember_me === true,
-              onChange: (e) => setData("remember_me", e.target.checked ? true : null),
+              onChange: (e) => setData("remember_me", e.target.checked || null),
               className: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
             }
           ),

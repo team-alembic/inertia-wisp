@@ -1,11 +1,11 @@
-import React from "react";
+
 import LoginForm from "./forms/LoginForm";
 
 interface LoginPageProps {
   title: string;
   message: string;
   features: string[];
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
 export default function Login({ title, message, features, errors }: LoginPageProps) {

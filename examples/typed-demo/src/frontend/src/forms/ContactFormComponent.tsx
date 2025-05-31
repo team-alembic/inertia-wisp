@@ -1,24 +1,72 @@
-import React, { FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
 import { ContactFormRequest } from "../../../shared/build/dev/javascript/shared_types/types.mjs";
+import type { GleamToJS } from "../types/gleam-projections";
+
+/**
+ * ContactFormComponent - Type-Level Programming Solution Demo
+ * 
+ * This component demonstrates the complete solution for using Gleam types with TypeScript
+ * form libraries through advanced type-level programming techniques.
+ * 
+ * THE PROBLEM:
+ * - Gleam types compile to classes: new ContactFormRequest(name, email, subject, message, urgent)
+ * - JavaScript form libraries expect plain objects: { name, email, subject, message, urgent }
+ * - Option<T> and List<T> types don't match JavaScript | null and [] syntax
+ * 
+ * THE SOLUTION:
+ * - Use TypeScript type-level programming to automatically project Gleam types
+ * - Transform Option<T> → T | null, List<T> → T[], classes → interfaces
+ * - Maintain single source of truth while ensuring runtime compatibility
+ * 
+ * BENEFITS:
+ * ✅ No manual interface duplication
+ * ✅ Automatic type conversion (Option<Bool> → boolean | null)
+ * ✅ Full IntelliSense support and compile-time safety
+ * ✅ Works seamlessly with Inertia.js useForm hook
+ * ✅ Backend automatically receives properly typed Gleam data
+ */
 
 interface ContactFormProps {
   title: string;
   message: string;
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
-export default function ContactFormComponent({ title, message, errors }: ContactFormProps) {
-  const { data, setData, post, processing } = useForm<ContactFormRequest>({
+/**
+ * Type-level projection of ContactFormRequest to JavaScript-compatible interface
+ * 
+ * Original Gleam type:
+ *   ContactFormRequest(name: String, email: String, subject: String, message: String, urgent: Option<Bool>)
+ * 
+ * Projected TypeScript interface:
+ *   { name: string, email: string, subject: string, message: string, urgent: boolean | null }
+ * 
+ * This transformation happens entirely at the type level - no runtime overhead!
+ */
+type ContactFormData = GleamToJS<ContactFormRequest>;
+
+export default function ContactFormComponent({
+  title,
+  message,
+  errors,
+}: ContactFormProps) {
+  // ✨ Type-safe form hook using projected Gleam type
+  // The ContactFormData type is automatically derived from ContactFormRequest
+  // with proper JavaScript-compatible types (Option<Bool> → boolean | null)
+  const { data, setData, post, processing } = useForm<ContactFormData>({
     name: "",
     email: "",
     subject: "",
     message: "",
-    urgent: null,
+    urgent: null,  // ✅ JavaScript null automatically becomes Option.None in Gleam
   });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    // ✨ Automatic type conversion on submit:
+    // JavaScript object → JSON → Gleam ContactFormRequest via decoders
+    // The boolean | null becomes Option<Bool> seamlessly
     post("/contact");
   };
 
@@ -33,7 +81,10 @@ export default function ContactFormComponent({ title, message, errors }: Contact
         <div className="px-6 py-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Name
               </label>
               <input
@@ -52,7 +103,10 @@ export default function ContactFormComponent({ title, message, errors }: Contact
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -71,7 +125,10 @@ export default function ContactFormComponent({ title, message, errors }: Contact
             </div>
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="subject"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Subject
               </label>
               <input
@@ -90,7 +147,10 @@ export default function ContactFormComponent({ title, message, errors }: Contact
             </div>
 
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="message"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Message
               </label>
               <textarea
@@ -113,11 +173,15 @@ export default function ContactFormComponent({ title, message, errors }: Contact
                 type="checkbox"
                 id="urgent"
                 checked={data.urgent === true}
-                onChange={(e) => setData("urgent", e.target.checked ? true : null)}
+                onChange={(e) => setData("urgent", e.target.checked || null)}
                 className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
               />
-              <label htmlFor="urgent" className="ml-2 block text-sm text-gray-700">
+              <label
+                htmlFor="urgent"
+                className="ml-2 block text-sm text-gray-700"
+              >
                 This is urgent
+                {/* ✨ Type-safe Option handling: boolean | null → Option<Bool> */}
               </label>
             </div>
 

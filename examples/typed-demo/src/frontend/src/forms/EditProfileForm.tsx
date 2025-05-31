@@ -1,6 +1,7 @@
-import React, { FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
 import { UpdateProfileRequest } from "../../../shared/build/dev/javascript/shared_types/types.mjs";
+import type { GleamToJS } from "../types/gleam-projections";
 
 interface EditProfileFormProps {
   user: {
@@ -10,11 +11,15 @@ interface EditProfileFormProps {
     bio: string;
     interests?: string[] | null;
   };
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
+// TypeScript projection of UpdateProfileRequest to JavaScript-compatible interface
+// This automatically converts List<T> to T[] and maintains type safety
+type UpdateProfileFormData = GleamToJS<UpdateProfileRequest>;
+
 export default function EditProfileForm({ user, errors }: EditProfileFormProps) {
-  const { data, setData, put, processing } = useForm<UpdateProfileRequest>({
+  const { data, setData, put, processing } = useForm<UpdateProfileFormData>({
     name: user.name,
     bio: user.bio,
     interests: user.interests || [],
@@ -36,7 +41,7 @@ export default function EditProfileForm({ user, errors }: EditProfileFormProps) 
   };
 
   const removeInterest = (index: number) => {
-    const newInterests = data.interests.filter((_, i) => i !== index);
+    const newInterests = data.interests.filter((_: string, i: number) => i !== index);
     setData("interests", newInterests);
   };
 
@@ -93,7 +98,7 @@ export default function EditProfileForm({ user, errors }: EditProfileFormProps) 
                 Interests
               </label>
               <div className="space-y-2">
-                {data.interests.map((interest, index) => (
+                {data.interests.map((interest: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2">
                     <input
                       type="text"

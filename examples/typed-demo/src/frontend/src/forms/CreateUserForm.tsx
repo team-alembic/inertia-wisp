@@ -1,15 +1,20 @@
-import React, { FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
 import { CreateUserRequest } from "../../../shared/build/dev/javascript/shared_types/types.mjs";
+import type { GleamToJS } from "../types/gleam-projections";
 
 interface CreateUserFormProps {
   title: string;
   message: string;
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
+// TypeScript projection of CreateUserRequest to JavaScript-compatible interface
+// This automatically converts Option<T> to T | null and maintains type safety
+type CreateUserFormData = GleamToJS<CreateUserRequest>;
+
 export default function CreateUserForm({ title, message, errors }: CreateUserFormProps) {
-  const { data, setData, post, processing } = useForm<CreateUserRequest>({
+  const { data, setData, post, processing } = useForm<CreateUserFormData>({
     name: "",
     email: "",
     bio: null,
@@ -74,7 +79,7 @@ export default function CreateUserForm({ title, message, errors }: CreateUserFor
               </label>
               <textarea
                 id="bio"
-                value={data.bio || ""}
+                value={(data.bio as string | null) ?? ""}
                 onChange={(e) => setData("bio", e.target.value || null)}
                 rows={4}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${

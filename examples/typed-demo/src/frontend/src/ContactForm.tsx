@@ -1,11 +1,11 @@
-import React from "react";
+
 import ContactFormComponent from "./forms/ContactFormComponent";
 
 interface ContactFormPageProps {
   title: string;
   message: string;
   features: string[];
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
 export default function ContactForm({ title, message, features, errors }: ContactFormPageProps) {

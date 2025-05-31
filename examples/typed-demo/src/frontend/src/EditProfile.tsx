@@ -1,4 +1,4 @@
-import React from "react";
+
 import EditProfileForm from "./forms/EditProfileForm";
 
 interface EditProfilePageProps {
@@ -9,7 +9,7 @@ interface EditProfilePageProps {
     bio: string;
     interests?: string[] | null;
   };
-  errors?: Record<string, string>;
+  errors?: Record<string, string> | undefined;
 }
 
 export default function EditProfile({ user, errors }: EditProfilePageProps) {
