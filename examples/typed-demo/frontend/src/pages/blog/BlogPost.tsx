@@ -1,10 +1,13 @@
 import type { BlogPostPageProps } from "@shared_types/shared_types/blog.mjs";
 import type { ProjectType } from "../../types/gleam-projections";
+import PageContainer from "../../components/layout/PageContainer";
+import ContentCard from "../../components/cards/ContentCard";
+import TagList from "../../components/data/TagList";
 
 export default function BlogPost(props: ProjectType<BlogPostPageProps>) {
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <article className="bg-white shadow-lg rounded-lg overflow-hidden">
+    <PageContainer>
+      <ContentCard variant="elevated" padding="none" className="overflow-hidden">
         <div className="px-8 py-12">
           <header className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -30,16 +33,11 @@ export default function BlogPost(props: ProjectType<BlogPostPageProps>) {
             </div>
 
             <div className="tag-cloud">
-              <div className="flex flex-wrap gap-2">
-                {props.tags.map((tag: string, index: number) => (
-                  <span
-                    key={index}
-                    className="tag px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+              <TagList
+                tags={props.tags}
+                variant="blue"
+                prefix="#"
+              />
             </div>
           </header>
 
@@ -67,7 +65,7 @@ export default function BlogPost(props: ProjectType<BlogPostPageProps>) {
             </div>
           </div>
         </footer>
-      </article>
-    </div>
+      </ContentCard>
+    </PageContainer>
   );
 }

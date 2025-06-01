@@ -1,5 +1,4 @@
 import gleam/dict
-import gleam/option
 import inertia_wisp/inertia
 import shared_types/users
 import users/validators
@@ -38,13 +37,14 @@ pub fn edit_profile_page_handler(
   // Would parse user_id in real app
 
   // Convert User to UserProfile
-  let user_profile = users.UserProfile(
-    name: user.name,
-    email: user.email,
-    id: user.id,
-    interests: user.interests,
-    bio: user.bio,
-  )
+  let user_profile =
+    users.UserProfile(
+      name: user.name,
+      email: user.email,
+      id: user.id,
+      interests: user.interests,
+      bio: user.bio,
+    )
 
   ctx
   |> users.with_user_profile_page_props()
@@ -83,13 +83,14 @@ pub fn update_profile_handler(
       let user = get_user_by_id(1)
 
       // Convert User to UserProfile
-      let user_profile = users.UserProfile(
-        name: user.name,
-        email: user.email,
-        id: user.id,
-        interests: user.interests,
-        bio: user.bio,
-      )
+      let user_profile =
+        users.UserProfile(
+          name: user.name,
+          email: user.email,
+          id: user.id,
+          interests: user.interests,
+          bio: user.bio,
+        )
 
       ctx
       |> users.with_user_profile_page_props()

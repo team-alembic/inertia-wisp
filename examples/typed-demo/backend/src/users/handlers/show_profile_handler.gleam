@@ -1,4 +1,3 @@
-import gleam/option
 import inertia_wisp/inertia
 import shared_types/users
 import wisp
@@ -35,13 +34,14 @@ pub fn user_profile_handler(
   let user = get_user_by_id(user_id)
 
   // Convert User to UserProfile
-  let user_profile = users.UserProfile(
-    name: user.name,
-    email: user.email,
-    id: user.id,
-    interests: user.interests,
-    bio: user.bio,
-  )
+  let user_profile =
+    users.UserProfile(
+      name: user.name,
+      email: user.email,
+      id: user.id,
+      interests: user.interests,
+      bio: user.bio,
+    )
 
   ctx
   |> users.with_user_profile_page_props()

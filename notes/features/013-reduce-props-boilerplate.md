@@ -88,11 +88,11 @@ Reduce boilerplate in the typed-demo example by extracting a `UserProfile` domai
 ### Key Findings
 
 #### Type System Integration
-- **Bug Identified and Fixed**: The `GleamToJS<T>` utility type doesn't handle nested custom types properly due to TypeScript's limitations with deeply recursive conditional types
-- **Solution**: Created type-safe accessor functions (`getUserProfile()`) that provide full type safety without type erasure
-- The accessor functions extract data from nested Gleam types and return properly typed JavaScript objects
-- Added runtime type guards for additional safety when working with Gleam-generated data
-- TypeScript definitions were correctly generated and type safety is fully maintained
+- **Type System Success**: The `ProjectType<T>` utility type (from `gleam-projections.ts`) successfully handles nested custom types through sophisticated TypeScript conditional type logic
+- **Solution**: Used the working `ProjectType<T>` system with `WithErrors<T>` wrapper for form pages, providing seamless type transformation from Gleam to JavaScript
+- The projection system automatically converts nested Gleam types (Option<T>, List<T>, CustomType) to JavaScript-compatible types (T | null, T[], plain objects)
+- TypeScript definitions were correctly generated and full type safety is maintained throughout the pipeline
+- No workarounds or accessor functions needed - direct prop access works with full type safety
 
 #### Code Reduction Achieved
 - Reduced from 5 prop assignment functions to 1
@@ -105,11 +105,11 @@ Reduce boilerplate in the typed-demo example by extracting a `UserProfile` domai
 - UI renders identically to before refactoring
 
 #### Final Solution
-- **Type-Safe Accessor Pattern**: Instead of trying to fix the recursive type system (which hits TypeScript's limits), implemented accessor functions that provide full type safety
-- The `getUserProfile(props)` function safely extracts and types the nested user profile data
-- This approach maintains end-to-end type safety without any `as any` casting
-- The pattern can be extended to other nested Gleam types as needed
-- Runtime type guards provide additional safety for production code
+- **Direct Type Projection**: The `ProjectType<T>` system successfully transforms nested Gleam types to JavaScript-compatible types at the TypeScript level
+- Frontend components can directly access nested properties like `props.user_profile.name` with full type safety
+- The projection system maintains end-to-end type safety without any `as any` casting or accessor functions
+- The `WithErrors<T>` wrapper seamlessly adds form validation support while preserving the projected types
+- This approach scales naturally to any nested Gleam custom types
 
 ## Conclusion
 
@@ -124,7 +124,7 @@ Successfully refactored the typed-demo example to reduce boilerplate by extracti
 
 ### Technical Details
 - **Backend**: Simplified handlers from 5-6 prop assignments to single assignment
-- **Frontend**: Updated components to use nested prop structure with proper type handling
+- **Frontend**: Updated components to use nested prop structure with direct property access through `ProjectType<T>` system
 - **Types**: Successfully generated correct TypeScript definitions for nested Gleam types
 - **Build Process**: All compilation targets (Erlang, JavaScript) work correctly
 
@@ -139,13 +139,13 @@ Successfully refactored the typed-demo example to reduce boilerplate by extracti
 1. **Maintainability**: Easier to add new user profile fields without creating new prop functions
 2. **Readability**: Handlers are more concise and easier to understand
 3. **Domain Modeling**: Better alignment with domain-driven design principles
-4. **Type Safety**: Maintained full end-to-end type safety with no `as any` casting
-5. **Scalable Pattern**: The accessor function pattern can be applied to other nested Gleam types
+4. **Type Safety**: Achieved seamless full end-to-end type safety through the `ProjectType<T>` projection system
+5. **Scalable Pattern**: The `ProjectType<T>` system automatically handles any nested Gleam types without additional code
 
 ### Future Considerations
 This pattern could be applied to other entity types in the codebase to achieve similar boilerplate reduction. The approach of extracting domain types and using them as single props scales well for complex data structures.
 
-The type-safe accessor pattern solves the fundamental issue of nested Gleam types in TypeScript without compromising type safety. This approach should be used for any future nested custom types.
+The `ProjectType<T>` system provides a robust foundation for seamless Gleam-to-TypeScript type integration. Any future nested custom types will automatically work through this projection system without requiring additional type handling code.
 
-The refactoring demonstrates how to maintain full end-to-end type safety while reducing boilerplate in a full-stack Gleam/TypeScript application using InertiaJS.
+The refactoring demonstrates how to achieve full end-to-end type safety while reducing boilerplate in a full-stack Gleam/TypeScript application using InertiaJS, with the `ProjectType<T>` system providing seamless type transformations across the language boundary.
 </edits>
