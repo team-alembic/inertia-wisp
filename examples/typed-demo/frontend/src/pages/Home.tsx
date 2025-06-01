@@ -6,6 +6,7 @@ import GridLayout from "../components/layout/GridLayout";
 import FeatureCard from "../components/cards/FeatureCard";
 import ContentCard from "../components/cards/ContentCard";
 import ActionButton from "../components/interactive/ActionButton";
+import { CheckIcon, TeamIcon, MailIcon, RefreshIcon } from "../components/ui/Icons";
 
 export default function Home(props: ProjectType<HomePageProps>) {
   console.log({ props });
@@ -24,64 +25,28 @@ export default function Home(props: ProjectType<HomePageProps>) {
             title="Type Safety"
             description="Enjoy compile-time type safety across your entire stack with shared Gleam and TypeScript definitions."
             iconColor="blue"
-            icon={
-              <svg
-                className="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
+            icon={<CheckIcon className="text-white" />}
           />
 
           <FeatureCard
             title="Shared Types"
             description="Define your data structures once in Gleam and automatically generate TypeScript types for your frontend."
             iconColor="green"
-            icon={
-              <svg
-                className="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-              </svg>
-            }
+            icon={<TeamIcon className="text-white" />}
           />
 
           <FeatureCard
             title="Transformations"
             description="Build your props incrementally using transformation functions while maintaining full type safety."
             iconColor="purple"
-            icon={
-              <svg
-                className="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 4l-6 4-6-4h12z" />
-              </svg>
-            }
+            icon={<MailIcon className="text-white" />}
           />
 
           <FeatureCard
             title="Partial Reloads"
             description="Keep all the benefits of Inertia.js partial reloads while enjoying static type checking."
             iconColor="orange"
-            icon={
-              <svg
-                className="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            }
+            icon={<RefreshIcon className="text-white" />}
           />
         </GridLayout>
 
