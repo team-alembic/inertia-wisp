@@ -31,7 +31,6 @@ pub type InitialLoadProps {
     users: List(UserData),
     pagination: Pagination,
     data: String,
-    errors: dict.Dict(String, String),
   )
 }
 
@@ -84,9 +83,6 @@ pub fn encode_initial_props(props: InitialLoadProps) -> json.Json {
       #("per_page", json.int(props.pagination.per_page)),
     ])),
     #("data", json.string(props.data)),
-    #("errors", json.object(dict.to_list(props.errors) |> list.map(fn(pair) {
-      #(pair.0, json.string(pair.1))
-    }))),
   ])
 }
 
@@ -107,7 +103,6 @@ fn initial_props() -> InitialLoadProps {
     users: [],
     pagination: Pagination(current_page: 1, total_pages: 1, per_page: 10),
     data: "",
-    errors: dict.new(),
   )
 }
 
@@ -233,9 +228,7 @@ pub fn initial_page_load_with_errors_test() {
   
   let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("errors", fn(props) {
-      InitialLoadProps(..props, errors: errors)
-    })
+    |> inertia.assign_errors(errors)
     |> inertia.assign_prop("title", fn(props) {
       InitialLoadProps(..props, title: "Contact Form")
     })

@@ -35,7 +35,7 @@ pub fn create_user(
   ctx: inertia.InertiaContext(inertia.EmptyProps),
   db: sqlight.Connection,
 ) -> wisp.Response {
-  use request <- utils.require_json(ctx, user.create_user_request_decoder())
+  use request <- inertia.require_json(ctx, user.create_user_request_decoder())
   use <- validate_user_request(ctx, request, db)
   use <- insert_user(ctx, request, db)
   inertia.redirect(ctx.request, "/users")

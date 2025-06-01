@@ -58,7 +58,7 @@ pub fn update_user(
 ) -> wisp.Response {
   use id <- utils.require_int(id_str)
   let decoder = user.edit_user_request_decoder(id)
-  use update_request <- utils.require_json(ctx, decoder)
+  use update_request <- inertia.require_json(ctx, decoder)
   use user <- find_user(id, db)
   use <- validate_update_request(ctx, update_request, user, db)
   case users.update_user(db, id, update_request.name, update_request.email) {

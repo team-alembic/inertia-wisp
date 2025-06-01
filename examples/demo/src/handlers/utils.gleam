@@ -1,22 +1,8 @@
-import gleam/dynamic/decode
 import gleam/int
 import gleam/json
 import inertia_wisp/inertia
 import props
 import wisp
-
-pub fn require_json(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-  decoder: decode.Decoder(a),
-  cont: fn(a) -> wisp.Response,
-) -> wisp.Response {
-  use json_data <- wisp.require_json(ctx.request)
-  let result = decode.run(json_data, decoder)
-  case result {
-    Ok(value) -> cont(value)
-    Error(_) -> wisp.bad_request()
-  }
-}
 
 pub fn require_int(
   param: String,

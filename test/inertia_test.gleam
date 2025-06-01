@@ -39,7 +39,6 @@ pub type MainTestProps {
     data: String,
     user: User,
     settings: Settings,
-    errors: dict.Dict(String, String),
   )
 }
 
@@ -76,9 +75,7 @@ pub fn encode_main_props(props: MainTestProps) -> json.Json {
     #("expensive_data", json.array(props.expensive_data, json.string)),
     #("notifications", json.int(props.notifications)),
     #("debug_info", json.string(props.debug_info)),
-    #("admin_stats", json.object([
-      #("count", json.int(props.admin_stats.count))
-    ])),
+    #("admin_stats", json.object([#("count", json.int(props.admin_stats.count))])),
     #("posts", json.array(props.posts, json.string)),
     #("comments", json.array(props.comments, json.string)),
     #("sidebar", json.string(props.sidebar)),
@@ -99,9 +96,6 @@ pub fn encode_main_props(props: MainTestProps) -> json.Json {
       #("theme", json.string(props.settings.theme)),
       #("notifications", json.bool(props.settings.notifications)),
     ])),
-    #("errors", json.object(dict.to_list(props.errors) |> list.map(fn(pair) {
-      #(pair.0, json.string(pair.1))
-    }))),
   ])
 }
 
@@ -132,7 +126,6 @@ fn initial_props() -> MainTestProps {
     data: "",
     user: User(id: 0, name: "", profile: Profile(email: "", verified: False), tags: []),
     settings: Settings(theme: "", notifications: False),
-    errors: dict.new(),
   )
 }
 
@@ -391,16 +384,14 @@ pub fn assign_errors_test() {
   let response =
     inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("errors", fn(props) {
-        MainTestProps(..props, errors: errors)
-      })
+      |> inertia.assign_errors(errors)
       |> inertia.assign_prop("title", fn(props) {
         MainTestProps(..props, title: "Form with Errors")
       })
-      |> inertia.render("ContactForm")
+      |> inertia.render("ErrorForm")
     })
 
-  testing.component(response) |> should.equal(Ok("ContactForm"))
+  testing.component(response) |> should.equal(Ok("ErrorForm"))
   testing.prop(response, "title", decode.string)
   |> should.equal(Ok("Form with Errors"))
   testing.prop(response, "errors", decode.at(["email"], decode.string))
@@ -418,18 +409,70 @@ pub fn assign_error_single_test() {
   let response =
     inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
       ctx
-      |> inertia.assign_prop("errors", fn(props) {
-        MainTestProps(..props, errors: errors)
-      })
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Registration")
-      })
+      |> inertia.assign_errors(errors)
       |> inertia.render("RegisterForm")
     })
 
   testing.component(response) |> should.equal(Ok("RegisterForm"))
   testing.prop(response, "errors", decode.at(["username"], decode.string))
   |> should.equal(Ok("Username already taken"))
+}
+
+pub fn assign_errors_only_test() {
+  let req = testing.inertia_request()
+  let config = inertia.default_config()
+
+  let errors = dict.new()
+    |> dict.insert("general", "Something went wrong")
+
+  let response =
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
+      ctx
+      |> inertia.assign_errors(errors)
+      |> inertia.render("ErrorPage")
+    })
+
+  testing.component(response) |> should.equal(Ok("ErrorPage"))
+  testing.prop(response, "errors", decode.at(["general"], decode.string))
+  |> should.equal(Ok("Something went wrong"))
+  // Verify that no other props are included
+  testing.prop(response, "title", decode.string) |> should.be_error()
+}
+
+pub fn assign_errors_with_partial_reload_test() {
+  let req = testing.inertia_request()
+    |> testing.partial_data(["title", "count"])
+  let config = inertia.default_config()
+
+  let errors = dict.new()
+    |> dict.insert("name", "Name is required")
+    |> dict.insert("email", "Invalid email")
+
+  let response =
+    inertia.middleware(req, config, option.None, initial_props(), encode_main_props, fn(ctx) {
+      ctx
+      |> inertia.assign_errors(errors)
+      |> inertia.assign_prop("title", fn(props) {
+        MainTestProps(..props, title: "Partial with Errors")
+      })
+      |> inertia.assign_prop("count", fn(props) {
+        MainTestProps(..props, count: 42)
+      })
+      |> inertia.assign_prop("name", fn(props) {
+        MainTestProps(..props, name: "Should not be included")
+      })
+      |> inertia.render("PartialErrorPage")
+    })
+
+  testing.component(response) |> should.equal(Ok("PartialErrorPage"))
+  // Requested props should be included
+  testing.prop(response, "title", decode.string) |> should.equal(Ok("Partial with Errors"))
+  testing.prop(response, "count", decode.int) |> should.equal(Ok(42))
+  // Errors should always be included
+  testing.prop(response, "errors", decode.at(["name"], decode.string)) |> should.equal(Ok("Name is required"))
+  testing.prop(response, "errors", decode.at(["email"], decode.string)) |> should.equal(Ok("Invalid email"))
+  // Non-requested props should not be included
+  testing.prop(response, "name", decode.string) |> should.be_error()
 }
 
 // Test redirects

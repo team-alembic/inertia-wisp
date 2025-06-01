@@ -70,8 +70,8 @@
 //// inertia.inertia_middleware(req, config, option.Some(ssr_supervisor), handler)
 //// ```
 
-
 import gleam/dict
+import gleam/dynamic/decode
 import gleam/erlang/process
 import gleam/json
 import gleam/option
@@ -170,7 +170,7 @@ pub fn empty_context(
 /// ```gleam
 /// fn home_page(ctx: InertiaContext(EmptyProps)) -> Response {
 ///   let home_props = HomeProps(title: "", user_count: 0)
-///   
+///
 ///   ctx
 ///   |> inertia.set_props(home_props, encode_home_props)
 ///   |> inertia.assign_prop("title", fn(props) { HomeProps(..props, title: "Welcome") })
@@ -196,9 +196,9 @@ pub fn set_props(
 }
 
 /// Assigns a prop transformation to a typed context.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// ctx
 /// |> inertia.assign_typed_prop("name", UserPageProps(_, name: "Alice"))
@@ -215,7 +215,7 @@ pub fn set_props(
 /// |> inertia.assign_prop_with_include("user", UserPageProps(_, user: user), types.IncludeDefault)
 ///
 /// // Always included
-/// ctx  
+/// ctx
 /// |> inertia.assign_prop_with_include("csrf", UserPageProps(_, csrf: token), types.IncludeAlways)
 ///
 /// // Optional (only when specifically requested)
@@ -228,15 +228,12 @@ pub fn assign_prop_with_include(
   transformer: fn(props) -> props,
   include: types.IncludeProp,
 ) -> InertiaContext(props) {
-  let prop_transform = types.PropTransform(
-    name: key,
-    transform: transformer, 
-    include: include,
-  )
-  types.InertiaContext(
-    ..ctx,
-    prop_transforms: [prop_transform, ..ctx.prop_transforms],
-  )
+  let prop_transform =
+    types.PropTransform(name: key, transform: transformer, include: include)
+  types.InertiaContext(..ctx, prop_transforms: [
+    prop_transform,
+    ..ctx.prop_transforms
+  ])
 }
 
 /// Assign a prop with default inclusion behavior.
@@ -292,6 +289,11 @@ pub fn assign_optional_prop(
   transformer: fn(props) -> props,
 ) -> InertiaContext(props) {
   assign_prop_with_include(ctx, key, transformer, types.IncludeOptionally)
+}
+
+pub fn assign_prop_t(ctx: InertiaContext(t), name_and_fn: #(String, fn(t) -> t)) {
+  let #(name, func) = name_and_fn
+  assign_prop(ctx, name, func)
 }
 
 /// Assigns validation errors to be displayed in forms.
@@ -353,8 +355,6 @@ pub fn default_config() -> Config {
   types.Config(version: "1", ssr: False, encrypt_history: False)
 }
 
-
-
 // Middleware
 
 /// Middleware for typed Inertia contexts with version checking and SSR support.
@@ -412,7 +412,14 @@ pub fn middleware(
   props_encoder: fn(props) -> json.Json,
   handler: fn(InertiaContext(props)) -> Response,
 ) -> Response {
-  middleware.typed_middleware(req, config, ssr_supervisor, props_zero, props_encoder, handler)
+  middleware.typed_middleware(
+    req,
+    config,
+    ssr_supervisor,
+    props_zero,
+    props_encoder,
+    handler,
+  )
 }
 
 /// Simplified middleware for the empty props pattern.
@@ -424,7 +431,7 @@ pub fn middleware(
 /// ```gleam
 /// pub fn handle_request(req: wisp.Request) -> wisp.Response {
 ///   use ctx <- inertia.empty_middleware(req, config, ssr_supervisor)
-///   
+///
 ///   case wisp.path_segments(req) {
 ///     [] -> home_page(ctx)         // ctx |> set_props(HomeProps(...))
 ///     ["users"] -> users_page(ctx) // ctx |> set_props(UserProps(...))
@@ -438,37 +445,30 @@ pub fn empty_middleware(
   ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
   handler: fn(InertiaContext(types.EmptyProps)) -> Response,
 ) -> Response {
-  middleware.typed_middleware(req, config, ssr_supervisor, types.EmptyProps, types.encode_empty_props, handler)
+  middleware.typed_middleware(
+    req,
+    config,
+    ssr_supervisor,
+    types.EmptyProps,
+    types.encode_empty_props,
+    handler,
+  )
 }
 
 // Controller functions
 
 /// Assigns a regular prop that will be included in initial requests by default.
-
-
 /// Assigns multiple regular props at once.
-
-
 /// Assigns a lazy prop that is included in initial requests and only evaluated when request for partial reloads.
 ///
 /// Lazy props are useful for expensive computations that shouldn't run on every request.
-
-
 /// Assigns an "always" prop that is included in every response, even partial reloads.
 ///
 /// Use this for data that should always be available, like current user info or CSRF tokens.
-
-
 /// Assigns multiple "always" props at once.
-
-
 /// Assigns an "optional" prop that is only included when specifically requested.
 ///
 /// Optional props are never included unless the frontend explicitly asks for them.
-
-
-
-
 // Form handling and redirects
 
 /// Assigns validation errors to be displayed in forms.
@@ -487,16 +487,11 @@ pub fn empty_middleware(
 ///
 /// ctx |> inertia.assign_errors(errors)
 /// ```
-
 /// Assigns a single validation error for a specific field.
-
-
 /// Enables history encryption for the current response.
 ///
 /// When enabled, the page data will be encrypted in the browser's history.
 /// The key is stored in browser session storage, and can be cleared with the clear_history call.
-
-
 /// Clears the browser's history state encryption key.
 ///
 /// Once cleared, previous history state will no longer be accessible.
@@ -508,25 +503,17 @@ pub fn empty_middleware(
 /// |> inertia.clear_history()
 /// |> inertia.redirect("/logged-out")
 /// ```
-
-
 // SSR Configuration
 
 /// Enables server-side rendering for the current context.
 ///
 /// Use this if you want to selectively enable SSR for particular routes.
-
-
 /// Disables server-side rendering for the current context.
-
-
 /// Renders an Inertia response with the specified component.
 ///
 /// This is the main function for returning Inertia responses. It will either
 /// return a JSON response (for Inertia requests) or render the full HTML page
 /// (for initial page loads).
-
-
 /// Renders an Inertia response with the specified component.
 ///
 /// This function works with the statically typed props system, evaluating
@@ -575,6 +562,37 @@ pub fn redirect(request: Request, to url: String) -> Response {
 /// ```
 pub fn external_redirect(to url: String) -> Response {
   controller.external_redirect(url)
+}
+
+/// A utility function for handling JSON request bodies with automatic decoding.
+///
+/// This function extracts JSON data from the request body, attempts to decode it
+/// using the provided decoder, and either continues with the decoded value or
+/// returns a bad request response on failure.
+///
+/// ## Example
+///
+/// ```gleam
+/// import gleam/dynamic/decode
+/// import inertia_wisp/inertia
+///
+/// pub fn create_user(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+///   use user_data <- inertia.require_json(ctx, user_decoder())
+///   // user_data is now the decoded user struct
+///   // ... handle the user creation logic
+/// }
+/// ```
+pub fn require_json(
+  ctx: InertiaContext(props),
+  decoder: decode.Decoder(a),
+  cont: fn(a) -> Response,
+) -> Response {
+  use json_data <- wisp.require_json(ctx.request)
+  let result = decode.run(json_data, decoder)
+  case result {
+    Ok(value) -> cont(value)
+    Error(_) -> wisp.bad_request()
+  }
 }
 
 // SSR functions

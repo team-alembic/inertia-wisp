@@ -33,7 +33,6 @@ pub type TestProps {
     html_entities: String,
     newlines: String,
     nested: TestNested,
-    errors: dict.Dict(String, String),
   )
 }
 
@@ -107,9 +106,6 @@ pub fn encode_test_props(props: TestProps) -> json.Json {
         ]))
       ]))
     ])),
-    #("errors", json.object(dict.to_list(props.errors) |> list.map(fn(pair) {
-      #(pair.0, json.string(pair.1))
-    }))),
   ])
 }
 
@@ -131,7 +127,6 @@ fn initial_props() -> TestProps {
     html_entities: "",
     newlines: "",
     nested: TestNested(TestLevel1(TestLevel2(TestLevel3(TestLevel4("", []))))),
-    errors: dict.new(),
   )
 }
 
@@ -421,9 +416,7 @@ pub fn multiple_errors_accumulation_test() {
   
   let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
     ctx
-    |> inertia.assign_prop("errors", fn(props) {
-      TestProps(..props, errors: errors)
-    })
+    |> inertia.assign_errors(errors)
     |> inertia.render("ErrorsPage")
   })
   

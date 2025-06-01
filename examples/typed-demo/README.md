@@ -14,20 +14,19 @@ This demo showcases the new statically typed props system for Inertia.js with Gl
 
 ```
 typed-demo/
-├── src/
-│   ├── backend/          # Gleam backend server
-│   │   ├── src/
-│   │   │   ├── typed_demo_backend.gleam  # Main server
-│   │   │   └── handlers.gleam            # Typed request handlers
-│   │   └── static/       # Built frontend assets
-│   ├── frontend/         # React + TypeScript frontend
-│   │   └── src/
-│   │       ├── *.tsx     # React components
-│   │       ├── main.tsx  # Client entry point
-│   │       └── ssr.tsx   # Server-side rendering
-│   └── shared/           # Shared type definitions
-│       └── src/
-│           └── types.gleam  # Gleam type definitions
+├── backend/          # Gleam backend server
+│   ├── src/
+│   │   ├── typed_demo_backend.gleam  # Main server
+│   │   └── handlers.gleam            # Typed request handlers
+│   └── static/       # Built frontend assets
+├── frontend/         # React + TypeScript frontend
+│   └── src/
+│       ├── *.tsx     # React components
+│       ├── main.tsx  # Client entry point
+│       └── ssr.tsx   # Server-side rendering
+└── shared/           # Shared type definitions
+    └── src/
+        └── types.gleam  # Gleam type definitions
 ```
 
 ## Quick Start
@@ -35,8 +34,9 @@ typed-demo/
 ### 1. Build Shared Types
 
 ```bash
-cd src/shared
-gleam build
+cd shared
+gleam build --target erlang
+gleam build --target javascript
 ```
 
 ### 2. Build Frontend Assets
@@ -50,7 +50,7 @@ npm run build
 ### 3. Start Backend Server
 
 ```bash
-cd src/backend
+cd backend
 gleam run
 ```
 
@@ -61,7 +61,7 @@ Open http://localhost:8001 to explore the typed demo.
 ## Demo Pages
 
 - **Home** (`/`) - Project overview with feature highlights
-- **User Profile** (`/user/1`) - User data with bio and interests  
+- **User Profile** (`/user/1`) - User data with bio and interests
 - **Blog Post** (`/blog/1`) - Article with metadata and tags
 - **Dashboard** (`/dashboard`) - Admin stats and recent activity
 
@@ -74,7 +74,7 @@ Open http://localhost:8001 to explore the typed demo.
 pub type UserProfilePageProps {
   UserProfilePageProps(
     name: String,
-    email: String, 
+    email: String,
     id: Int,
     interests: List(String),
     bio: String,
@@ -97,22 +97,22 @@ pub fn user_profile_handler(
     )
 
   let user = get_user_by_id(user_id)
-  
+
   typed_ctx
   // Always included props (essential user data)
-  |> inertia.assign_always_prop("name", fn(props) { 
-    UserProfilePageProps(..props, name: user.name) 
+  |> inertia.assign_always_prop("name", fn(props) {
+    UserProfilePageProps(..props, name: user.name)
   })
-  |> inertia.assign_always_prop("id", fn(props) { 
-    UserProfilePageProps(..props, id: user.id) 
+  |> inertia.assign_always_prop("id", fn(props) {
+    UserProfilePageProps(..props, id: user.id)
   })
   // Default props (included in initial load and when requested)
-  |> inertia.assign_prop("email", fn(props) { 
-    UserProfilePageProps(..props, email: user.email) 
+  |> inertia.assign_prop("email", fn(props) {
+    UserProfilePageProps(..props, email: user.email)
   })
   // Optional props (only included when specifically requested)
-  |> inertia.assign_optional_prop("interests", fn(props) { 
-    UserProfilePageProps(..props, interests: user.interests) 
+  |> inertia.assign_optional_prop("interests", fn(props) {
+    UserProfilePageProps(..props, interests: user.interests)
   })
   |> inertia.render("UserProfile")
 }

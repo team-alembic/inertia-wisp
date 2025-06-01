@@ -36,9 +36,14 @@ pub fn render_typed(
   let #(final_props, included_props) =
     evaluate_typed_props(ctx, is_inertia, partial_data)
 
-  // Encode only the included props
+  // Encode only the included props and merge with errors
   let props_json =
-    encode_selective_props(final_props, included_props, ctx.props_encoder)
+    encode_selective_props(
+      final_props,
+      included_props,
+      ctx.props_encoder,
+      ctx.errors,
+    )
 
   let url = wisp.path_segments(ctx.request) |> string.join("/")
   let url = "/" <> url
@@ -128,14 +133,16 @@ fn evaluate_typed_props(
   #(final_props, list.reverse(included_props))
 }
 
-/// Encode only the props that should be included
+/// Encode only the props that should be included and merge with errors
 fn encode_selective_props(
   props: props,
   included_props: List(String),
   encoder: fn(props) -> json.Json,
+  errors: dict.Dict(String, String),
 ) -> json.Json {
-  case list.length(included_props) {
-    0 -> json.object([])
+  // Start with an empty list of props
+  let base_props = case list.is_empty(included_props) {
+    True -> []
     // No props to include
     _ -> {
       // Encode all props first, then parse and filter
@@ -146,24 +153,37 @@ fn encode_selective_props(
       case json.parse(json_string, decode.dict(decode.string, decode.dynamic)) {
         Ok(all_props) -> {
           // Filter to only include the specified props
-          let filtered_pairs =
-            list.filter_map(included_props, fn(prop_name) {
-              case dict.get(all_props, prop_name) {
-                Ok(dynamic_value) -> {
-                  // Convert dynamic value back to JSON string and parse as JSON
-                  let value_json = convert_dynamic_to_json(dynamic_value)
-                  Ok(#(prop_name, value_json))
-                }
-                Error(_) -> Error(Nil)
+          list.filter_map(included_props, fn(prop_name) {
+            case dict.get(all_props, prop_name) {
+              Ok(dynamic_value) -> {
+                // Convert dynamic value back to JSON string and parse as JSON
+                let value_json = convert_dynamic_to_json(dynamic_value)
+                Ok(#(prop_name, value_json))
               }
-            })
-          json.object(filtered_pairs)
+              Error(_) -> Error(Nil)
+            }
+          })
         }
-        Error(_) -> json.object([])
+        Error(_) -> []
         // Fallback on parse error
       }
     }
   }
+
+  // Always include errors if they exist
+  let final_props = case dict.is_empty(errors) {
+    True -> base_props
+    False -> {
+      let errors_json =
+        json.object(
+          dict.to_list(errors)
+          |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }),
+        )
+      [#("errors", errors_json), ..base_props]
+    }
+  }
+
+  json.object(final_props)
 }
 
 pub fn convert_dynamic_to_json(dynamic_value) {
