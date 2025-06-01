@@ -16,7 +16,7 @@ pub fn contact_page_handler(
   |> inertia.assign_prop_t(contact.message(
     "We'd love to hear from you. Send us a message!",
   ))
-  |> inertia.render("ContactForm")
+  |> inertia.render("contact/ContactForm")
 }
 
 // ===== FORM HANDLERS =====
@@ -48,7 +48,7 @@ pub fn contact_form_handler(
       // Validation errors - re-render contact form with errors
       ctx
       |> inertia.assign_errors(validation_errors)
-      |> inertia.render("ContactForm")
+      |> inertia.render("contact/ContactForm")
     }
   }
 }

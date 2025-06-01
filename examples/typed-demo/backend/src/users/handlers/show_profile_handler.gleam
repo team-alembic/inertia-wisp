@@ -5,7 +5,13 @@ import wisp
 
 // Mock data
 type User {
-  User(id: Int, name: String, email: String, bio: String, interests: List(String))
+  User(
+    id: Int,
+    name: String,
+    email: String,
+    bio: String,
+    interests: List(String),
+  )
 }
 
 fn get_user_by_id(id: Int) -> User {
@@ -14,7 +20,7 @@ fn get_user_by_id(id: Int) -> User {
     name: "Alice Johnson",
     email: "alice@example.com",
     bio: "Software engineer passionate about functional programming and web development.",
-    interests: ["Programming", "Reading", "Hiking", "Photography"]
+    interests: ["Programming", "Reading", "Hiking", "Photography"],
   )
 }
 
@@ -27,7 +33,7 @@ pub fn user_profile_handler(
 ) -> wisp.Response {
   // Simulate fetching user data
   let user = get_user_by_id(user_id)
-  
+
   ctx
   |> users.with_user_profile_page_props()
   // Always included props (essential user data)
@@ -37,6 +43,8 @@ pub fn user_profile_handler(
   |> inertia.assign_prop_t(users.email(user.email))
   |> inertia.assign_prop_t(users.bio(user.bio))
   // Optional props (only included when specifically requested - good for expensive data)
-  |> inertia.assign_prop_t(users.interests(fn() { option.Some(user.interests) }))
-  |> inertia.render("UserProfile")
+  |> inertia.assign_prop_t(
+    users.interests(fn() { option.Some(user.interests) }),
+  )
+  |> inertia.render("users/UserProfile")
 }

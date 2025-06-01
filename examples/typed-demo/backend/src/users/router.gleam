@@ -10,35 +10,44 @@ pub fn users_router(
   ctx: inertia.InertiaContext(inertia.EmptyProps),
   request: wisp.Request,
 ) -> wisp.Response {
+  echo wisp.path_segments(request)
+  echo request.method
+
   case wisp.path_segments(request) {
     // GET /users/create - show create user form
-    // POST /users/create - process create user form
     ["users", "create"] ->
       case request.method {
         http.Get -> create_user_handlers.create_user_page_handler(ctx)
+        _ -> wisp.method_not_allowed([http.Get, http.Post])
+      }
+    // POST /users/ - process create user form
+    ["users"] ->
+      case request.method {
         http.Post -> create_user_handlers.create_user_handler(ctx)
         _ -> wisp.method_not_allowed([http.Get, http.Post])
       }
 
     // GET /users/:id - show user profile
-    ["users", user_id] ->
-      case request.method {
-        http.Get -> {
-          case int.parse(user_id) {
-            Ok(id) -> show_profile_handler.user_profile_handler(ctx, id)
-            Error(_) -> wisp.bad_request()
+    ["users", user_id] -> {
+      case int.parse(user_id) {
+        Ok(id) ->
+          case request.method {
+            http.Get -> show_profile_handler.user_profile_handler(ctx, id)
+            http.Put ->
+              edit_profile_handlers.update_profile_handler(ctx, user_id)
+            _ -> wisp.method_not_allowed([http.Get, http.Put])
           }
-        }
-        _ -> wisp.method_not_allowed([http.Get])
+        Error(_) -> wisp.bad_request()
       }
+    }
 
     // GET /users/:id/edit - show edit profile form
-    // POST /users/:id/edit - process edit profile form
+    // PUT /users/:id - process edit profile form
     ["users", user_id, "edit"] ->
       case request.method {
         http.Get ->
           edit_profile_handlers.edit_profile_page_handler(ctx, user_id)
-        http.Post -> edit_profile_handlers.update_profile_handler(ctx, user_id)
+
         _ -> wisp.method_not_allowed([http.Get, http.Post])
       }
 

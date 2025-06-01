@@ -18,7 +18,7 @@ packages = [
   { name = "gramps", version = "3.0.1", build_tools = ["gleam"], requirements = ["gleam_crypto", "gleam_erlang", "gleam_http", "gleam_stdlib"], otp_app = "gramps", source = "hex", outer_checksum = "59194B3980110B403EE6B75330DB82CDE05FC8138491C2EAEACBC7AAEF30B2E8" },
   { name = "houdini", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "houdini", source = "hex", outer_checksum = "5BA517E5179F132F0471CB314F27FE210A10407387DA1EA4F6FD084F74469FC2" },
   { name = "hpack_erl", version = "0.3.0", build_tools = ["rebar3"], requirements = [], otp_app = "hpack", source = "hex", outer_checksum = "D6137D7079169D8C485C6962DFE261AF5B9EF60FBC557344511C1E65E3D95FB0" },
-  { name = "inertia_wisp", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_crypto", "gleam_erlang", "gleam_http", "gleam_json", "gleam_otp", "gleam_stdlib", "nodejs", "simplifile", "wisp"], source = "local", path = "../../../.." },
+  { name = "inertia_wisp", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_crypto", "gleam_erlang", "gleam_http", "gleam_json", "gleam_otp", "gleam_stdlib", "nodejs", "simplifile", "wisp"], source = "local", path = "../../.." },
   { name = "jason", version = "1.4.4", build_tools = ["mix"], requirements = ["decimal"], otp_app = "jason", source = "hex", outer_checksum = "C5EB0CAB91F094599F94D55BC63409236A8EC69A21A67814529E8D5F6CC90B3B" },
   { name = "logging", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "logging", source = "hex", outer_checksum = "1098FBF10B54B44C2C7FDF0B01C1253CAFACDACABEFB4B0D027803246753E06D" },
   { name = "marceau", version = "1.3.0", build_tools = ["gleam"], requirements = [], otp_app = "marceau", source = "hex", outer_checksum = "2D1C27504BEF45005F5DFB18591F8610FB4BFA91744878210BDC464412EC44E9" },
@@ -26,7 +26,7 @@ packages = [
   { name = "nodejs", version = "3.1.3", build_tools = ["mix"], requirements = ["jason", "poolboy", "ssl_verify_fun"], otp_app = "nodejs", source = "hex", outer_checksum = "E7751AAD77AC55F8E6C5C07617378AFD88D2E0C349D9DB2EBB5273AAE46EF6A9" },
   { name = "platform", version = "1.0.0", build_tools = ["gleam"], requirements = [], otp_app = "platform", source = "hex", outer_checksum = "8339420A95AD89AAC0F82F4C3DB8DD401041742D6C3F46132A8739F6AEB75391" },
   { name = "poolboy", version = "1.5.2", build_tools = ["rebar3"], requirements = [], otp_app = "poolboy", source = "hex", outer_checksum = "DAD79704CE5440F3D5A3681C8590B9DC25D1A561E8F5A9C995281012860901E3" },
-  { name = "shared_types", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib"], source = "local", path = "../shared_types" },
+  { name = "shared_types", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "inertia_wisp"], source = "local", path = "../shared_types" },
   { name = "simplifile", version = "2.2.1", build_tools = ["gleam"], requirements = ["filepath", "gleam_stdlib"], otp_app = "simplifile", source = "hex", outer_checksum = "C88E0EE2D509F6D86EB55161D631657675AA7684DAB83822F7E59EB93D9A60E3" },
   { name = "ssl_verify_fun", version = "1.1.7", build_tools = ["mix", "rebar3", "make"], requirements = [], otp_app = "ssl_verify_fun", source = "hex", outer_checksum = "FE4C190E8F37401D30167C8C405EDA19469F34577987C76DDE613E838BBC67F8" },
   { name = "telemetry", version = "1.3.0", build_tools = ["rebar3"], requirements = [], otp_app = "telemetry", source = "hex", outer_checksum = "7015FC8919DBE63764F4B4B87A95B7C0996BD539E0D499BE6EC9D7F3875B79E6" },
@@ -39,7 +39,7 @@ gleam_http = { version = ">= 4.0.0 and < 5.0.0" }
 gleam_json = { version = ">= 3.0.0" }
 gleam_stdlib = { version = ">= 0.60.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
-inertia_wisp = { path = "../../../.." }
+inertia_wisp = { path = "../../.." }
 mist = { version = ">= 2.0.0 and < 5.0.0" }
 shared_types = { path = "../shared_types" }
 wisp = { version = ">= 1.7.0 and < 2.0.0" }

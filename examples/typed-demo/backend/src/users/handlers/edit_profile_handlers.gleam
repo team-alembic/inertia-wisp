@@ -7,7 +7,13 @@ import wisp
 
 // Mock data
 type User {
-  User(id: Int, name: String, email: String, bio: String, interests: List(String))
+  User(
+    id: Int,
+    name: String,
+    email: String,
+    bio: String,
+    interests: List(String),
+  )
 }
 
 fn get_user_by_id(id: Int) -> User {
@@ -16,7 +22,7 @@ fn get_user_by_id(id: Int) -> User {
     name: "Alice Johnson",
     email: "alice@example.com",
     bio: "Software engineer passionate about functional programming and web development.",
-    interests: ["Programming", "Reading", "Hiking", "Photography"]
+    interests: ["Programming", "Reading", "Hiking", "Photography"],
   )
 }
 
@@ -28,16 +34,19 @@ pub fn edit_profile_page_handler(
   _user_id: String,
 ) -> wisp.Response {
   // Simulate fetching user data for editing
-  let user = get_user_by_id(1) // Would parse user_id in real app
-  
+  let user = get_user_by_id(1)
+  // Would parse user_id in real app
+
   ctx
   |> users.with_user_profile_page_props()
   |> inertia.assign_prop_t(users.name(user.name))
   |> inertia.assign_prop_t(users.id(user.id))
   |> inertia.assign_prop_t(users.email(user.email))
   |> inertia.assign_prop_t(users.bio(user.bio))
-  |> inertia.assign_prop_t(users.interests(fn() { option.Some(user.interests) }))
-  |> inertia.render("EditProfile")
+  |> inertia.assign_prop_t(
+    users.interests(fn() { option.Some(user.interests) }),
+  )
+  |> inertia.render("users/EditProfile")
 }
 
 // ===== FORM HANDLERS =====
@@ -51,10 +60,15 @@ pub fn update_profile_handler(
     ctx,
     users.update_profile_request_decoder(),
   )
-  
+
   // Validate the request
-  let validation_errors = validators.validate_update_profile_request(request.name, request.bio, request.interests)
-  
+  let validation_errors =
+    validators.validate_update_profile_request(
+      request.name,
+      request.bio,
+      request.interests,
+    )
+
   case dict.is_empty(validation_errors) {
     True -> {
       // Success - redirect to user profile
@@ -64,16 +78,18 @@ pub fn update_profile_handler(
       // Validation errors - re-render edit profile form with errors
       // Get user data (would normally fetch from database)
       let user = get_user_by_id(1)
-      
+
       ctx
       |> users.with_user_profile_page_props()
       |> inertia.assign_prop_t(users.name(user.name))
       |> inertia.assign_prop_t(users.id(user.id))
       |> inertia.assign_prop_t(users.email(user.email))
       |> inertia.assign_prop_t(users.bio(user.bio))
-      |> inertia.assign_prop_t(users.interests(fn() { option.Some(user.interests) }))
+      |> inertia.assign_prop_t(
+        users.interests(fn() { option.Some(user.interests) }),
+      )
       |> inertia.assign_errors(validation_errors)
-      |> inertia.render("EditProfile")
+      |> inertia.render("users/EditProfile")
     }
   }
 }

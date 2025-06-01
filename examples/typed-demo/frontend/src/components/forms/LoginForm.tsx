@@ -28,7 +28,7 @@ export default function LoginForm({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    post("/login");
+    post("/auth/login");
   };
 
   return (

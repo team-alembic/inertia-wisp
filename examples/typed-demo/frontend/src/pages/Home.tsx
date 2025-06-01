@@ -1,7 +1,8 @@
 import { Link } from "@inertiajs/react";
-import type { HomePageData } from "../types/gleam-projections";
+import type { HomePageProps$ } from "@shared_types/shared_types/home.d.mts";
+import type { GleamToJS } from "../types/gleam-projections";
 
-export default function Home(props: HomePageData) {
+export default function Home(props: GleamToJS<HomePageProps$>) {
   console.log({ props });
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -119,7 +120,9 @@ export default function Home(props: HomePageData) {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Demo Pages</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">View Examples</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                View Examples
+              </h3>
               <div className="flex flex-col space-y-3">
                 <Link
                   href="/user/1"
@@ -142,7 +145,9 @@ export default function Home(props: HomePageData) {
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Form Examples</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Form Examples
+              </h3>
               <div className="flex flex-col space-y-3">
                 <Link
                   href="/users/create"
@@ -157,7 +162,7 @@ export default function Home(props: HomePageData) {
                   Edit Profile Form
                 </Link>
                 <Link
-                  href="/login"
+                  href="/auth/login"
                   className="bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors"
                 >
                   Login Form

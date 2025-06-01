@@ -1,6 +1,7 @@
-import type { UserProfilePageData } from "../../types/gleam-projections";
+import type { UserProfilePageProps$ } from "@shared_types/shared_types/users.d.mts";
+import type { GleamToJS } from "../../types/gleam-projections";
 
-export default function UserProfile(props: UserProfilePageData) {
+export default function UserProfile(props: GleamToJS<UserProfilePageProps$>) {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">

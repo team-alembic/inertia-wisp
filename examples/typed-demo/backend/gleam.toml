@@ -7,7 +7,7 @@ target = "erlang"
 [dependencies]
 gleam_stdlib = ">= 0.60.0"
 gleam_json = ">= 3.0.0"
-inertia_wisp = { path = "../../../.." }
+inertia_wisp = { path = "../../.." }
 wisp = ">= 1.7.0 and < 2.0.0"
 mist = ">= 2.0.0 and < 5.0.0"
 shared_types = { path = "../shared_types" }

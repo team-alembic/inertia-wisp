@@ -15,9 +15,9 @@ pub fn login_page_handler(
   |> inertia.assign_prop_t(auth.title("Login"))
   |> inertia.assign_prop_t(auth.message("Please sign in to your account."))
   |> inertia.assign_prop_t(
-    auth.features(fn() { ["Demo credentials: demo@example.com / password123"] }),
+    auth.demo_info(fn() { ["Demo credentials: demo@example.com / password123"] }),
   )
-  |> inertia.render("Login")
+  |> inertia.render("auth/Login")
 }
 
 // ===== FORM HANDLERS =====
@@ -41,7 +41,7 @@ pub fn login_handler(
       // Validation errors - re-render login form with errors
       ctx
       |> inertia.assign_errors(validation_errors)
-      |> inertia.render("Login")
+      |> inertia.render("auth/Login")
     }
   }
 }

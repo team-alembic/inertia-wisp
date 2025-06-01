@@ -9,6 +9,7 @@ pub fn auth_router(
 ) -> wisp.Response {
   case wisp.path_segments(request) {
     // GET /auth/login
+    // POST /auth/login
     ["auth", "login"] ->
       case request.method {
         http.Get -> handlers.login_page_handler(ctx)

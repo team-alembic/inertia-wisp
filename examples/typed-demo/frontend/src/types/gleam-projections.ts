@@ -21,34 +21,19 @@ import type { List } from "../../../shared_types/build/dev/javascript/prelude.d.
 import type { Some, None } from "../../../shared_types/build/dev/javascript/gleam_stdlib/gleam/option.d.mts";
 
 
-// Import shared types for forms and page props
+// Import shared types for forms
 import type {
-  ContactPageProps$ as ContactPageProps,
   ContactFormRequest$,
 } from "../../../shared_types/build/dev/javascript/shared_types/shared_types/contact.d.mts";
 
 import type {
-  LoginPageProps$ as LoginPageProps,
   LoginRequest$,
 } from "../../../shared_types/build/dev/javascript/shared_types/shared_types/auth.d.mts";
 
 import type {
-  UserProfilePageProps$,
   CreateUserRequest$,
   UpdateProfileRequest$,
 } from "../../../shared_types/build/dev/javascript/shared_types/shared_types/users.d.mts";
-
-import type {
-  BlogPostPageProps$,
-} from "../../../shared_types/build/dev/javascript/shared_types/shared_types/blog.d.mts";
-
-import type {
-  DashboardPageProps$,
-} from "../../../shared_types/build/dev/javascript/shared_types/shared_types/dashboard.d.mts";
-
-import type {
-  HomePageProps$,
-} from "../../../shared_types/build/dev/javascript/shared_types/shared_types/home.d.mts";
 
 
 
@@ -115,23 +100,32 @@ export type GleamConstructorToJS<T> = T extends new (
     }
   : never;
 
+/**
+ * Utility type for pages that handle forms and need access to validation errors.
+ * Adds an `errors` field containing form validation errors to any page props type.
+ * 
+ * Usage:
+ * - Form pages: `WithErrors<LoginPageProps$>`  
+ * - Read-only pages: `GleamToJS<BlogPostPageProps$>`
+ * 
+ * Example:
+ * ```typescript
+ * import type { LoginPageProps$ } from "path/to/gleam/types";
+ * import type { WithErrors } from "./types/gleam-projections";
+ * 
+ * type Props = WithErrors<LoginPageProps$>;
+ * // Result: { ...loginPageFields, errors: Record<string, string> }
+ * ```
+ */
+export type WithErrors<Props> = GleamToJS<Props> & {
+  errors: Record<string, string>;
+};
+
 // Specific type aliases for form submission data (using the projection utility)
 export type ContactFormData = GleamToJS<ContactFormRequest$>;
 export type CreateUserFormData = GleamToJS<CreateUserRequest$>;
 export type UpdateProfileFormData = GleamToJS<UpdateProfileRequest$>;
 export type LoginFormData = GleamToJS<LoginRequest$>;
-
-// Page prop projections - Convert Gleam page props to JavaScript-compatible interfaces
-export type UserProfilePageData = GleamToJS<UserProfilePageProps$>;
-export type BlogPostPageData = GleamToJS<BlogPostPageProps$>;
-export type DashboardPageData = GleamToJS<DashboardPageProps$>;
-export type HomePageData = GleamToJS<HomePageProps$>;
-
-// Missing export aliases expected by pages
-export type ContactFormPageData = GleamToJS<ContactPageProps>;
-export type LoginFormPageData = GleamToJS<LoginPageProps>;
-export type CreateUserFormPageData = GleamToJS<UserProfilePageProps$>;
-export type EditProfileFormPageData = GleamToJS<UserProfilePageProps$>;
 
 // Helper type aliases for common projections
 export type JSOption<T> = T | null;
@@ -186,37 +180,34 @@ export type FormDefaults<T> = {
 };
 
 /**
- * Usage Examples for Dict Projections
+ * Usage Examples
  *
- * // Basic form validation errors
- * type LoginErrors = GleamToJS<Dict$<string, string>>;
- * // Result: Record<string, string>
- * const loginErrors: LoginErrors = {
+ * // Page components should import Gleam types directly:
+ * import type { LoginPageProps$ } from "path/to/gleam/types";
+ * import type { WithErrors, GleamToJS } from "./types/gleam-projections";
+ * 
+ * // For form pages (with error handling):
+ * type LoginPageProps = WithErrors<LoginPageProps$>;
+ * 
+ * // For read-only pages:
+ * type BlogPageProps = GleamToJS<BlogPostPageProps$>;
+ * 
+ * // Form data projections (Option/List transformations):
+ * type LoginForm = LoginFormData; // Already projected
+ * 
+ * // Dict Projections for validation errors:
+ * const loginErrors: FormErrors = {
  *   email: "Email is required",
  *   password: "Password must be at least 8 characters"
  * };
- *
- * // Multiple errors per field
- * type MultiErrors = GleamToJS<Dict$<string, List<string>>>;
- * // Result: Record<string, string[]>
- * const fieldErrors: MultiErrors = {
+ * 
+ * const fieldErrors: MultiFieldErrors = {
  *   password: ["Too short", "Must contain numbers", "Must contain symbols"]
  * };
- *
- * // Optional field errors
- * type OptionalErrors = GleamToJS<Dict$<string, Option$<string>>>;
- * // Result: Record<string, string | null>
- * const conditionalErrors: OptionalErrors = {
+ * 
+ * const conditionalErrors: OptionalFieldErrors = {
  *   bio: "Bio is too long",
  *   avatar: null // No error for this field
- * };
- *
- * // Nested validation errors (e.g., for nested forms)
- * type NestedErrors = GleamToJS<Dict$<string, Dict$<string, string>>>;
- * // Result: Record<string, Record<string, string>>
- * const addressErrors: NestedErrors = {
- *   billing: { street: "Required", city: "Invalid" },
- *   shipping: { zip: "Invalid format" }
  * };
  */
 
@@ -272,17 +263,6 @@ export type {
   MultiFieldErrors as MultiErrors,
   OptionalFieldErrors as OptionalErrors,
 };
-
-// Export page data types for easy importing
-export type {
-  UserProfilePageData as UserProfilePage,
-  BlogPostPageData as BlogPostPage,
-  DashboardPageData as DashboardPage,
-  HomePageData as HomePage,
-};
-
-// Re-export imported Gleam types for convenience
-export type { ContactPageProps, LoginPageProps };
 
 // Convenience type for any page data
 export type PageData<T> = GleamToJS<T>;

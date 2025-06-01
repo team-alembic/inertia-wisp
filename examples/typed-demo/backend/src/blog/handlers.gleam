@@ -22,5 +22,5 @@ pub fn blog_post_handler(
     blog.tags(fn() { ["gleam", "functional-programming", "web-development"] }),
   )
   |> inertia.assign_prop_t(blog.view_count(fn() { option.Some(1250) }))
-  |> inertia.render("BlogPost")
+  |> inertia.render("blog/BlogPost")
 }
