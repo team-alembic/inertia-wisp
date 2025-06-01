@@ -57,9 +57,9 @@ fn handle_request(
   ssr_supervisor: option.Option(process.Subject(inertia.SSRMessage)),
 ) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use ctx <- inertia.empty_middleware(
+  use ctx <- inertia.middleware(
     req,
-    inertia.default_config(),
+    inertia.config(version: "1", ssr: True, encrypt_history: False),
     ssr_supervisor,
   )
 
@@ -99,5 +99,3 @@ fn handle_request(
     _ -> wisp.not_found()
   }
 }
-
-

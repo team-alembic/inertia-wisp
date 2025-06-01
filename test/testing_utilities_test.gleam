@@ -153,8 +153,9 @@ pub fn json_response_component_extraction_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("title", fn(props) {
       TestingProps(..props, title: "Test")
     })
@@ -168,8 +169,9 @@ pub fn json_response_prop_extraction_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("string_prop", fn(props) {
       TestingProps(..props, string_prop: "test string")
     })
@@ -180,7 +182,7 @@ pub fn json_response_prop_extraction_test() {
       TestingProps(..props, bool_prop: True)
     })
     |> inertia.assign_prop("array_prop", fn(props) {
-      TestingProps(..props, array_prop: ["a", "b"])
+      TestingProps(..props, array_prop: ["a", "b", "c"])
     })
     |> inertia.render("PropTestComponent")
   })
@@ -188,15 +190,16 @@ pub fn json_response_prop_extraction_test() {
   testing.prop(response, "string_prop", decode.string) |> should.equal(Ok("test string"))
   testing.prop(response, "int_prop", decode.int) |> should.equal(Ok(42))
   testing.prop(response, "bool_prop", decode.bool) |> should.equal(Ok(True))
-  testing.prop(response, "array_prop", decode.list(decode.string)) |> should.equal(Ok(["a", "b"]))
+  testing.prop(response, "array_prop", decode.list(decode.string)) |> should.equal(Ok(["a", "b", "c"]))
 }
 
 pub fn json_response_url_extraction_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.render("UrlTestComponent")
   })
   
@@ -216,8 +219,9 @@ pub fn json_response_version_extraction_test() {
   )
   let config = inertia.config(version: "test-version", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.render("VersionTestComponent")
   })
   
@@ -230,8 +234,9 @@ pub fn html_response_component_extraction_test() {
   let req = wisp_testing.request(http.Get, "/test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("title", fn(props) {
       TestingProps(..props, title: "HTML Test")
     })
@@ -245,8 +250,9 @@ pub fn html_response_prop_extraction_test() {
   let req = wisp_testing.request(http.Get, "/test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("html_string", fn(props) {
       TestingProps(..props, html_string: "html test string")
     })
@@ -268,8 +274,9 @@ pub fn html_response_url_extraction_test() {
   let req = wisp_testing.request(http.Get, "/html-test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.render("HtmlUrlTestComponent")
   })
   
@@ -290,8 +297,9 @@ pub fn missing_prop_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("existing_prop", fn(props) {
       TestingProps(..props, existing_prop: "exists")
     })
@@ -306,8 +314,9 @@ pub fn wrong_prop_type_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("string_prop", fn(props) {
       TestingProps(..props, string_prop: "not a number")
     })
@@ -329,12 +338,13 @@ pub fn nested_object_prop_test() {
     name: "John",
     profile: Profile(
       email: "john@example.com",
-      settings: Settings(theme: "dark", notifications: True)
+      settings: Settings(theme: "light", notifications: True)
     )
   )
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("user", fn(props) {
       TestingProps(..props, user: user_data)
     })
@@ -345,8 +355,8 @@ pub fn nested_object_prop_test() {
   testing.prop(response, "user", decode.at(["name"], decode.string)) |> should.equal(Ok("John"))
   testing.prop(response, "user", decode.at(["profile", "email"], decode.string)) 
     |> should.equal(Ok("john@example.com"))
-  testing.prop(response, "user", decode.at(["profile", "settings", "theme"], decode.string)) 
-    |> should.equal(Ok("dark"))
+  testing.prop(response, "user", decode.at(["profile", "settings", "theme"], decode.string))
+  |> should.equal(Ok("light"))
   testing.prop(response, "user", decode.at(["profile", "settings", "notifications"], decode.bool)) 
     |> should.equal(Ok(True))
 }
@@ -361,8 +371,9 @@ pub fn array_of_objects_prop_test() {
     Item(id: 3, name: "Item 3")
   ]
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("items", fn(props) {
       TestingProps(..props, items: items)
     })
@@ -381,8 +392,9 @@ pub fn html_entity_unescaping_test() {
   let req = wisp_testing.request(http.Get, "/test", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_testing_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_testing_props)
     |> inertia.assign_prop("quotes", fn(props) {
       TestingProps(..props, quotes: "\"Hello\"")
     })

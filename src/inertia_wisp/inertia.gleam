@@ -24,7 +24,7 @@
 //// import inertia_wisp/inertia
 ////
 //// pub fn handle_request(req: wisp.Request) -> wisp.Response {
-////   use ctx <- inertia.inertia_middleware(req, config, option.None)
+////   use ctx <- inertia.middleware(req, config, option.None)
 ////
 ////   case wisp.path_segments(req) {
 ////     [] -> home_page(ctx)
@@ -67,7 +67,7 @@
 //// let assert Ok(ssr_supervisor) = inertia.start_ssr_supervisor(ssr_config)
 ////
 //// // Use the supervisor in your middleware
-//// inertia.inertia_middleware(req, config, option.Some(ssr_supervisor), handler)
+//// inertia.middleware(req, config, option.Some(ssr_supervisor), handler)
 //// ```
 
 import gleam/dict
@@ -395,7 +395,7 @@ pub fn default_config() -> Config {
 ///     encrypt_history: False
 ///   )
 ///
-///   use ctx <- inertia.middleware(req, config, option.None, HomeProps("", 0), encode_home_props)
+///   use ctx <- inertia.middleware(req, config, option.None)
 ///
 ///   case wisp.path_segments(req) {
 ///     [] -> home_page(ctx)
@@ -404,33 +404,15 @@ pub fn default_config() -> Config {
 ///   }
 /// }
 /// ```
-pub fn middleware(
-  req: Request,
-  config: types.Config,
-  ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
-  props_zero: props,
-  props_encoder: fn(props) -> json.Json,
-  handler: fn(InertiaContext(props)) -> Response,
-) -> Response {
-  middleware.typed_middleware(
-    req,
-    config,
-    ssr_supervisor,
-    props_zero,
-    props_encoder,
-    handler,
-  )
-}
-
-/// Simplified middleware for the empty props pattern.
+/// Inertia middleware for the elegant middleware-before-routing pattern.
 /// Creates an InertiaContext(EmptyProps) and passes it to your handler.
-/// Use this for the elegant middleware-before-routing pattern.
+/// Use set_props() in your route handlers to assign typed props.
 ///
 /// ## Example
 ///
 /// ```gleam
 /// pub fn handle_request(req: wisp.Request) -> wisp.Response {
-///   use ctx <- inertia.empty_middleware(req, config, ssr_supervisor)
+///   use ctx <- inertia.middleware(req, config, ssr_supervisor)
 ///
 ///   case wisp.path_segments(req) {
 ///     [] -> home_page(ctx)         // ctx |> set_props(HomeProps(...))
@@ -439,7 +421,7 @@ pub fn middleware(
 ///   }
 /// }
 /// ```
-pub fn empty_middleware(
+pub fn middleware(
   req: Request,
   config: types.Config,
   ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),

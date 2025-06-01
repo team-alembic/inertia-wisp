@@ -1,4 +1,3 @@
-import gleam/dynamic/decode
 import gleam/json
 import gleam/option
 import inertia_wisp/inertia

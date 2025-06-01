@@ -146,10 +146,11 @@ pub fn version_mismatch_forces_redirect_test() {
   )
   let config = inertia.config(version: "new-version", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("users", fn(props) {
-      TestProps(..props, users: ["user1"])
+      TestProps(..props, users: ["users"])
     })
     |> inertia.render("UsersList")
   })
@@ -172,8 +173,9 @@ pub fn version_match_returns_json_test() {
   )
   let config = inertia.config(version: "v1.0.0", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("users", fn(props) {
       TestProps(..props, users: ["user1"])
     })
@@ -199,8 +201,9 @@ pub fn missing_version_header_test() {
   )
   let config = inertia.config(version: "v1.0.0", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("data", fn(props) {
       TestProps(..props, data: "test data")
     })
@@ -218,8 +221,9 @@ pub fn empty_props_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("empty_string", fn(props) {
       TestProps(..props, empty_string: "")
     })
@@ -257,8 +261,9 @@ pub fn large_props_test() {
     )
   })
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("items", fn(props) {
       TestProps(..props, items: large_data)
     })
@@ -281,8 +286,9 @@ pub fn special_characters_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("unicode", fn(props) {
       TestProps(..props, unicode: "Hello 世界 🌍")
     })
@@ -318,8 +324,9 @@ pub fn json_request_without_inertia_header_test() {
   )
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("api_data", fn(props) {
       TestProps(..props, api_data: "API response")
     })
@@ -338,8 +345,9 @@ pub fn prop_overwriting_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("title", fn(props) {
       TestProps(..props, title: "Original Title")
     })
@@ -368,8 +376,9 @@ pub fn mixed_prop_types_partial_request_test() {
     |> testing.partial_data(["title", "data"])
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_always_prop("users", fn(props) {
       TestProps(..props, users: ["always included"])
     })
@@ -414,8 +423,9 @@ pub fn multiple_errors_accumulation_test() {
     |> dict.insert("field3", "Error 3")
     |> dict.insert("field4", "Error 4")
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_errors(errors)
     |> inertia.render("ErrorsPage")
   })
@@ -449,8 +459,9 @@ pub fn deeply_nested_data_test() {
     )
   )
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("nested", fn(props) {
       TestProps(..props, nested: nested_data)
     })
@@ -470,8 +481,9 @@ pub fn context_modification_chain_test() {
   let req = testing.inertia_request()
   let config = inertia.config(version: "1", ssr: True, encrypt_history: True)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_test_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_test_props)
     |> inertia.assign_prop("data", fn(props) {
       TestProps(..props, data: "chained modifications")
     })

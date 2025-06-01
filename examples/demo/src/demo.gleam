@@ -82,7 +82,7 @@ fn handle_request(
   db: sqlight.Connection,
 ) -> wisp.Response {
   use <- wisp.serve_static(req, from: "./static", under: "/static")
-  use ctx <- inertia.empty_middleware(req, inertia.default_config(), ssr_supervisor)
+  use ctx <- inertia.middleware(req, inertia.default_config(), ssr_supervisor)
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx, db)
     ["about"], http.Get -> about_page(ctx)

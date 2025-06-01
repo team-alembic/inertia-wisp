@@ -118,8 +118,9 @@ pub fn initial_page_load_basic_test() {
   )
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_prop("title", fn(props) {
       InitialLoadProps(..props, title: "Home Page")
     })
@@ -142,8 +143,9 @@ pub fn initial_page_load_with_always_props_test() {
   let req = wisp_testing.request(http.Get, "/dashboard", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_always_prop("csrf_token", fn(props) {
       InitialLoadProps(..props, csrf_token: "abc123")
     })
@@ -167,8 +169,9 @@ pub fn initial_page_load_with_lazy_props_test() {
   let req = wisp_testing.request(http.Get, "/reports", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_prop("title", fn(props) {
       InitialLoadProps(..props, title: "Reports")
     })
@@ -196,8 +199,9 @@ pub fn initial_page_load_with_optional_props_test() {
   let req = wisp_testing.request(http.Get, "/profile", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_prop("name", fn(props) {
       InitialLoadProps(..props, name: "John")
     })
@@ -226,8 +230,9 @@ pub fn initial_page_load_with_errors_test() {
     |> dict.insert("email", "Invalid email format")
     |> dict.insert("message", "Message is required")
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_errors(errors)
     |> inertia.assign_prop("title", fn(props) {
       InitialLoadProps(..props, title: "Contact Form")
@@ -248,8 +253,9 @@ pub fn initial_page_load_with_encrypted_history_test() {
   let req = wisp_testing.request(http.Get, "/payment", [], <<"">>)
   let config = inertia.config(version: "1", ssr: False, encrypt_history: True)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_prop("amount", fn(props) {
       InitialLoadProps(..props, amount: 100)
     })
@@ -271,8 +277,9 @@ pub fn initial_page_load_with_complex_data_test() {
     UserData(id: 2, name: "Bob", roles: ["user"])
   ]
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_prop("users", fn(props) {
       InitialLoadProps(..props, users: users_data)
     })
@@ -302,8 +309,9 @@ pub fn initial_page_load_url_and_version_test() {
   let req = wisp_testing.request(http.Get, "/about", [], <<"">>)
   let config = inertia.config(version: "v2.1.0", ssr: False, encrypt_history: False)
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_prop("title", fn(props) {
       InitialLoadProps(..props, title: "About Us")
     })
@@ -322,7 +330,7 @@ pub fn initial_page_redirect_test() {
   let req = wisp_testing.request(http.Get, "/login", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, initial_props(), encode_initial_props, fn(_ctx) {
+  let response = inertia.middleware(req, config, option.None, fn(_ctx) {
     inertia.redirect(req, to: "/dashboard")
   })
   
@@ -348,21 +356,22 @@ pub fn mixed_request_handling_test() {
   
   let test_handler = fn(ctx) {
     ctx
-    |> inertia.assign_prop("data", fn(props) {
-      InitialLoadProps(..props, data: "shared data")
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("title", fn(props) {
+      InitialLoadProps(..props, title: "Test Page")
     })
-    |> inertia.render("MixedPage")
+    |> inertia.render("TestPage")
   }
   
   // Test regular request (should return HTML)
-  let html_response = inertia.middleware(regular_req, config, option.None, initial_props(), encode_initial_props, test_handler)
+  let html_response = inertia.middleware(regular_req, config, option.None, test_handler)
   html_response.status |> should.equal(200)
-  testing.component(html_response) |> should.equal(Ok("MixedPage"))
-  testing.prop(html_response, "data", decode.string) |> should.equal(Ok("shared data"))
+  testing.component(html_response) |> should.equal(Ok("TestPage"))
+  testing.prop(html_response, "title", decode.string) |> should.equal(Ok("Test Page"))
   
   // Test Inertia request (should return JSON)
-  let json_response = inertia.middleware(inertia_req, config, option.None, initial_props(), encode_initial_props, test_handler)
+  let json_response = inertia.middleware(inertia_req, config, option.None, test_handler)
   json_response.status |> should.equal(200)
-  testing.component(json_response) |> should.equal(Ok("MixedPage"))
-  testing.prop(json_response, "data", decode.string) |> should.equal(Ok("shared data"))
+  testing.component(json_response) |> should.equal(Ok("TestPage"))
+  testing.prop(json_response, "title", decode.string) |> should.equal(Ok("Test Page"))
 }
