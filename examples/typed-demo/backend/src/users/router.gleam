@@ -10,9 +10,6 @@ pub fn users_router(
   ctx: inertia.InertiaContext(inertia.EmptyProps),
   request: wisp.Request,
 ) -> wisp.Response {
-  echo wisp.path_segments(request)
-  echo request.method
-
   case wisp.path_segments(request) {
     // GET /users/create - show create user form
     ["users", "create"] ->

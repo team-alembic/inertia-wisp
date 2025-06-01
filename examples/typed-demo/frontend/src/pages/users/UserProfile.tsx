@@ -1,13 +1,14 @@
-import type { UserProfilePageProps$ } from "@shared_types/shared_types/users.d.mts";
-import type { GleamToJS } from "../../types/gleam-projections";
+import type { UserProfilePageProps } from "@shared_types/shared_types/users.mjs";
+import type { ProjectType } from "../../types/gleam-projections";
 
-export default function UserProfile(props: GleamToJS<UserProfilePageProps$>) {
+export default function Foo(props: ProjectType<UserProfilePageProps>) {
+  const userProfile = props.user_profile;
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8">
-          <h1 className="text-3xl font-bold text-white">{props.name}</h1>
-          <p className="text-blue-100 mt-2">{props.email}</p>
+          <h1 className="text-3xl font-bold text-white">{userProfile.name}</h1>
+          <p className="text-blue-100 mt-2">{userProfile.email}</p>
         </div>
 
         <div className="px-6 py-8">
@@ -21,17 +22,17 @@ export default function UserProfile(props: GleamToJS<UserProfilePageProps$>) {
                   <span className="text-sm font-medium text-gray-500">
                     User ID
                   </span>
-                  <p className="text-gray-900">{props.id}</p>
+                  <p className="text-gray-900">{userProfile.id}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500">
                     Email
                   </span>
-                  <p className="text-gray-900">{props.email}</p>
+                  <p className="text-gray-900">{userProfile.email}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500">Bio</span>
-                  <p className="text-gray-900">{props.bio}</p>
+                  <p className="text-gray-900">{userProfile.bio}</p>
                 </div>
               </div>
             </div>
@@ -41,19 +42,20 @@ export default function UserProfile(props: GleamToJS<UserProfilePageProps$>) {
                 Interests
               </h2>
               <div className="flex flex-wrap gap-2">
-                {props.interests && props.interests.length > 0 ? (
-                  props.interests.map((interest: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                    >
-                      {interest}
-                    </span>
-                  ))
+                {userProfile.interests.length > 0 ? (
+                  userProfile.interests.map(
+                    (interest: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                      >
+                        {interest}
+                      </span>
+                    ),
+                  )
                 ) : (
                   <p className="text-gray-500 italic">
-                    No interests loaded. This is an optional prop that's only
-                    included when specifically requested.
+                    No interests specified.
                   </p>
                 )}
               </div>

@@ -1,31 +1,7 @@
 import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
-import { ContactFormRequest } from "../../../../shared_types/build/dev/javascript/shared_types/types.mjs";
-import type { GleamToJS } from "../../types/gleam-projections";
-
-/**
- * ContactFormComponent - Type-Level Programming Solution Demo
- *
- * This component demonstrates the complete solution for using Gleam types with TypeScript
- * form libraries through advanced type-level programming techniques.
- *
- * THE PROBLEM:
- * - Gleam types compile to classes: new ContactFormRequest(name, email, subject, message, urgent)
- * - JavaScript form libraries expect plain objects: { name, email, subject, message, urgent }
- * - Option<T> and List<T> types don't match JavaScript | null and [] syntax
- *
- * THE SOLUTION:
- * - Use TypeScript type-level programming to automatically project Gleam types
- * - Transform Option<T> → T | null, List<T> → T[], classes → interfaces
- * - Maintain single source of truth while ensuring runtime compatibility
- *
- * BENEFITS:
- * ✅ No manual interface duplication
- * ✅ Automatic type conversion (Option<Bool> → boolean | null)
- * ✅ Full IntelliSense support and compile-time safety
- * ✅ Works seamlessly with Inertia.js useForm hook
- * ✅ Backend automatically receives properly typed Gleam data
- */
+import type { ContactFormRequest } from "@shared_types/shared_types/contact.mjs";
+import type { ProjectType } from "../../types/gleam-projections";
 
 interface ContactFormProps {
   title: string;
@@ -44,7 +20,7 @@ interface ContactFormProps {
  *
  * This transformation happens entirely at the type level - no runtime overhead!
  */
-type ContactFormData = GleamToJS<ContactFormRequest>;
+type ContactFormData = ProjectType<ContactFormRequest>;
 
 export default function ContactFormComponent({
   title,

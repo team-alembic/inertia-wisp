@@ -1,7 +1,7 @@
 import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
-import { UpdateProfileRequest } from "../../../../shared_types/build/dev/javascript/shared_types/types.mjs";
-import type { GleamToJS } from "../../types/gleam-projections";
+import type { UpdateProfileRequest } from "@shared_types/shared_types/users.mjs";
+import type { ProjectType } from "../../types/gleam-projections";
 
 interface EditProfileFormProps {
   user: {
@@ -16,7 +16,7 @@ interface EditProfileFormProps {
 
 // TypeScript projection of UpdateProfileRequest to JavaScript-compatible interface
 // This automatically converts Gleam List<T> to T[] and maintains type safety
-type UpdateProfileFormData = GleamToJS<UpdateProfileRequest>;
+type UpdateProfileFormData = ProjectType<UpdateProfileRequest>;
 
 export default function EditProfileForm({
   user,

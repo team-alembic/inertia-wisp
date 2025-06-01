@@ -1,7 +1,7 @@
 import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
-import { LoginRequest } from "../../../../shared_types/build/dev/javascript/shared_types/types.mjs";
-import type { GleamToJS } from "../../types/gleam-projections";
+import { LoginRequest } from "@shared_types/shared_types/auth.mjs";
+import type { ProjectType } from "../../types/gleam-projections";
 
 interface LoginFormProps {
   title: string;
@@ -12,7 +12,7 @@ interface LoginFormProps {
 
 // TypeScript projection of LoginRequest to JavaScript-compatible interface
 // This automatically converts Option<T> to T | null and maintains type safety
-type LoginFormData = GleamToJS<LoginRequest>;
+type LoginFormData = ProjectType<LoginRequest>;
 
 export default function LoginForm({
   title,

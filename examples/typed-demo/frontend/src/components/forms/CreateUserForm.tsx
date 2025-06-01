@@ -1,7 +1,7 @@
 import type { FormEvent } from "react";
 import { useForm } from "@inertiajs/react";
-import { CreateUserRequest } from "../../../../shared_types/build/dev/javascript/shared_types/types.mjs";
-import type { GleamToJS } from "../../types/gleam-projections";
+import type { CreateUserRequest } from "@shared_types/shared_types/users.mjs";
+import type { ProjectType } from "../../types/gleam-projections";
 
 interface CreateUserFormProps {
   title: string;
@@ -11,7 +11,7 @@ interface CreateUserFormProps {
 
 // TypeScript projection of CreateUserRequest to JavaScript-compatible interface
 // This automatically converts Option<T> to T | null and maintains type safety
-type CreateUserFormData = GleamToJS<CreateUserRequest>;
+type CreateUserFormData = ProjectType<CreateUserRequest>;
 
 export default function CreateUserForm({
   title,

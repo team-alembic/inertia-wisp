@@ -34,17 +34,17 @@ pub fn user_profile_handler(
   // Simulate fetching user data
   let user = get_user_by_id(user_id)
 
+  // Convert User to UserProfile
+  let user_profile = users.UserProfile(
+    name: user.name,
+    email: user.email,
+    id: user.id,
+    interests: user.interests,
+    bio: user.bio,
+  )
+
   ctx
   |> users.with_user_profile_page_props()
-  // Always included props (essential user data)
-  |> inertia.assign_prop_t(users.name(user.name))
-  |> inertia.assign_prop_t(users.id(user.id))
-  // Default props (included in initial load and when requested)
-  |> inertia.assign_prop_t(users.email(user.email))
-  |> inertia.assign_prop_t(users.bio(user.bio))
-  // Optional props (only included when specifically requested - good for expensive data)
-  |> inertia.assign_prop_t(
-    users.interests(fn() { option.Some(user.interests) }),
-  )
+  |> inertia.assign_prop_t(users.user_profile(user_profile))
   |> inertia.render("users/UserProfile")
 }

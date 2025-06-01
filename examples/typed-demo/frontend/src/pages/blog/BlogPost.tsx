@@ -1,7 +1,7 @@
-import type { BlogPostPageProps$ } from "@shared_types/shared_types/blog.d.mts";
-import type { GleamToJS } from "../../types/gleam-projections";
+import type { BlogPostPageProps } from "@shared_types/shared_types/blog.mjs";
+import type { ProjectType } from "../../types/gleam-projections";
 
-export default function BlogPost(props: GleamToJS<BlogPostPageProps$>) {
+export default function BlogPost(props: ProjectType<BlogPostPageProps>) {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <article className="bg-white shadow-lg rounded-lg overflow-hidden">

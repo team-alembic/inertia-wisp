@@ -37,15 +37,18 @@ pub fn edit_profile_page_handler(
   let user = get_user_by_id(1)
   // Would parse user_id in real app
 
+  // Convert User to UserProfile
+  let user_profile = users.UserProfile(
+    name: user.name,
+    email: user.email,
+    id: user.id,
+    interests: user.interests,
+    bio: user.bio,
+  )
+
   ctx
   |> users.with_user_profile_page_props()
-  |> inertia.assign_prop_t(users.name(user.name))
-  |> inertia.assign_prop_t(users.id(user.id))
-  |> inertia.assign_prop_t(users.email(user.email))
-  |> inertia.assign_prop_t(users.bio(user.bio))
-  |> inertia.assign_prop_t(
-    users.interests(fn() { option.Some(user.interests) }),
-  )
+  |> inertia.assign_prop_t(users.user_profile(user_profile))
   |> inertia.render("users/EditProfile")
 }
 
@@ -79,15 +82,18 @@ pub fn update_profile_handler(
       // Get user data (would normally fetch from database)
       let user = get_user_by_id(1)
 
+      // Convert User to UserProfile
+      let user_profile = users.UserProfile(
+        name: user.name,
+        email: user.email,
+        id: user.id,
+        interests: user.interests,
+        bio: user.bio,
+      )
+
       ctx
       |> users.with_user_profile_page_props()
-      |> inertia.assign_prop_t(users.name(user.name))
-      |> inertia.assign_prop_t(users.id(user.id))
-      |> inertia.assign_prop_t(users.email(user.email))
-      |> inertia.assign_prop_t(users.bio(user.bio))
-      |> inertia.assign_prop_t(
-        users.interests(fn() { option.Some(user.interests) }),
-      )
+      |> inertia.assign_prop_t(users.user_profile(user_profile))
       |> inertia.assign_errors(validation_errors)
       |> inertia.render("users/EditProfile")
     }

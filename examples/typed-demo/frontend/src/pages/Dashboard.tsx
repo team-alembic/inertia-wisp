@@ -1,7 +1,7 @@
-import type { DashboardPageProps$ } from "@shared_types/shared_types/dashboard.d.mts";
-import type { GleamToJS } from "../types/gleam-projections";
+import type { DashboardPageProps } from "@shared_types/shared_types/dashboard.d.mts";
+import type { ProjectType } from "../types/gleam-projections";
 
-export default function Dashboard(props: GleamToJS<DashboardPageProps$>) {
+export default function Dashboard(props: ProjectType<DashboardPageProps>) {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">

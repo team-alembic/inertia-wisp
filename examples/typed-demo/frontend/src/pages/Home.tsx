@@ -1,8 +1,8 @@
 import { Link } from "@inertiajs/react";
-import type { HomePageProps$ } from "@shared_types/shared_types/home.d.mts";
-import type { GleamToJS } from "../types/gleam-projections";
+import type { HomePageProps } from "@shared_types/shared_types/home.mjs";
+import type { ProjectType } from "../types/gleam-projections";
 
-export default function Home(props: GleamToJS<HomePageProps$>) {
+export default function Home(props: ProjectType<HomePageProps>) {
   console.log({ props });
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

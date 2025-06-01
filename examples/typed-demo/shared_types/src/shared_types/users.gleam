@@ -3,38 +3,51 @@ import gleam/json
 import gleam/option
 import inertia_wisp/inertia
 
-// ===== PROPS TYPES (with encoders) =====
+// ===== DOMAIN TYPES =====
 
-pub type UserProfilePageProps {
-  UserProfilePageProps(
+pub type UserProfile {
+  UserProfile(
     name: String,
     email: String,
     id: Int,
-    interests: option.Option(List(String)),
+    interests: List(String),
     bio: String,
   )
 }
 
+pub fn encode_user_profile(profile: UserProfile) -> json.Json {
+  json.object([
+    #("name", json.string(profile.name)),
+    #("email", json.string(profile.email)),
+    #("id", json.int(profile.id)),
+    #(
+      "interests", json.array(profile.interests, json.string),
+    ),
+    #("bio", json.string(profile.bio)),
+  ])
+}
+
+// ===== PROPS TYPES (with encoders) =====
+
+pub type UserProfilePageProps {
+  UserProfilePageProps(user_profile: UserProfile)
+}
+
 pub fn encode_user_profile_props(props: UserProfilePageProps) -> json.Json {
   json.object([
-    #("name", json.string(props.name)),
-    #("email", json.string(props.email)),
-    #("id", json.int(props.id)),
-    #(
-      "interests",
-      json.nullable(props.interests, of: json.array(_, json.string)),
-    ),
-    #("bio", json.string(props.bio)),
+    #("user_profile", encode_user_profile(props.user_profile)),
   ])
 }
 
 /// Zero value for User Profile Page Props
 pub const zero_user_profile_page_props = UserProfilePageProps(
-  name: "",
-  email: "",
-  id: 0,
-  interests: option.None,
-  bio: "",
+  user_profile: UserProfile(
+    name: "",
+    email: "",
+    id: 0,
+    interests: [],
+    bio: "",
+  ),
 )
 
 @target(erlang)
@@ -46,25 +59,9 @@ pub fn with_user_profile_page_props(
   |> inertia.set_props(zero_user_profile_page_props, encode_user_profile_props)
 }
 
-//prop assignment functions. Generates tuples for use with inertia.assign_prop_t
-pub fn name(n: String) {
-  #("name", fn(p) { UserProfilePageProps(..p, name: n) })
-}
-
-pub fn email(e: String) {
-  #("email", fn(p) { UserProfilePageProps(..p, email: e) })
-}
-
-pub fn id(i: Int) {
-  #("id", fn(p) { UserProfilePageProps(..p, id: i) })
-}
-
-pub fn interests(i: fn() -> option.Option(List(String))) {
-  #("interests", fn(p) { UserProfilePageProps(..p, interests: i()) })
-}
-
-pub fn bio(b: String) {
-  #("bio", fn(p) { UserProfilePageProps(..p, bio: b) })
+//prop assignment function. Generates tuple for use with inertia.assign_prop_t
+pub fn user_profile(profile: UserProfile) {
+  #("user_profile", fn(_p) { UserProfilePageProps(user_profile: profile) })
 }
 
 // ===== REQUEST TYPES (with decoders) =====
