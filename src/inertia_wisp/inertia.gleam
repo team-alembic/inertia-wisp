@@ -67,8 +67,8 @@
 //// fn home_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
 ////   ctx
 ////   |> inertia.set_props(init_home_page_props, home_page_props_to_json)
-////   |> inertia.assign_prop_t(title_prop("Welcome"))
-////   |> inertia.assign_prop_t(user_prop(User(name: "John", email: "john@example.com"))
+////   |> inertia.prop(title_prop("Welcome"))
+////   |> inertia.prop(user_prop(User(name: "John", email: "john@example.com"))
 ////   |> inertia.render("Home")
 //// }
 //// ```
@@ -127,66 +127,6 @@ pub type SSRConfig =
 pub type EmptyProps =
   types.EmptyProps
 
-// New typed context functions
-
-/// Creates a new typed context with statically typed props.
-/// Creates a new context for building up props with type safety.
-///
-/// This creates a context that enforces type safety for props at compile time.
-/// You provide an initial props object and an encoder function that converts
-/// the props to JSON.
-///
-/// ## Example
-///
-/// ```gleam
-/// type UserPageProps {
-///   UserPageProps(name: String, email: String, id: Int)
-/// }
-///
-/// fn encode_user_props(props: UserPageProps) -> json.Json {
-///   json.object([
-///     #("name", json.string(props.name)),
-///     #("email", json.string(props.email)),
-///     #("id", json.int(props.id)),
-///   ])
-/// }
-///
-/// let ctx = inertia.new_context(
-///   config,
-///   request,
-///   UserPageProps(name: "", email: "", id: 0),  // Initial/zero value
-///   encode_user_props
-/// )
-/// ```
-pub fn new_context(
-  config: Config,
-  request: Request,
-  props_zero: props,
-  props_encoder: fn(props) -> json.Json,
-) -> InertiaContext(props) {
-  types.new_context(config, request, props_zero, props_encoder)
-}
-
-/// Creates an empty context for middleware-before-routing pattern.
-/// Returns an InertiaContext(EmptyProps) that can be transformed to specific prop types
-/// using `set_props()` in individual route handlers.
-///
-/// ## Example
-///
-/// ```gleam
-/// // In middleware (before routing)
-/// let empty_ctx = inertia.empty_context(config, request)
-///
-/// // In route handler
-/// let typed_ctx = empty_ctx |> inertia.set_props(HomeProps(...))
-/// ```
-pub fn empty_context(
-  config: Config,
-  request: Request,
-) -> InertiaContext(types.EmptyProps) {
-  types.new_context(config, request, types.EmptyProps, types.encode_empty_props)
-}
-
 /// Transforms an InertiaContext(EmptyProps) to InertiaContext(SpecificProps).
 /// This allows the middleware-before-routing pattern while maintaining type safety.
 ///
@@ -221,7 +161,7 @@ pub fn set_props(
 }
 
 /// Assigns a prop transformation to a typed context.
-fn assign_prop_with_include(
+fn add_prop(
   ctx: InertiaContext(props),
   key: String,
   transformer: fn(props) -> props,
@@ -235,43 +175,37 @@ fn assign_prop_with_include(
   ])
 }
 
-/// Assign a prop with default inclusion behavior.
+/// Assign a prop with default inclusion behavior using a tuple.
 /// The prop will be included in initial renders and when specifically requested in partial reloads.
+/// This is the recommended way to assign typed props.
 ///
 /// ## Examples
 ///
 /// ```gleam
 /// ctx
-/// |> inertia.assign_prop("name", UserPageProps(_, name: "Alice"))
-/// |> inertia.assign_prop("id", UserPageProps(_, id: 42))
+/// |> inertia.prop(home.title("Welcome"))
+/// |> inertia.prop(home.user_count(42))
 /// ```
-pub fn assign_prop(
-  ctx: InertiaContext(props),
-  key: String,
-  transformer: fn(props) -> props,
-) -> InertiaContext(props) {
-  assign_prop_with_include(ctx, key, transformer, types.IncludeDefault)
+pub fn prop(ctx: InertiaContext(t), name_and_fn: #(String, fn(t) -> t)) {
+  let #(name, func) = name_and_fn
+  add_prop(ctx, name, func, types.IncludeDefault)
 }
 
-/// Assign a prop that is always included in renders.
+/// Assign a prop that is always included in renders using a tuple.
 /// The prop will be included in both initial renders and all partial reloads.
 ///
 /// ## Examples
 ///
 /// ```gleam
 /// ctx
-/// |> inertia.assign_always_prop("csrf_token", UserPageProps(_, csrf_token: token))
-/// |> inertia.assign_always_prop("user", UserPageProps(_, user: current_user))
+/// |> inertia.always_prop(home.auth(current_user))
 /// ```
-pub fn assign_always_prop(
-  ctx: InertiaContext(props),
-  key: String,
-  transformer: fn(props) -> props,
-) -> InertiaContext(props) {
-  assign_prop_with_include(ctx, key, transformer, types.IncludeAlways)
+pub fn always_prop(ctx: InertiaContext(t), name_and_fn: #(String, fn(t) -> t)) {
+  let #(name, func) = name_and_fn
+  add_prop(ctx, name, func, types.IncludeAlways)
 }
 
-/// Assign a prop that is only included when specifically requested.
+/// Assign a prop that is only included when specifically requested using a tuple.
 /// The prop will be excluded from initial renders and only included in partial reloads
 /// when explicitly requested via the X-Inertia-Partial-Data header.
 ///
@@ -279,20 +213,12 @@ pub fn assign_always_prop(
 ///
 /// ```gleam
 /// ctx
-/// |> inertia.assign_optional_prop("expensive_data", UserPageProps(_, expensive_data: compute_expensive_data()))
-/// |> inertia.assign_optional_prop("debug_info", UserPageProps(_, debug_info: get_debug_info()))
+/// |> inertia.optional_prop(home.expensive_data(compute_expensive_data()))
+/// |> inertia.optional_prop(home.debug_info(get_debug_info()))
 /// ```
-pub fn assign_optional_prop(
-  ctx: InertiaContext(props),
-  key: String,
-  transformer: fn(props) -> props,
-) -> InertiaContext(props) {
-  assign_prop_with_include(ctx, key, transformer, types.IncludeOptionally)
-}
-
-pub fn assign_prop_t(ctx: InertiaContext(t), name_and_fn: #(String, fn(t) -> t)) {
+pub fn optional_prop(ctx: InertiaContext(t), name_and_fn: #(String, fn(t) -> t)) {
   let #(name, func) = name_and_fn
-  assign_prop(ctx, name, func)
+  add_prop(ctx, name, func, types.IncludeOptionally)
 }
 
 /// Assigns validation errors to be displayed in forms.
@@ -311,9 +237,9 @@ pub fn assign_prop_t(ctx: InertiaContext(t), name_and_fn: #(String, fn(t) -> t))
 ///   #("password", "Password must be at least 8 characters"),
 /// ])
 ///
-/// ctx |> inertia.assign_errors(errors)
+/// ctx |> inertia.erros(errors)
 /// ```
-pub fn assign_errors(
+pub fn errors(
   ctx: InertiaContext(props),
   errors: dict.Dict(String, String),
 ) -> InertiaContext(props) {

@@ -59,7 +59,7 @@ pub fn with_user_profile_page_props(
   |> inertia.set_props(zero_user_profile_page_props, encode_user_profile_props)
 }
 
-//prop assignment function. Generates tuple for use with inertia.assign_prop_t
+//prop assignment function. Generates tuple for use with inertia.prop
 pub fn user_profile(profile: UserProfile) {
   #("user_profile", fn(_p) { UserProfilePageProps(user_profile: profile) })
 }

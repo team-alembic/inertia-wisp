@@ -34,9 +34,7 @@ pub fn edit_user_page(
   ctx
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
-  |> inertia.assign_prop("user", fn(props) {
-    props.UserProps(..props, user: user.user_to_json(user))
-  })
+  |> inertia.prop(props.user_user(user.user_to_json(user)))
   |> inertia.render("EditUser")
 }
 
@@ -101,11 +99,7 @@ fn error_response(ctx, user, errors) {
   ctx
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
-  |> inertia.assign_prop("user", fn(props) {
-    props.UserProps(..props, user: user.user_to_json(user))
-  })
-  |> inertia.assign_prop("errors", fn(props) {
-    props.UserProps(..props, errors: json.object(dict.to_list(errors) |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })))
-  })
+  |> inertia.prop(props.user_user(user.user_to_json(user)))
+  |> inertia.prop(props.user_errors(json.object(dict.to_list(errors) |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }))))
   |> inertia.render("EditUser")
 }

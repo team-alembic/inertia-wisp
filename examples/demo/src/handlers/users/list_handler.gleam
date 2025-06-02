@@ -29,9 +29,7 @@ pub fn users_page(
   ctx
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
-  |> inertia.assign_prop("users", fn(props) {
-    props.UserProps(..props, users: users_data)
-  })
+  |> inertia.prop(props.user_users(users_data))
   |> inertia.render("Users")
 }
 

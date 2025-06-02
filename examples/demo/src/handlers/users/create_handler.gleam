@@ -89,8 +89,6 @@ fn validation_error_response(
   ctx
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
-  |> inertia.assign_prop("errors", fn(props) {
-    props.UserProps(..props, errors: json.object(dict.to_list(errors) |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })))
-  })
+  |> inertia.prop(props.user_errors(json.object(dict.to_list(errors) |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }))))
   |> inertia.render("CreateUser")
 }

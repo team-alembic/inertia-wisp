@@ -35,7 +35,7 @@ pub fn with_login_page_props(
   |> inertia.set_props(zero_login_page_props, encode_login_page_props)
 }
 
-//prop assignment functions. Generates tuples for use with inertia.assign_prop_t
+//prop assignment functions. Generates tuples for use with inertia.prop
 pub fn title(t: String) {
   #("title", fn(p) { LoginPageProps(..p, title: t) })
 }

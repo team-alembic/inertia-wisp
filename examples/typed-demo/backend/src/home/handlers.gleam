@@ -10,11 +10,11 @@ pub fn home_page_handler(
 ) -> wisp.Response {
   ctx
   |> home.with_home_page_props()
-  |> inertia.assign_prop_t(home.title("Typed Props Demo"))
-  |> inertia.assign_prop_t(home.message(
-    "Welcome to the statically typed props demo!",
+  |> inertia.prop(home.title("Typed Props Demo"))
+  |> inertia.prop(home.message(
+    "Welcome to the Inertia.js Gleam demo with statically typed props!",
   ))
-  |> inertia.assign_prop_t(home.features(fn() {
+  |> inertia.prop(home.features(fn() {
     [
       "🔒 Compile-time type safety across full stack",
       "📝 Shared Gleam/TypeScript types with single source of truth",

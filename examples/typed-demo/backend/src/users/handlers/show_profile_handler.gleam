@@ -45,6 +45,6 @@ pub fn user_profile_handler(
 
   ctx
   |> users.with_user_profile_page_props()
-  |> inertia.assign_prop_t(users.user_profile(user_profile))
+  |> inertia.prop(users.user_profile(user_profile))
   |> inertia.render("users/UserProfile")
 }

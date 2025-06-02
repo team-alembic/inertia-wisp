@@ -87,12 +87,29 @@ fn pagination(pagination: Pagination) {
   #("pagination", fn(p) { InitialLoadProps(..p, pagination: pagination) })
 }
 
+fn csrf_token(token: String) {
+  #("csrf_token", fn(p) { InitialLoadProps(..p, csrf_token: token) })
+}
+
+fn user(user_name: String) {
+  #("user", fn(p) { InitialLoadProps(..p, user: User(id: 1, name: user_name)) })
+}
+
+fn notifications(count: Int) {
+  #("notifications", fn(p) { InitialLoadProps(..p, notifications: count) })
+}
+
+fn debug_info(info: String) {
+  #("debug_info", fn(p) { InitialLoadProps(..p, debug_info: info) })
+}
+
+fn admin_panel(is_admin: Bool) {
+  #("admin_panel", fn(p) { InitialLoadProps(..p, admin_panel: is_admin) })
+}
+
 // Individual type encoders
 pub fn user_to_json(user: User) -> json.Json {
-  json.object([
-    #("id", json.int(user.id)),
-    #("name", json.string(user.name)),
-  ])
+  json.object([#("id", json.int(user.id)), #("name", json.string(user.name))])
 }
 
 pub fn expensive_report_to_json(report: ExpensiveReport) -> json.Json {
@@ -168,8 +185,8 @@ pub fn initial_page_load_basic_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(title("Home Page"))
-    |> inertia.assign_prop_t(message("Welcome!"))
+    |> inertia.prop(title("Home Page"))
+    |> inertia.prop(message("Welcome!"))
     |> inertia.render("HomePage")
   }
 
@@ -192,13 +209,9 @@ pub fn initial_page_load_with_always_props_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_always_prop("csrf_token", fn(props) {
-      InitialLoadProps(..props, csrf_token: "abc123")
-    })
-    |> inertia.assign_always_prop("user", fn(props) {
-      InitialLoadProps(..props, user: User(id: 42, name: "Alice"))
-    })
-    |> inertia.assign_prop_t(dashboard_data("dashboard content"))
+    |> inertia.always_prop(csrf_token("abc123"))
+    |> inertia.always_prop(user("Alice"))
+    |> inertia.prop(dashboard_data("dashboard content"))
     |> inertia.render("Dashboard")
   }
 
@@ -220,13 +233,11 @@ pub fn initial_page_load_with_lazy_props_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(title("Reports"))
-    |> inertia.assign_prop_t(
+    |> inertia.prop(title("Reports"))
+    |> inertia.prop(
       expensive_report(ExpensiveReport(total: 1000, items: ["item1", "item2"])),
     )
-    |> inertia.assign_always_prop("notifications", fn(props) {
-      InitialLoadProps(..props, notifications: 3)
-    })
+    |> inertia.always_prop(notifications(3))
     |> inertia.render("ReportsPage")
   }
 
@@ -247,13 +258,9 @@ pub fn initial_page_load_with_optional_props_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(name("John"))
-    |> inertia.assign_optional_prop("debug_info", fn(props) {
-      InitialLoadProps(..props, debug_info: "debug data")
-    })
-    |> inertia.assign_optional_prop("admin_panel", fn(props) {
-      InitialLoadProps(..props, admin_panel: True)
-    })
+    |> inertia.prop(name("John"))
+    |> inertia.optional_prop(debug_info("debug data"))
+    |> inertia.optional_prop(admin_panel(True))
     |> inertia.render("ProfilePage")
   }
 
@@ -278,8 +285,8 @@ pub fn initial_page_load_with_errors_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_errors(errors)
-    |> inertia.assign_prop_t(title("Contact Form"))
+    |> inertia.errors(errors)
+    |> inertia.prop(title("Contact Form"))
     |> inertia.render("ContactForm")
   }
 
@@ -301,7 +308,7 @@ pub fn initial_page_load_with_encrypted_history_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(amount(100))
+    |> inertia.prop(amount(100))
     |> inertia.render("PaymentForm")
   }
 
@@ -324,8 +331,8 @@ pub fn initial_page_load_with_complex_data_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(users(users_data))
-    |> inertia.assign_prop_t(
+    |> inertia.prop(users(users_data))
+    |> inertia.prop(
       pagination(Pagination(current_page: 1, total_pages: 5, per_page: 10)),
     )
     |> inertia.render("UsersList")
@@ -356,7 +363,7 @@ pub fn initial_page_load_url_and_version_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(title("About Us"))
+    |> inertia.prop(title("About Us"))
     |> inertia.render("AboutPage")
   }
 
@@ -405,7 +412,7 @@ pub fn mixed_request_handling_test() {
   let test_handler = fn(ctx) {
     ctx
     |> inertia.set_props(initial_props(), encode_initial_props)
-    |> inertia.assign_prop_t(title("Test Page"))
+    |> inertia.prop(title("Test Page"))
     |> inertia.render("TestPage")
   }
 

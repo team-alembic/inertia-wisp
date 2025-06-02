@@ -75,7 +75,10 @@ pub fn encode_main_props(props: MainTestProps) -> json.Json {
     #("expensive_data", json.array(props.expensive_data, json.string)),
     #("notifications", json.int(props.notifications)),
     #("debug_info", json.string(props.debug_info)),
-    #("admin_stats", json.object([#("count", json.int(props.admin_stats.count))])),
+    #(
+      "admin_stats",
+      json.object([#("count", json.int(props.admin_stats.count))]),
+    ),
     #("posts", json.array(props.posts, json.string)),
     #("comments", json.array(props.comments, json.string)),
     #("sidebar", json.string(props.sidebar)),
@@ -83,20 +86,102 @@ pub fn encode_main_props(props: MainTestProps) -> json.Json {
     #("other_data", json.string(props.other_data)),
     #("sensitive_data", json.string(props.sensitive_data)),
     #("data", json.string(props.data)),
-    #("user", json.object([
-      #("id", json.int(props.user.id)),
-      #("name", json.string(props.user.name)),
-      #("profile", json.object([
-        #("email", json.string(props.user.profile.email)),
-        #("verified", json.bool(props.user.profile.verified)),
-      ])),
-      #("tags", json.array(props.user.tags, json.string)),
-    ])),
-    #("settings", json.object([
-      #("theme", json.string(props.settings.theme)),
-      #("notifications", json.bool(props.settings.notifications)),
-    ])),
+    #("user", user_to_json(props.user)),
+    #("settings", settings_to_json(props.settings)),
   ])
+}
+
+// Individual type encoders
+pub fn user_to_json(user: User) -> json.Json {
+  json.object([
+    #("id", json.int(user.id)),
+    #("name", json.string(user.name)),
+    #("profile", profile_to_json(user.profile)),
+    #("tags", json.array(user.tags, json.string)),
+  ])
+}
+
+pub fn profile_to_json(profile: Profile) -> json.Json {
+  json.object([
+    #("email", json.string(profile.email)),
+    #("verified", json.bool(profile.verified)),
+  ])
+}
+
+pub fn settings_to_json(settings: Settings) -> json.Json {
+  json.object([
+    #("theme", json.string(settings.theme)),
+    #("notifications", json.bool(settings.notifications)),
+  ])
+}
+
+// Helper functions for typed prop assignment
+fn title(t: String) {
+  #("title", fn(p) { MainTestProps(..p, title: t) })
+}
+
+fn count(c: Int) {
+  #("count", fn(p) { MainTestProps(..p, count: c) })
+}
+
+fn active(a: Bool) {
+  #("active", fn(p) { MainTestProps(..p, active: a) })
+}
+
+fn name(n: String) {
+  #("name", fn(p) { MainTestProps(..p, name: n) })
+}
+
+fn csrf_token(token: String) {
+  #("csrf_token", fn(p) { MainTestProps(..p, csrf_token: token) })
+}
+
+fn expensive_data(data: List(String)) {
+  #("expensive_data", fn(p) { MainTestProps(..p, expensive_data: data) })
+}
+
+fn notifications(n: Int) {
+  #("notifications", fn(p) { MainTestProps(..p, notifications: n) })
+}
+
+fn debug_info(info: fn() -> String) {
+  #("debug_info", fn(p) { MainTestProps(..p, debug_info: info()) })
+}
+
+fn admin_stats(stats: AdminStats) {
+  #("admin_stats", fn(p) { MainTestProps(..p, admin_stats: stats) })
+}
+
+fn posts(p: List(String)) {
+  #("posts", fn(props) { MainTestProps(..props, posts: p) })
+}
+
+fn comments(c: List(String)) {
+  #("comments", fn(p) { MainTestProps(..p, comments: c) })
+}
+
+fn sidebar(s: String) {
+  #("sidebar", fn(p) { MainTestProps(..p, sidebar: s) })
+}
+
+fn specific_data(data: String) {
+  #("specific_data", fn(p) { MainTestProps(..p, specific_data: data) })
+}
+
+fn other_data(data: String) {
+  #("other_data", fn(p) { MainTestProps(..p, other_data: data) })
+}
+
+fn sensitive_data(data: String) {
+  #("sensitive_data", fn(p) { MainTestProps(..p, sensitive_data: data) })
+}
+
+fn user(u: User) {
+  #("user", fn(p) { MainTestProps(..p, user: u) })
+}
+
+fn settings(s: Settings) {
+  #("settings", fn(p) { MainTestProps(..p, settings: s) })
 }
 
 // Helper to create initial props
@@ -124,7 +209,12 @@ fn initial_props() -> MainTestProps {
     other_data: "",
     sensitive_data: "",
     data: "",
-    user: User(id: 0, name: "", profile: Profile(email: "", verified: False), tags: []),
+    user: User(
+      id: 0,
+      name: "",
+      profile: Profile(email: "", verified: False),
+      tags: [],
+    ),
     settings: Settings(theme: "", notifications: False),
   )
 }
@@ -156,9 +246,7 @@ pub fn render_basic_component_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Test Page")
-      })
+      |> inertia.prop(title("Test Page"))
       |> inertia.render("TestComponent")
     })
 
@@ -175,25 +263,17 @@ pub fn render_with_multiple_props_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Multiple Props")
-      })
-      |> inertia.assign_prop("posts", fn(props) {
-        MainTestProps(..props, posts: ["Alice", "Bob"])
-      })
-      |> inertia.assign_prop("count", fn(props) {
-        MainTestProps(..props, count: 2)
-      })
-      |> inertia.assign_prop("active", fn(props) {
-        MainTestProps(..props, active: True)
-      })
-      |> inertia.render("MultiPropComponent")
+      |> inertia.prop(title("Complex Page"))
+      |> inertia.prop(posts(["Post 1", "Post 2"]))
+      |> inertia.prop(count(42))
+      |> inertia.prop(active(True))
+      |> inertia.render("ComplexComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("MultiPropComponent"))
+  testing.component(response) |> should.equal(Ok("ComplexComponent"))
   testing.prop(response, "title", decode.string)
-  |> should.equal(Ok("Multiple Props"))
-  testing.prop(response, "count", decode.int) |> should.equal(Ok(2))
+  |> should.equal(Ok("Complex Page"))
+  testing.prop(response, "count", decode.int) |> should.equal(Ok(42))
   testing.prop(response, "active", decode.bool) |> should.equal(Ok(True))
 }
 
@@ -207,20 +287,16 @@ pub fn assign_always_prop_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_always_prop("csrf_token", fn(props) {
-        MainTestProps(..props, csrf_token: "abc123")
-      })
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Secure Page")
-      })
-      |> inertia.render("SecurePage")
+      |> inertia.always_prop(csrf_token("abc123"))
+      |> inertia.prop(title("Always Props Test"))
+      |> inertia.render("AlwaysPropsComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("SecurePage"))
+  testing.component(response) |> should.equal(Ok("AlwaysPropsComponent"))
   testing.prop(response, "csrf_token", decode.string)
   |> should.equal(Ok("abc123"))
   testing.prop(response, "title", decode.string)
-  |> should.equal(Ok("Secure Page"))
+  |> should.equal(Ok("Always Props Test"))
 }
 
 // Test expensive computation props (replaces lazy props)
@@ -233,20 +309,16 @@ pub fn assign_expensive_prop_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("expensive_data", fn(props) {
-        MainTestProps(..props, expensive_data: ["item1", "item2"])
-      })
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Expensive Component")
-      })
-      |> inertia.render("ExpensiveComponent")
+      |> inertia.prop(expensive_data(["data1", "data2"]))
+      |> inertia.prop(title("Expensive Data Test"))
+      |> inertia.render("ExpensiveDataComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("ExpensiveComponent"))
+  testing.component(response) |> should.equal(Ok("ExpensiveDataComponent"))
   testing.prop(response, "title", decode.string)
-  |> should.equal(Ok("Expensive Component"))
+  |> should.equal(Ok("Expensive Data Test"))
   testing.prop(response, "expensive_data", decode.list(decode.string))
-  |> should.equal(Ok(["item1", "item2"]))
+  |> should.equal(Ok(["data1", "data2"]))
 }
 
 pub fn assign_always_expensive_prop_test() {
@@ -257,13 +329,11 @@ pub fn assign_always_expensive_prop_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_always_prop("notifications", fn(props) {
-        MainTestProps(..props, notifications: 5)
-      })
-      |> inertia.render("Dashboard")
+      |> inertia.always_prop(notifications(5))
+      |> inertia.render("NotificationsComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("Dashboard"))
+  testing.component(response) |> should.equal(Ok("NotificationsComponent"))
   testing.prop(response, "notifications", decode.int) |> should.equal(Ok(5))
 }
 
@@ -277,18 +347,14 @@ pub fn assign_optional_prop_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_optional_prop("debug_info", fn(props) {
-        MainTestProps(..props, debug_info: "debug data")
-      })
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Debug Page")
-      })
-      |> inertia.render("DebugPage")
+      |> inertia.optional_prop(debug_info(fn() { "Debug data" }))
+      |> inertia.prop(title("Optional Props Test"))
+      |> inertia.render("OptionalPropsComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("DebugPage"))
+  testing.component(response) |> should.equal(Ok("OptionalPropsComponent"))
   testing.prop(response, "title", decode.string)
-  |> should.equal(Ok("Debug Page"))
+  |> should.equal(Ok("Optional Props Test"))
   // Optional props should not be included unless specifically requested
   testing.prop(response, "debug_info", decode.string) |> should.be_error()
 }
@@ -301,16 +367,12 @@ pub fn assign_optional_expensive_prop_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_optional_prop("admin_stats", fn(props) {
-        MainTestProps(..props, admin_stats: AdminStats(count: 100))
-      })
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Admin Dashboard")
-      })
-      |> inertia.render("AdminDashboard")
+      |> inertia.optional_prop(admin_stats(AdminStats(count: 100)))
+      |> inertia.prop(title("Admin Dashboard"))
+      |> inertia.render("AdminComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("AdminDashboard"))
+  testing.component(response) |> should.equal(Ok("AdminComponent"))
   testing.prop(response, "title", decode.string)
   |> should.equal(Ok("Admin Dashboard"))
   // Optional props should not be included unless specifically requested
@@ -329,23 +391,17 @@ pub fn partial_data_request_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("posts", fn(props) {
-        MainTestProps(..props, posts: ["post1"])
-      })
-      |> inertia.assign_prop("comments", fn(props) {
-        MainTestProps(..props, comments: ["comment1"])
-      })
-      |> inertia.assign_prop("sidebar", fn(props) {
-        MainTestProps(..props, sidebar: "sidebar content")
-      })
-      |> inertia.render("BlogPage")
+      |> inertia.prop(posts(["Post A", "Post B"]))
+      |> inertia.prop(comments(["Comment 1", "Comment 2"]))
+      |> inertia.prop(sidebar("Sidebar content"))
+      |> inertia.render("BlogComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("BlogPage"))
+  testing.component(response) |> should.equal(Ok("BlogComponent"))
   testing.prop(response, "posts", decode.list(decode.string))
-  |> should.equal(Ok(["post1"]))
+  |> should.equal(Ok(["Post A", "Post B"]))
   testing.prop(response, "comments", decode.list(decode.string))
-  |> should.equal(Ok(["comment1"]))
+  |> should.equal(Ok(["Comment 1", "Comment 2"]))
   // Non-requested props should not be included in partial requests
   testing.prop(response, "sidebar", decode.string) |> should.be_error()
 }
@@ -360,31 +416,25 @@ pub fn partial_data_with_always_props_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_always_prop("csrf_token", fn(props) {
-        MainTestProps(..props, csrf_token: "token123")
-      })
-      |> inertia.assign_prop("specific_data", fn(props) {
-        MainTestProps(..props, specific_data: "requested data")
-      })
-      |> inertia.assign_prop("other_data", fn(props) {
-        MainTestProps(..props, other_data: "not requested")
-      })
-      |> inertia.render("PartialPage")
+      |> inertia.always_prop(csrf_token("token123"))
+      |> inertia.prop(specific_data("specific"))
+      |> inertia.prop(other_data("other"))
+      |> inertia.render("PartialRequestComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("PartialPage"))
+  testing.component(response) |> should.equal(Ok("PartialRequestComponent"))
   // Always props should be included even in partial requests
   testing.prop(response, "csrf_token", decode.string)
   |> should.equal(Ok("token123"))
   testing.prop(response, "specific_data", decode.string)
-  |> should.equal(Ok("requested data"))
+  |> should.equal(Ok("specific"))
   // Non-requested regular props should not be included
   testing.prop(response, "other_data", decode.string) |> should.be_error()
 }
 
 // Test error handling (now using regular props)
 
-pub fn assign_errors_test() {
+pub fn erros_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
@@ -397,10 +447,8 @@ pub fn assign_errors_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_errors(errors)
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Form with Errors")
-      })
+      |> inertia.errors(errors)
+      |> inertia.prop(title("Form with Errors"))
       |> inertia.render("ErrorForm")
     })
 
@@ -423,7 +471,7 @@ pub fn assign_error_single_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_errors(errors)
+      |> inertia.errors(errors)
       |> inertia.render("RegisterForm")
     })
 
@@ -432,18 +480,19 @@ pub fn assign_error_single_test() {
   |> should.equal(Ok("Username already taken"))
 }
 
-pub fn assign_errors_only_test() {
+pub fn erros_only_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
-  let errors = dict.new()
+  let errors =
+    dict.new()
     |> dict.insert("general", "Something went wrong")
 
   let response =
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_errors(errors)
+      |> inertia.errors(errors)
       |> inertia.render("ErrorPage")
     })
 
@@ -454,12 +503,14 @@ pub fn assign_errors_only_test() {
   testing.prop(response, "title", decode.string) |> should.be_error()
 }
 
-pub fn assign_errors_with_partial_reload_test() {
-  let req = testing.inertia_request()
+pub fn erros_with_partial_reload_test() {
+  let req =
+    testing.inertia_request()
     |> testing.partial_data(["title", "count"])
   let config = inertia.default_config()
 
-  let errors = dict.new()
+  let errors =
+    dict.new()
     |> dict.insert("name", "Name is required")
     |> dict.insert("email", "Invalid email")
 
@@ -467,26 +518,23 @@ pub fn assign_errors_with_partial_reload_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_errors(errors)
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Partial with Errors")
-      })
-      |> inertia.assign_prop("count", fn(props) {
-        MainTestProps(..props, count: 42)
-      })
-      |> inertia.assign_prop("name", fn(props) {
-        MainTestProps(..props, name: "Should not be included")
-      })
+      |> inertia.errors(errors)
+      |> inertia.prop(title("Partial with Errors"))
+      |> inertia.prop(count(42))
+      |> inertia.prop(name("Should not be included"))
       |> inertia.render("PartialErrorPage")
     })
 
   testing.component(response) |> should.equal(Ok("PartialErrorPage"))
   // Requested props should be included
-  testing.prop(response, "title", decode.string) |> should.equal(Ok("Partial with Errors"))
+  testing.prop(response, "title", decode.string)
+  |> should.equal(Ok("Partial with Errors"))
   testing.prop(response, "count", decode.int) |> should.equal(Ok(42))
   // Errors should always be included
-  testing.prop(response, "errors", decode.at(["name"], decode.string)) |> should.equal(Ok("Name is required"))
-  testing.prop(response, "errors", decode.at(["email"], decode.string)) |> should.equal(Ok("Invalid email"))
+  testing.prop(response, "errors", decode.at(["name"], decode.string))
+  |> should.equal(Ok("Name is required"))
+  testing.prop(response, "errors", decode.at(["email"], decode.string))
+  |> should.equal(Ok("Invalid email"))
   // Non-requested props should not be included
   testing.prop(response, "name", decode.string) |> should.be_error()
 }
@@ -525,13 +573,11 @@ pub fn encrypt_history_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("sensitive_data", fn(props) {
-        MainTestProps(..props, sensitive_data: "secret")
-      })
-      |> inertia.render("SecurePage")
+      |> inertia.prop(sensitive_data("sensitive info"))
+      |> inertia.render("SensitiveComponent")
     })
 
-  testing.component(response) |> should.equal(Ok("SecurePage"))
+  testing.component(response) |> should.equal(Ok("SensitiveComponent"))
   testing.encrypt_history(response) |> should.equal(Ok(True))
 }
 
@@ -562,24 +608,21 @@ pub fn complex_props_test() {
   let req = testing.inertia_request()
   let config = inertia.default_config()
 
-  let user_data = User(
-    id: 123,
-    name: "Alice",
-    profile: Profile(email: "alice@example.com", verified: True),
-    tags: ["admin", "user"]
-  )
+  let user_data =
+    User(
+      id: 123,
+      name: "Alice",
+      profile: Profile(email: "alice@example.com", verified: True),
+      tags: ["admin", "user"],
+    )
   let settings_data = Settings(theme: "dark", notifications: False)
 
   let response =
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("user", fn(props) {
-        MainTestProps(..props, user: user_data)
-      })
-      |> inertia.assign_prop("settings", fn(props) {
-        MainTestProps(..props, settings: settings_data)
-      })
+      |> inertia.prop(user(user_data))
+      |> inertia.prop(settings(settings_data))
       |> inertia.render("UserDashboard")
     })
 
@@ -610,9 +653,7 @@ pub fn url_extraction_test() {
     inertia.middleware(req, config, option.None, fn(ctx) {
       ctx
       |> inertia.set_props(initial_props(), encode_main_props)
-      |> inertia.assign_prop("title", fn(props) {
-        MainTestProps(..props, title: "Test")
-      })
+      |> inertia.prop(title("Test"))
       |> inertia.render("TestPage")
     })
 

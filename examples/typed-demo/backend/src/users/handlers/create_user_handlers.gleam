@@ -13,11 +13,11 @@ pub fn create_user_page_handler(
 ) -> wisp.Response {
   ctx
   |> home.with_home_page_props()
-  |> inertia.assign_prop_t(home.title("Create New User"))
-  |> inertia.assign_prop_t(home.message(
+  |> inertia.prop(home.title("Create New User"))
+  |> inertia.prop(home.message(
     "Fill out the form below to create a new user account.",
   ))
-  |> inertia.assign_prop_t(home.features(fn() { [] }))
+  |> inertia.prop(home.features(fn() { [] }))
   |> inertia.render("users/CreateUser")
 }
 
@@ -46,7 +46,7 @@ pub fn create_user_handler(
     False -> {
       // Validation errors - re-render create user form with errors
       ctx
-      |> inertia.assign_errors(validation_errors)
+      |> inertia.errors(validation_errors)
       |> inertia.render("users/CreateUser")
     }
   }

@@ -31,7 +31,7 @@ pub fn with_contact_page_props(
   |> inertia.set_props(zero_contact_page_props, encode_contact_page_props)
 }
 
-//prop assignment functions. Generates tuples for use with inertia.assign_prop_t
+//prop assignment functions. Generates tuples for use with inertia.prop
 pub fn title(t: String) {
   #("title", fn(p) { ContactPageProps(..p, title: t) })
 }

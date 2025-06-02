@@ -18,21 +18,13 @@ pub fn require_int(
 /// Assign common auth and CSRF props for UserProps
 pub fn assign_user_common_props(context: inertia.InertiaContext(props.UserProps)) {
   context
-  |> inertia.assign_always_prop("auth", fn(props) {
-    props.UserProps(..props, auth: props.authenticated_user("demo_user"))
-  })
-  |> inertia.assign_always_prop("csrf_token", fn(props) {
-    props.UserProps(..props, csrf_token: "abc123xyz")
-  })
+  |> inertia.always_prop(props.user_auth(props.authenticated_user("demo_user")))
+  |> inertia.always_prop(props.user_csrf_token("abc123xyz"))
 }
 
 /// Assign common auth and CSRF props for UploadProps
 pub fn assign_upload_common_props(context: inertia.InertiaContext(props.UploadProps)) {
   context
-  |> inertia.assign_always_prop("auth", fn(props) {
-    props.UploadProps(..props, auth: props.authenticated_user("demo_user"))
-  })
-  |> inertia.assign_always_prop("csrf_token", fn(props) {
-    props.UploadProps(..props, csrf_token: "abc123xyz")
-  })
+  |> inertia.always_prop(props.upload_auth(props.authenticated_user("demo_user")))
+  |> inertia.always_prop(props.upload_csrf_token("abc123xyz"))
 }

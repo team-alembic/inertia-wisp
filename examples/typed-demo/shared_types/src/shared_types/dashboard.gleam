@@ -42,7 +42,7 @@ pub fn with_dashboard_page_props(
   |> inertia.set_props(zero_dashboard_page_props, encode_dashboard_props)
 }
 
-//prop assignment functions. Generates tuples for use with inertia.assign_prop_t
+//prop assignment functions. Generates tuples for use with inertia.prop
 pub fn user_count(uc: Int) {
   #("user_count", fn(p) { DashboardPageProps(..p, user_count: uc) })
 }

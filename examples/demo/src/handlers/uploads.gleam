@@ -22,12 +22,8 @@ pub fn upload_form_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp
   ctx
   |> inertia.set_props(initial_props, props.encode_upload_props)
   |> utils.assign_upload_common_props()
-  |> inertia.assign_prop("max_files", fn(props) {
-    props.UploadProps(..props, max_files: 3)
-  })
-  |> inertia.assign_prop("max_size_mb", fn(props) {
-    props.UploadProps(..props, max_size_mb: 5)
-  })
+  |> inertia.prop(props.upload_max_files(3))
+  |> inertia.prop(props.upload_max_size_mb(5))
   |> inertia.render("UploadForm")
 }
 
@@ -67,12 +63,8 @@ pub fn handle_upload(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Re
   ctx
   |> inertia.set_props(initial_props, props.encode_upload_props)
   |> utils.assign_upload_common_props()
-  |> inertia.assign_prop("success", fn(props) {
-    props.UploadProps(..props, success: "Success!")
-  })
-  |> inertia.assign_prop("uploaded_files", fn(props) {
-    props.UploadProps(..props, uploaded_files: uploaded_files_data)
-  })
+  |> inertia.prop(props.upload_success("Success!"))
+  |> inertia.prop(props.upload_uploaded_files(uploaded_files_data))
   |> inertia.render("UploadSuccess")
 }
 

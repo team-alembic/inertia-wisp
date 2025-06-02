@@ -37,8 +37,6 @@ fn render_user_page(req: inertia.InertiaContext(inertia.EmptyProps), user: User)
   req
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
-  |> inertia.assign_prop("user", fn(props) {
-    props.UserProps(..props, user: user_data)
-  })
+  |> inertia.prop(props.user_user(user_data))
   |> inertia.render("ShowUser")
 }

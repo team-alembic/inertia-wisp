@@ -44,8 +44,8 @@ fn data(data: String) {
   #("data", fn(p) { TestProps(..p, data: data) })
 }
 
-fn api_data(api_data: String) {
-  #("api_data", fn(p) { TestProps(..p, api_data: api_data) })
+fn api_data(api_data: fn() -> String) {
+  #("api_data", fn(p) { TestProps(..p, api_data: api_data()) })
 }
 
 fn title(title: String) {
@@ -225,7 +225,7 @@ pub fn version_mismatch_forces_redirect_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(users(["users"]))
+    |> inertia.prop(users(["users"]))
     |> inertia.render("UsersList")
   }
 
@@ -249,7 +249,7 @@ pub fn version_match_returns_json_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(users(["user1"]))
+    |> inertia.prop(users(["user1"]))
     |> inertia.render("UsersList")
   }
 
@@ -274,7 +274,7 @@ pub fn missing_version_header_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(data("test data"))
+    |> inertia.prop(data("test data"))
     |> inertia.render("TestPage")
   }
 
@@ -293,10 +293,10 @@ pub fn empty_props_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(empty_string(""))
-    |> inertia.assign_prop_t(empty_array([]))
-    |> inertia.assign_prop_t(empty_object(dict.new()))
-    |> inertia.assign_prop_t(null_value(option.None))
+    |> inertia.prop(empty_string(""))
+    |> inertia.prop(empty_array([]))
+    |> inertia.prop(empty_object(dict.new()))
+    |> inertia.prop(null_value(option.None))
     |> inertia.render("EmptyPropsPage")
   }
 
@@ -335,8 +335,8 @@ pub fn large_props_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(items(large_data))
-    |> inertia.assign_prop_t(count(1000))
+    |> inertia.prop(items(large_data))
+    |> inertia.prop(count(1000))
     |> inertia.render("LargeDataPage")
   }
 
@@ -357,10 +357,10 @@ pub fn special_characters_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(unicode("Hello 世界 🌍"))
-    |> inertia.assign_prop_t(quotes("\"Double quotes\" and 'single quotes'"))
-    |> inertia.assign_prop_t(html_entities("<script>alert('xss')</script>"))
-    |> inertia.assign_prop_t(newlines("Line 1\nLine 2\rLine 3"))
+    |> inertia.prop(unicode("Hello 世界 🌍"))
+    |> inertia.prop(quotes("\"Double quotes\" and 'single quotes'"))
+    |> inertia.prop(html_entities("<script>alert('xss')</script>"))
+    |> inertia.prop(newlines("Line 1\nLine 2\rLine 3"))
     |> inertia.render("SpecialCharsPage")
   }
 
@@ -385,7 +385,7 @@ pub fn json_request_without_inertia_header_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(api_data("API response"))
+    |> inertia.prop(api_data(fn() { "API response" }))
     |> inertia.render("ApiPage")
   }
 
@@ -406,10 +406,10 @@ pub fn prop_overwriting_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(title("Original Title"))
-    |> inertia.assign_prop_t(title("Updated Title"))
-    |> inertia.assign_prop_t(count(1))
-    |> inertia.assign_prop_t(count(2))
+    |> inertia.prop(title("Original Title"))
+    |> inertia.prop(title("Updated Title"))
+    |> inertia.prop(count(1))
+    |> inertia.prop(count(2))
     |> inertia.render("OverwritePage")
   }
 
@@ -432,15 +432,11 @@ pub fn mixed_prop_types_partial_request_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_always_prop("users", fn(props) {
-      TestProps(..props, users: ["always included"])
-    })
-    |> inertia.assign_prop_t(title("included in partial"))
-    |> inertia.assign_prop_t(count(999))
-    |> inertia.assign_prop_t(data("data included"))
-    |> inertia.assign_optional_prop("api_data", fn(props) {
-      TestProps(..props, api_data: "never included")
-    })
+    |> inertia.always_prop(users(["always included"]))
+    |> inertia.prop(title("included in partial"))
+    |> inertia.prop(count(999))
+    |> inertia.prop(data("data included"))
+    |> inertia.optional_prop(api_data(fn() { "never included" }))
     |> inertia.render("MixedPropsPage")
   }
 
@@ -478,7 +474,7 @@ pub fn multiple_errors_accumulation_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_errors(errors)
+    |> inertia.errors(errors)
     |> inertia.render("ErrorsPage")
   }
 
@@ -517,7 +513,7 @@ pub fn deeply_nested_data_test() {
     use ctx <- inertia.middleware(req, config, option.None)
     ctx
     |> inertia.set_props(initial_props(), encode_test_props)
-    |> inertia.assign_prop_t(nested(nested_data))
+    |> inertia.prop(nested(nested_data))
     |> inertia.render("NestedDataPage")
   }
 

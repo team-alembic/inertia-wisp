@@ -12,8 +12,8 @@ pub fn contact_page_handler(
 ) -> wisp.Response {
   ctx
   |> contact.with_contact_page_props()
-  |> inertia.assign_prop_t(contact.title("Contact Us"))
-  |> inertia.assign_prop_t(contact.message(
+  |> inertia.prop(contact.title("Contact Us"))
+  |> inertia.prop(contact.message(
     "We'd love to hear from you. Send us a message!",
   ))
   |> inertia.render("contact/ContactForm")
@@ -47,7 +47,7 @@ pub fn contact_form_handler(
     False -> {
       // Validation errors - re-render contact form with errors
       ctx
-      |> inertia.assign_errors(validation_errors)
+      |> inertia.errors(validation_errors)
       |> inertia.render("contact/ContactForm")
     }
   }

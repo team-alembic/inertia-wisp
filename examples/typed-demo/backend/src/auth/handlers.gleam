@@ -12,9 +12,9 @@ pub fn login_page_handler(
 ) -> wisp.Response {
   ctx
   |> auth.with_login_page_props()
-  |> inertia.assign_prop_t(auth.title("Login"))
-  |> inertia.assign_prop_t(auth.message("Please sign in to your account."))
-  |> inertia.assign_prop_t(
+  |> inertia.prop(auth.title("Login"))
+  |> inertia.prop(auth.message("Please sign in to your account."))
+  |> inertia.prop(
     auth.demo_info(fn() { ["Demo credentials: demo@example.com / password123"] }),
   )
   |> inertia.render("auth/Login")
@@ -40,7 +40,7 @@ pub fn login_handler(
     False -> {
       // Validation errors - re-render login form with errors
       ctx
-      |> inertia.assign_errors(validation_errors)
+      |> inertia.errors(validation_errors)
       |> inertia.render("auth/Login")
     }
   }
