@@ -34,16 +34,41 @@
 //// }
 //// ```
 ////
-//// 3. Create Inertia responses in your route handlers:
+//// 3. Define your page props type and to_json function:
 ////
 //// ```gleam
-//// fn home_page(ctx: inertia.InertiaContext) -> wisp.Response {
+//// pub type User {
+////   User(name: String, email: String)
+//// }
+////
+//// pub type HomePageProps {
+////   HomePageProps(title: String, user: User)
+//// }
+////
+//// fn title_prop(title: String) { #("title", fn(p){ HomePageProps(..p, title: title) }) }
+//// fn user_prop(user: User) { #("user", fn(p){ HomePageProps(..p, user: user) }) }
+////
+//// pub const init_home_page_props = HomePageProps(title: "", user: User(name: "", email: ""))
+////
+//// pub fn home_page_props_to_json(props: HomePageProps) -> json.Json {
+////   json.object([
+////     #("title", json.string(props.title)),
+////     #("user", json.object([
+////       #("name", json.string(props.user.name)),
+////       #("email", json.string(props.user.email))
+////     ]))
+////   ])
+//// }
+//// ```
+////
+//// 4. Create Inertia responses in your route handlers:
+////
+//// ```gleam
+//// fn home_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
 ////   ctx
-////   |> inertia.assign_prop("title", json.string("Welcome"))
-////   |> inertia.assign_prop("user", json.object([
-////     #("name", json.string("John")),
-////     #("email", json.string("john@example.com"))
-////   ]))
+////   |> inertia.set_props(init_home_page_props, home_page_props_to_json)
+////   |> inertia.assign_prop_t(title_prop("Welcome"))
+////   |> inertia.assign_prop_t(user_prop(User(name: "John", email: "john@example.com"))
 ////   |> inertia.render("Home")
 //// }
 //// ```
@@ -401,7 +426,7 @@ pub fn middleware(
   ssr_supervisor: option.Option(process.Subject(types.SSRMessage)),
   handler: fn(InertiaContext(types.EmptyProps)) -> Response,
 ) -> Response {
-  middleware.typed_middleware(
+  middleware.middleware(
     req,
     config,
     ssr_supervisor,
@@ -410,56 +435,6 @@ pub fn middleware(
     handler,
   )
 }
-
-// Controller functions
-
-/// Assigns a regular prop that will be included in initial requests by default.
-/// Assigns multiple regular props at once.
-/// Assigns a lazy prop that is included in initial requests and only evaluated when request for partial reloads.
-///
-/// Lazy props are useful for expensive computations that shouldn't run on every request.
-/// Assigns an "always" prop that is included in every response, even partial reloads.
-///
-/// Use this for data that should always be available, like current user info or CSRF tokens.
-/// Assigns multiple "always" props at once.
-/// Assigns an "optional" prop that is only included when specifically requested.
-///
-/// Optional props are never included unless the frontend explicitly asks for them.
-// Form handling and redirects
-
-/// Assigns validation errors to be displayed in forms.
-///
-/// Errors are automatically included in responses and cleared after successful requests.
-///
-/// ## Example
-///
-/// ```gleam
-/// import gleam/dict
-///
-/// let errors = dict.from_list([
-///   #("email", "Email is required"),
-///   #("password", "Password must be at least 8 characters"),
-/// ])
-///
-/// ctx |> inertia.assign_errors(errors)
-/// ```
-/// Assigns a single validation error for a specific field.
-/// Enables history encryption for the current response.
-///
-/// When enabled, the page data will be encrypted in the browser's history.
-/// The key is stored in browser session storage, and can be cleared with the clear_history call.
-/// Clears the browser's history state encryption key.
-///
-/// Once cleared, previous history state will no longer be accessible.
-///
-/// ## Example
-///
-/// ```gleam
-/// ctx
-/// |> inertia.clear_history()
-/// |> inertia.redirect("/logged-out")
-/// ```
-// SSR Configuration
 
 /// Enables server-side rendering for the current context.
 ///
