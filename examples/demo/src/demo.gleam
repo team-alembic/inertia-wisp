@@ -112,7 +112,7 @@ fn home_page(
 
   // Create initial props
   let initial_props = props.HomeProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     message: "",
     timestamp: "",
@@ -123,10 +123,7 @@ fn home_page(
   ctx
   |> inertia.set_props(initial_props, props.encode_home_props)
   |> inertia.assign_always_prop("auth", fn(props) {
-    props.HomeProps(..props, auth: json.object([
-      #("authenticated", json.bool(True)),
-      #("user", json.string("demo_user")),
-    ]))
+    props.HomeProps(..props, auth: props.authenticated_user("demo_user"))
   })
   |> inertia.assign_always_prop("csrf_token", fn(props) {
     props.HomeProps(..props, csrf_token: "abc123xyz")
@@ -147,7 +144,7 @@ fn home_page(
 fn versioned_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
   // Create initial props
   let initial_props = props.VersionedProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     version: "",
     build_info: "",
@@ -157,10 +154,7 @@ fn versioned_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Respo
   ctx
   |> inertia.set_props(initial_props, props.encode_versioned_props)
   |> inertia.assign_always_prop("auth", fn(props) {
-    props.VersionedProps(..props, auth: json.object([
-      #("authenticated", json.bool(True)),
-      #("user", json.string("demo_user")),
-    ]))
+    props.VersionedProps(..props, auth: props.authenticated_user("demo_user"))
   })
   |> inertia.assign_always_prop("csrf_token", fn(props) {
     props.VersionedProps(..props, csrf_token: "abc123xyz")
@@ -177,7 +171,7 @@ fn versioned_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Respo
 fn about_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
   // Create initial props
   let initial_props = props.AboutProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     page_title: "",
     description: "",
@@ -187,10 +181,7 @@ fn about_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response 
   ctx
   |> inertia.set_props(initial_props, props.encode_about_props)
   |> inertia.assign_always_prop("auth", fn(props) {
-    props.AboutProps(..props, auth: json.object([
-      #("authenticated", json.bool(True)),
-      #("user", json.string("demo_user")),
-    ]))
+    props.AboutProps(..props, auth: props.authenticated_user("demo_user"))
   })
   |> inertia.assign_always_prop("csrf_token", fn(props) {
     props.AboutProps(..props, csrf_token: "abc123xyz")
@@ -208,7 +199,7 @@ fn about_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response 
 fn demo_features_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
   // Create initial props for demonstration
   let initial_props = props.DemoFeaturesProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     title: "",
     description: "",
@@ -221,11 +212,7 @@ fn demo_features_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.R
   |> inertia.set_props(initial_props, props.encode_demo_features_props)
   // ALWAYS props - included in all requests (initial + partial)
   |> inertia.assign_always_prop("auth", fn(props) {
-    props.DemoFeaturesProps(..props, auth: json.object([
-      #("authenticated", json.bool(True)),
-      #("user", json.string("demo_user")),
-      #("timestamp", json.string("2024-01-01T00:00:00Z")),
-    ]))
+    props.DemoFeaturesProps(..props, auth: props.authenticated_user("demo_user"))
   })
   |> inertia.assign_always_prop("csrf_token", fn(props) {
     props.DemoFeaturesProps(..props, csrf_token: "abc123xyz")

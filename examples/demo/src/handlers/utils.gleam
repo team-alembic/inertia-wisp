@@ -1,5 +1,4 @@
 import gleam/int
-import gleam/json
 import inertia_wisp/inertia
 import props
 import wisp
@@ -20,10 +19,7 @@ pub fn require_int(
 pub fn assign_user_common_props(context: inertia.InertiaContext(props.UserProps)) {
   context
   |> inertia.assign_always_prop("auth", fn(props) {
-    props.UserProps(..props, auth: json.object([
-      #("authenticated", json.bool(True)),
-      #("user", json.string("demo_user")),
-    ]))
+    props.UserProps(..props, auth: props.authenticated_user("demo_user"))
   })
   |> inertia.assign_always_prop("csrf_token", fn(props) {
     props.UserProps(..props, csrf_token: "abc123xyz")
@@ -34,10 +30,7 @@ pub fn assign_user_common_props(context: inertia.InertiaContext(props.UserProps)
 pub fn assign_upload_common_props(context: inertia.InertiaContext(props.UploadProps)) {
   context
   |> inertia.assign_always_prop("auth", fn(props) {
-    props.UploadProps(..props, auth: json.object([
-      #("authenticated", json.bool(True)),
-      #("user", json.string("demo_user")),
-    ]))
+    props.UploadProps(..props, auth: props.authenticated_user("demo_user"))
   })
   |> inertia.assign_always_prop("csrf_token", fn(props) {
     props.UploadProps(..props, csrf_token: "abc123xyz")

@@ -10,7 +10,7 @@ import wisp
 pub fn upload_form_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
   // Create initial props
   let initial_props = props.UploadProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     max_files: 0,
     max_size_mb: 0,
@@ -36,7 +36,7 @@ pub fn handle_upload(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Re
 
   // Create initial props
   let initial_props = props.UploadProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     max_files: 0,
     max_size_mb: 0,

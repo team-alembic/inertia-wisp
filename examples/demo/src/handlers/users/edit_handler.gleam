@@ -21,7 +21,7 @@ pub fn edit_user_page(
   
   // Create initial props
   let initial_props = props.UserProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     users: [],
     pagination: json.null(),
@@ -88,7 +88,7 @@ fn validate_update_request(
 fn error_response(ctx, user, errors) {
   // Create initial props
   let initial_props = props.UserProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     users: [],
     pagination: json.null(),

@@ -24,7 +24,7 @@ fn render_user_page(req: inertia.InertiaContext(inertia.EmptyProps), user: User)
 
   // Create initial props
   let initial_props = props.UserProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     users: [],
     pagination: json.null(),

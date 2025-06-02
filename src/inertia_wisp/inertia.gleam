@@ -196,33 +196,7 @@ pub fn set_props(
 }
 
 /// Assigns a prop transformation to a typed context.
-///
-/// ## Example
-///
-/// ```gleam
-/// ctx
-/// |> inertia.assign_typed_prop("name", UserPageProps(_, name: "Alice"))
-/// |> inertia.assign_typed_prop("id", UserPageProps(_, id: 42))
-/// ```
-/// Assign a prop with explicit inclusion behavior.
-/// This is the primary function for adding props to the context.
-///
-/// ## Examples
-///
-/// ```gleam
-/// // Default behavior (included in initial render and when requested)
-/// ctx
-/// |> inertia.assign_prop_with_include("user", UserPageProps(_, user: user), types.IncludeDefault)
-///
-/// // Always included
-/// ctx
-/// |> inertia.assign_prop_with_include("csrf", UserPageProps(_, csrf: token), types.IncludeAlways)
-///
-/// // Optional (only when specifically requested)
-/// ctx
-/// |> inertia.assign_prop_with_include("debug", UserPageProps(_, debug: info), types.IncludeOptionally)
-/// ```
-pub fn assign_prop_with_include(
+fn assign_prop_with_include(
   ctx: InertiaContext(props),
   key: String,
   transformer: fn(props) -> props,

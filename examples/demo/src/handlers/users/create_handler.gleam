@@ -15,7 +15,7 @@ import wisp
 pub fn create_user_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
   // Create initial props
   let initial_props = props.UserProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     users: [],
     pagination: json.null(),
@@ -76,7 +76,7 @@ fn validation_error_response(
 ) -> wisp.Response {
   // Create initial props
   let initial_props = props.UserProps(
-    auth: json.null(),
+    auth: props.unauthenticated_user(),
     csrf_token: "",
     users: [],
     pagination: json.null(),
