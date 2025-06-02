@@ -3,44 +3,76 @@ import gleam/list
 import gleam/string
 import handlers/utils
 import inertia_wisp/inertia
+import props
 import simplifile
 import wisp
 
-pub fn upload_form_page(req: inertia.InertiaContext) -> wisp.Response {
-  req
-  |> utils.assign_common_props()
-  |> inertia.assign_prop("max_files", json.int(3))
-  |> inertia.assign_prop("max_size_mb", json.int(5))
+pub fn upload_form_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+  // Create initial props
+  let initial_props = props.UploadProps(
+    auth: props.unauthenticated_user(),
+    csrf_token: "",
+    max_files: 0,
+    max_size_mb: 0,
+    success: "",
+    uploaded_files: json.null(),
+  )
+
+  // Transform to typed context
+  ctx
+  |> inertia.set_props(initial_props, props.encode_upload_props)
+  |> utils.assign_upload_common_props()
+  |> inertia.assign_prop("max_files", fn(props) {
+    props.UploadProps(..props, max_files: 3)
+  })
+  |> inertia.assign_prop("max_size_mb", fn(props) {
+    props.UploadProps(..props, max_size_mb: 5)
+  })
   |> inertia.render("UploadForm")
 }
 
-pub fn handle_upload(req: inertia.InertiaContext) -> wisp.Response {
-  use form_data <- wisp.require_form(req.request)
+pub fn handle_upload(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+  use form_data <- wisp.require_form(ctx.request)
 
-  req
-  |> utils.assign_common_props()
-  |> inertia.assign_prop("success", json.string("Success!"))
-  |> inertia.assign_prop(
-    "uploaded_files",
-    json.object(
-      form_data.files
-      |> list.map(fn(file) {
-        let uploaded_file = file.1
-        let file_size = get_file_size(uploaded_file.path)
-        let content_type =
-          get_content_type_from_filename(uploaded_file.file_name)
-
-        #(
-          file.0,
-          json.object([
-            #("filename", json.string(uploaded_file.file_name)),
-            #("size", json.int(file_size)),
-            #("content_type", json.string(content_type)),
-          ]),
-        )
-      }),
-    ),
+  // Create initial props
+  let initial_props = props.UploadProps(
+    auth: props.unauthenticated_user(),
+    csrf_token: "",
+    max_files: 0,
+    max_size_mb: 0,
+    success: "",
+    uploaded_files: json.null(),
   )
+
+  let uploaded_files_data = json.object(
+    form_data.files
+    |> list.map(fn(file) {
+      let uploaded_file = file.1
+      let file_size = get_file_size(uploaded_file.path)
+      let content_type =
+        get_content_type_from_filename(uploaded_file.file_name)
+
+      #(
+        file.0,
+        json.object([
+          #("filename", json.string(uploaded_file.file_name)),
+          #("size", json.int(file_size)),
+          #("content_type", json.string(content_type)),
+        ]),
+      )
+    }),
+  )
+
+  // Transform to typed context
+  ctx
+  |> inertia.set_props(initial_props, props.encode_upload_props)
+  |> utils.assign_upload_common_props()
+  |> inertia.assign_prop("success", fn(props) {
+    props.UploadProps(..props, success: "Success!")
+  })
+  |> inertia.assign_prop("uploaded_files", fn(props) {
+    props.UploadProps(..props, uploaded_files: uploaded_files_data)
+  })
   |> inertia.render("UploadSuccess")
 }
 
@@ -78,7 +110,7 @@ fn get_content_type_from_filename(filename: String) -> String {
   }
 }
 
-pub fn progress_endpoint(_req: inertia.InertiaContext) -> wisp.Response {
+pub fn progress_endpoint(_ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
   // This would be used for upload progress tracking
   // In a real implementation, you might track upload progress in a cache/database
   // and return the current progress as JSON

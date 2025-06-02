@@ -14,6 +14,98 @@ pub fn main() {
   gleeunit.main()
 }
 
+// Props type for initial load tests
+pub type InitialLoadProps {
+  InitialLoadProps(
+    title: String,
+    message: String,
+    csrf_token: String,
+    user: User,
+    dashboard_data: String,
+    expensive_report: ExpensiveReport,
+    notifications: Int,
+    name: String,
+    debug_info: String,
+    admin_panel: Bool,
+    amount: Int,
+    users: List(UserData),
+    pagination: Pagination,
+    data: String,
+  )
+}
+
+pub type User {
+  User(id: Int, name: String)
+}
+
+pub type ExpensiveReport {
+  ExpensiveReport(total: Int, items: List(String))
+}
+
+pub type UserData {
+  UserData(id: Int, name: String, roles: List(String))
+}
+
+pub type Pagination {
+  Pagination(current_page: Int, total_pages: Int, per_page: Int)
+}
+
+// Encoder for initial load props
+pub fn encode_initial_props(props: InitialLoadProps) -> json.Json {
+  json.object([
+    #("title", json.string(props.title)),
+    #("message", json.string(props.message)),
+    #("csrf_token", json.string(props.csrf_token)),
+    #("user", json.object([
+      #("id", json.int(props.user.id)),
+      #("name", json.string(props.user.name)),
+    ])),
+    #("dashboard_data", json.string(props.dashboard_data)),
+    #("expensive_report", json.object([
+      #("total", json.int(props.expensive_report.total)),
+      #("items", json.array(props.expensive_report.items, json.string)),
+    ])),
+    #("notifications", json.int(props.notifications)),
+    #("name", json.string(props.name)),
+    #("debug_info", json.string(props.debug_info)),
+    #("admin_panel", json.bool(props.admin_panel)),
+    #("amount", json.int(props.amount)),
+    #("users", json.array(props.users, fn(user) {
+      json.object([
+        #("id", json.int(user.id)),
+        #("name", json.string(user.name)),
+        #("roles", json.array(user.roles, json.string)),
+      ])
+    })),
+    #("pagination", json.object([
+      #("current_page", json.int(props.pagination.current_page)),
+      #("total_pages", json.int(props.pagination.total_pages)),
+      #("per_page", json.int(props.pagination.per_page)),
+    ])),
+    #("data", json.string(props.data)),
+  ])
+}
+
+// Helper to create initial props
+fn initial_props() -> InitialLoadProps {
+  InitialLoadProps(
+    title: "",
+    message: "",
+    csrf_token: "",
+    user: User(id: 0, name: ""),
+    dashboard_data: "",
+    expensive_report: ExpensiveReport(total: 0, items: []),
+    notifications: 0,
+    name: "",
+    debug_info: "",
+    admin_panel: False,
+    amount: 0,
+    users: [],
+    pagination: Pagination(current_page: 1, total_pages: 1, per_page: 10),
+    data: "",
+  )
+}
+
 // Test initial page loads (non-Inertia requests)
 
 pub fn initial_page_load_basic_test() {
@@ -28,8 +120,13 @@ pub fn initial_page_load_basic_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_prop("title", json.string("Home Page"))
-    |> inertia.assign_prop("message", json.string("Welcome!"))
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("title", fn(props) {
+      InitialLoadProps(..props, title: "Home Page")
+    })
+    |> inertia.assign_prop("message", fn(props) {
+      InitialLoadProps(..props, message: "Welcome!")
+    })
     |> inertia.render("HomePage")
   })
   
@@ -48,12 +145,16 @@ pub fn initial_page_load_with_always_props_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_always_prop("csrf_token", json.string("abc123"))
-    |> inertia.assign_always_prop("user", json.object([
-      #("id", json.int(42)),
-      #("name", json.string("Alice"))
-    ]))
-    |> inertia.assign_prop("dashboard_data", json.string("dashboard content"))
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_always_prop("csrf_token", fn(props) {
+      InitialLoadProps(..props, csrf_token: "abc123")
+    })
+    |> inertia.assign_always_prop("user", fn(props) {
+      InitialLoadProps(..props, user: User(id: 42, name: "Alice"))
+    })
+    |> inertia.assign_prop("dashboard_data", fn(props) {
+      InitialLoadProps(..props, dashboard_data: "dashboard content")
+    })
     |> inertia.render("Dashboard")
   })
   
@@ -70,15 +171,18 @@ pub fn initial_page_load_with_lazy_props_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_prop("title", json.string("Reports"))
-    |> inertia.assign_lazy_prop("expensive_report", fn() {
-      json.object([
-        #("total", json.int(1000)),
-        #("items", json.array([json.string("item1"), json.string("item2")], fn(x) { x }))
-      ])
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("title", fn(props) {
+      InitialLoadProps(..props, title: "Reports")
     })
-    |> inertia.assign_always_lazy_prop("notifications", fn() {
-      json.int(3)
+    |> inertia.assign_prop("expensive_report", fn(props) {
+      InitialLoadProps(..props, expensive_report: ExpensiveReport(
+        total: 1000,
+        items: ["item1", "item2"]
+      ))
+    })
+    |> inertia.assign_always_prop("notifications", fn(props) {
+      InitialLoadProps(..props, notifications: 3)
     })
     |> inertia.render("ReportsPage")
   })
@@ -86,7 +190,7 @@ pub fn initial_page_load_with_lazy_props_test() {
   response.status |> should.equal(200)
   testing.component(response) |> should.equal(Ok("ReportsPage"))
   testing.prop(response, "title", decode.string) |> should.equal(Ok("Reports"))
-  // Lazy props should be evaluated and included in initial loads
+  // Props should be evaluated and included in initial loads
   testing.prop(response, "expensive_report", decode.at(["total"], decode.int)) |> should.equal(Ok(1000))
   testing.prop(response, "notifications", decode.int) |> should.equal(Ok(3))
 }
@@ -97,10 +201,15 @@ pub fn initial_page_load_with_optional_props_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_prop("name", json.string("John"))
-    |> inertia.assign_optional_prop("debug_info", json.string("debug data"))
-    |> inertia.assign_optional_lazy_prop("admin_panel", fn() {
-      json.bool(True)
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("name", fn(props) {
+      InitialLoadProps(..props, name: "John")
+    })
+    |> inertia.assign_optional_prop("debug_info", fn(props) {
+      InitialLoadProps(..props, debug_info: "debug data")
+    })
+    |> inertia.assign_optional_prop("admin_panel", fn(props) {
+      InitialLoadProps(..props, admin_panel: True)
     })
     |> inertia.render("ProfilePage")
   })
@@ -123,8 +232,11 @@ pub fn initial_page_load_with_errors_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
+    |> inertia.set_props(initial_props(), encode_initial_props)
     |> inertia.assign_errors(errors)
-    |> inertia.assign_prop("title", json.string("Contact Form"))
+    |> inertia.assign_prop("title", fn(props) {
+      InitialLoadProps(..props, title: "Contact Form")
+    })
     |> inertia.render("ContactForm")
   })
   
@@ -143,8 +255,10 @@ pub fn initial_page_load_with_encrypted_history_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_prop("amount", json.int(100))
-    |> inertia.encrypt_history()
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("amount", fn(props) {
+      InitialLoadProps(..props, amount: 100)
+    })
     |> inertia.render("PaymentForm")
   })
   
@@ -158,27 +272,24 @@ pub fn initial_page_load_with_complex_data_test() {
   let req = wisp_testing.request(http.Get, "/users", [], <<"">>)
   let config = inertia.default_config()
   
-  let users_data = json.array([
-    json.object([
-      #("id", json.int(1)),
-      #("name", json.string("Alice")),
-      #("roles", json.array([json.string("admin"), json.string("user")], fn(x) { x }))
-    ]),
-    json.object([
-      #("id", json.int(2)),
-      #("name", json.string("Bob")),
-      #("roles", json.array([json.string("user")], fn(x) { x }))
-    ])
-  ], fn(x) { x })
+  let users_data = [
+    UserData(id: 1, name: "Alice", roles: ["admin", "user"]),
+    UserData(id: 2, name: "Bob", roles: ["user"])
+  ]
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_prop("users", users_data)
-    |> inertia.assign_prop("pagination", json.object([
-      #("current_page", json.int(1)),
-      #("total_pages", json.int(5)),
-      #("per_page", json.int(10))
-    ]))
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("users", fn(props) {
+      InitialLoadProps(..props, users: users_data)
+    })
+    |> inertia.assign_prop("pagination", fn(props) {
+      InitialLoadProps(..props, pagination: Pagination(
+        current_page: 1,
+        total_pages: 5,
+        per_page: 10
+      ))
+    })
     |> inertia.render("UsersList")
   })
   
@@ -200,7 +311,10 @@ pub fn initial_page_load_url_and_version_test() {
   
   let response = inertia.middleware(req, config, option.None, fn(ctx) {
     ctx
-    |> inertia.assign_prop("title", json.string("About Us"))
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("title", fn(props) {
+      InitialLoadProps(..props, title: "About Us")
+    })
     |> inertia.render("AboutPage")
   })
   
@@ -216,8 +330,8 @@ pub fn initial_page_redirect_test() {
   let req = wisp_testing.request(http.Get, "/login", [], <<"">>)
   let config = inertia.default_config()
   
-  let response = inertia.middleware(req, config, option.None, fn(ctx) {
-    inertia.redirect(ctx, to: "/dashboard")
+  let response = inertia.middleware(req, config, option.None, fn(_ctx) {
+    inertia.redirect(req, to: "/dashboard")
   })
   
   // For initial page loads, should return standard HTTP redirect
@@ -242,19 +356,22 @@ pub fn mixed_request_handling_test() {
   
   let test_handler = fn(ctx) {
     ctx
-    |> inertia.assign_prop("data", json.string("shared data"))
-    |> inertia.render("MixedPage")
+    |> inertia.set_props(initial_props(), encode_initial_props)
+    |> inertia.assign_prop("title", fn(props) {
+      InitialLoadProps(..props, title: "Test Page")
+    })
+    |> inertia.render("TestPage")
   }
   
   // Test regular request (should return HTML)
   let html_response = inertia.middleware(regular_req, config, option.None, test_handler)
   html_response.status |> should.equal(200)
-  testing.component(html_response) |> should.equal(Ok("MixedPage"))
-  testing.prop(html_response, "data", decode.string) |> should.equal(Ok("shared data"))
+  testing.component(html_response) |> should.equal(Ok("TestPage"))
+  testing.prop(html_response, "title", decode.string) |> should.equal(Ok("Test Page"))
   
   // Test Inertia request (should return JSON)
   let json_response = inertia.middleware(inertia_req, config, option.None, test_handler)
   json_response.status |> should.equal(200)
-  testing.component(json_response) |> should.equal(Ok("MixedPage"))
-  testing.prop(json_response, "data", decode.string) |> should.equal(Ok("shared data"))
+  testing.component(json_response) |> should.equal(Ok("TestPage"))
+  testing.prop(json_response, "title", decode.string) |> should.equal(Ok("Test Page"))
 }

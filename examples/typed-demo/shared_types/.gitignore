@@ -1,0 +1,33 @@
+# Gleam build artifacts
+build/
+*.beam
+
+# Erlang/OTP build artifacts
+ebin/
+.eunit/
+.rebar3/
+_build/
+rebar3.crashdump
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+*.pid

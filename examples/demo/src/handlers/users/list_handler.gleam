@@ -1,25 +1,43 @@
 import data/users
 import gleam/json
+import gleam/list
 import handlers/utils
 import inertia_wisp/inertia
+import props
 import sqlight
 import types/user
 import wisp
 
 pub fn users_page(
-  req: inertia.InertiaContext,
+  ctx: inertia.InertiaContext(inertia.EmptyProps),
   db: sqlight.Connection,
 ) -> wisp.Response {
   let users_data = get_users_data(db)
-  req
-  |> utils.assign_common_props()
-  |> inertia.assign_prop("users", users_data)
+  
+  // Create initial props
+  let initial_props = props.UserProps(
+    auth: props.unauthenticated_user(),
+    csrf_token: "",
+    users: [],
+    pagination: json.null(),
+    user: json.null(),
+    success: "",
+    errors: json.null(),
+  )
+
+  // Transform to typed context
+  ctx
+  |> inertia.set_props(initial_props, props.encode_user_props)
+  |> utils.assign_user_common_props()
+  |> inertia.assign_prop("users", fn(props) {
+    props.UserProps(..props, users: users_data)
+  })
   |> inertia.render("Users")
 }
 
-fn get_users_data(db: sqlight.Connection) -> json.Json {
+fn get_users_data(db: sqlight.Connection) -> List(json.Json) {
   case users.get_all_users(db) {
-    Ok(user_list) -> json.array(user_list, user.user_to_json)
-    Error(_) -> json.array([], user.user_to_json)
+    Ok(user_list) -> list.map(user_list, user.user_to_json)
+    Error(_) -> []
   }
 }

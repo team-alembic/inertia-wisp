@@ -5,7 +5,7 @@ import sqlight
 import wisp
 
 pub fn delete_user(
-  req: InertiaContext,
+  req: InertiaContext(inertia.EmptyProps),
   id_str: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -17,12 +17,12 @@ pub fn delete_user(
 }
 
 fn handle_successful_deletion(
-  req: InertiaContext,
+  req: InertiaContext(inertia.EmptyProps),
   id: Int,
   db: sqlight.Connection,
 ) -> wisp.Response {
   case users.delete_user(db, id) {
-    Ok(_) -> inertia.redirect(req, "/users")
+    Ok(_) -> inertia.redirect(req.request, "/users")
     Error(_) -> wisp.internal_server_error()
   }
 }

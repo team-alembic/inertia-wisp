@@ -1,21 +1,7 @@
-import gleam/dynamic/decode
 import gleam/int
-import gleam/json
 import inertia_wisp/inertia
+import props
 import wisp
-
-pub fn require_json(
-  ctx: inertia.InertiaContext,
-  decoder: decode.Decoder(a),
-  cont: fn(a) -> wisp.Response,
-) -> wisp.Response {
-  use json_data <- wisp.require_json(ctx.request)
-  let result = decode.run(json_data, decoder)
-  case result {
-    Ok(value) -> cont(value)
-    Error(_) -> wisp.bad_request()
-  }
-}
 
 pub fn require_int(
   param: String,
@@ -27,17 +13,26 @@ pub fn require_int(
   }
 }
 
-// Common authentication and CSRF props used across all handlers
-pub fn assign_common_props(context) {
+// Helper functions for common authentication and CSRF props for each prop type
+
+/// Assign common auth and CSRF props for UserProps
+pub fn assign_user_common_props(context: inertia.InertiaContext(props.UserProps)) {
   context
-  |> inertia.assign_always_props([
-    #(
-      "auth",
-      json.object([
-        #("authenticated", json.bool(True)),
-        #("user", json.string("demo_user")),
-      ]),
-    ),
-    #("csrf_token", json.string("abc123xyz")),
-  ])
+  |> inertia.assign_always_prop("auth", fn(props) {
+    props.UserProps(..props, auth: props.authenticated_user("demo_user"))
+  })
+  |> inertia.assign_always_prop("csrf_token", fn(props) {
+    props.UserProps(..props, csrf_token: "abc123xyz")
+  })
+}
+
+/// Assign common auth and CSRF props for UploadProps
+pub fn assign_upload_common_props(context: inertia.InertiaContext(props.UploadProps)) {
+  context
+  |> inertia.assign_always_prop("auth", fn(props) {
+    props.UploadProps(..props, auth: props.authenticated_user("demo_user"))
+  })
+  |> inertia.assign_always_prop("csrf_token", fn(props) {
+    props.UploadProps(..props, csrf_token: "abc123xyz")
+  })
 }

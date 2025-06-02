@@ -43,7 +43,7 @@ pub fn main() {
 }
 
 fn handle_request(req: wisp.Request) -> wisp.Response {
-  use ctx <- inertia.inertia_middleware(
+  use ctx <- inertia.middleware(
     req,
     inertia.default_config(),
     option.None  // No SSR supervisor

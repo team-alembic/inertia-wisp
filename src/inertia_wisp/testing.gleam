@@ -1,4 +1,3 @@
-
 //// Testing utilities for Inertia.js applications built with Gleam and Wisp.
 ////
 //// This module provides a comprehensive set of testing utilities specifically
@@ -25,9 +24,9 @@
 //// pub fn test_home_page() {
 ////   let req = testing.inertia_request()
 ////   let response = my_handler(req)
-////   
+////
 ////   testing.component(response) |> should.equal(Ok("HomePage"))
-////   testing.prop(response, "title", decode.string) 
+////   testing.prop(response, "title", decode.string)
 ////     |> should.equal(Ok("Welcome"))
 //// }
 //// ```
@@ -39,7 +38,7 @@
 ////   let req = testing.inertia_request()
 ////     |> testing.partial_data(["posts", "comments"])
 ////   let response = my_handler(req)
-////   
+////
 ////   // Only specified props should be present
 ////   testing.prop(response, "posts", decode.list(decode.string))
 ////     |> should.be_ok()
@@ -52,11 +51,11 @@
 //// pub fn test_user_data() {
 ////   let req = testing.inertia_request()
 ////   let response = user_profile_handler(req)
-////   
+////
 ////   // Test nested object props
 ////   testing.prop(response, "user", decode.field("name", decode.string))
 ////     |> should.equal(Ok("John Doe"))
-////   
+////
 ////   // Test array props
 ////   testing.prop(response, "items", decode.list(decode.int))
 ////     |> should.equal(Ok([1, 2, 3]))
@@ -90,14 +89,14 @@ import wisp.{type Request, type Response}
 import wisp/testing
 
 /// Create a mock Inertia XHR request for testing.
-/// 
+///
 /// This creates a request with the necessary Inertia headers:
 /// - `x-inertia: true` to indicate this is an Inertia request
 /// - `x-inertia-version: 1` for version matching
 /// - `accept: application/json` for JSON responses
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// let req = testing.inertia_request()
 /// let response = my_handler(req)
@@ -117,12 +116,12 @@ pub fn inertia_request() -> Request {
 }
 
 /// Add partial data headers to a request for testing partial reloads.
-/// 
+///
 /// This modifies an existing request to include the `x-inertia-partial-data`
 /// header, which tells Inertia to only return the specified props.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// let req = testing.inertia_request()
 ///   |> testing.partial_data(["posts", "comments"])
@@ -136,12 +135,12 @@ pub fn partial_data(req: Request, props: List(String)) -> Request {
 }
 
 /// Extract the component name from an Inertia response.
-/// 
+///
 /// This works for both JSON responses (XHR requests) and HTML responses
 /// (initial page loads) by parsing the appropriate format.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// let response = my_handler(req)
 /// testing.component(response) |> should.equal(Ok("HomePage"))
@@ -152,21 +151,21 @@ pub fn component(response: Response) {
 }
 
 /// Extract a specific prop value from an Inertia response.
-/// 
+///
 /// This function allows you to retrieve and decode any prop from the response
 /// using Gleam's dynamic decoders. Works for both JSON and HTML responses.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// // Test a string prop
-/// testing.prop(response, "title", decode.string) 
+/// testing.prop(response, "title", decode.string)
 /// |> should.equal(Ok("My Title"))
-/// 
+///
 /// // Test an integer prop
-/// testing.prop(response, "count", decode.int) 
+/// testing.prop(response, "count", decode.int)
 /// |> should.equal(Ok(42))
-/// 
+///
 /// // Test a complex object
 /// testing.prop(response, "user", decode.field("name", decode.string))
 /// |> should.equal(Ok("John"))
@@ -177,9 +176,9 @@ pub fn prop(resp: Response, key: String, decoder: decode.Decoder(a)) {
 }
 
 /// Extract the URL from an Inertia response.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// testing.url(response) |> should.equal(Ok("/dashboard"))
 /// ```
@@ -189,9 +188,9 @@ pub fn url(response: Response) {
 }
 
 /// Extract the version from an Inertia response.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// testing.version(response) |> should.equal(Ok("1"))
 /// ```
@@ -201,9 +200,9 @@ pub fn version(response: Response) {
 }
 
 /// Extract the encrypt_history flag from an Inertia response.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// testing.encrypt_history(response) |> should.equal(Ok(True))
 /// ```
@@ -213,9 +212,9 @@ pub fn encrypt_history(response: Response) {
 }
 
 /// Extract the clear_history flag from an Inertia response.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```gleam
 /// testing.clear_history(response) |> should.equal(Ok(True))
 /// ```
@@ -252,7 +251,9 @@ fn is_json_response(response: Response) -> Bool {
 /// Extract JSON string from HTML data-page attribute
 fn extract_json_from_html(html: String) -> Result(String, String) {
   case string.split_once(html, "data-page=\"") {
-    Error(_) -> Error("No data-page attribute found in HTML")
+    Error(_) -> {
+      Error("No data-page attribute found in HTML")
+    }
     Ok(#(_, after_start)) -> {
       case string.split_once(after_start, "\"") {
         Error(_) -> Error("Malformed data-page attribute")
