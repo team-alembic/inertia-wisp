@@ -1,5 +1,5 @@
-import type { DashboardPageProps } from "@shared_types/shared_types/dashboard.d.mts";
-import type { ProjectType } from "../types/gleam-projections";
+import type { DashboardPageProp$ } from "@shared_types/shared_types/dashboard.d.mts";
+import type { PageProps } from "../types/gleam-projections";
 import PageContainer from "../components/layout/PageContainer";
 import SectionHeader from "../components/layout/SectionHeader";
 import GridLayout from "../components/layout/GridLayout";
@@ -7,13 +7,18 @@ import StatCard from "../components/cards/StatCard";
 import ContentCard from "../components/cards/ContentCard";
 import StatusIndicator from "../components/data/StatusIndicator";
 import ActivityList from "../components/data/ActivityList";
-import { UsersIcon, PostsIcon, UserIcon, CheckCircleIcon } from "../components/ui/Icons";
+import {
+  UsersIcon,
+  PostsIcon,
+  UserIcon,
+  CheckCircleIcon,
+} from "../components/ui/Icons";
 
-export default function Dashboard(props: ProjectType<DashboardPageProps>) {
+export default function Dashboard(props: PageProps<DashboardPageProp$>) {
   return (
     <PageContainer maxWidth="6xl">
-      <SectionHeader 
-        title="Dashboard" 
+      <SectionHeader
+        title="Dashboard"
         subtitle="Welcome to your admin dashboard"
         variant="large"
       />
@@ -58,7 +63,7 @@ export default function Dashboard(props: ProjectType<DashboardPageProps>) {
               props.recent_signups && props.recent_signups.length > 0
                 ? props.recent_signups.map((email: string, index: number) => ({
                     id: index.toString(),
-                    primary: email
+                    primary: email,
                   }))
                 : []
             }
@@ -81,11 +86,7 @@ export default function Dashboard(props: ProjectType<DashboardPageProps>) {
               variant="blue"
             />
 
-            <StatusIndicator
-              label="Cache"
-              status="Active"
-              variant="purple"
-            />
+            <StatusIndicator label="Cache" status="Active" variant="purple" />
           </div>
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">

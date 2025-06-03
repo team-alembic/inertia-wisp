@@ -1,7 +1,6 @@
 import gleam/dynamic/decode
 import gleam/json
 import gleam/option
-import inertia_wisp/inertia
 
 // ===== DOMAIN TYPES =====
 
@@ -20,48 +19,21 @@ pub fn encode_user_profile(profile: UserProfile) -> json.Json {
     #("name", json.string(profile.name)),
     #("email", json.string(profile.email)),
     #("id", json.int(profile.id)),
-    #(
-      "interests", json.array(profile.interests, json.string),
-    ),
+    #("interests", json.array(profile.interests, json.string)),
     #("bio", json.string(profile.bio)),
   ])
 }
 
 // ===== PROPS TYPES (with encoders) =====
 
-pub type UserProfilePageProps {
-  UserProfilePageProps(user_profile: UserProfile)
+pub type UserProfilePageProp {
+  UserProfileProp(user_profile: UserProfile)
 }
 
-pub fn encode_user_profile_props(props: UserProfilePageProps) -> json.Json {
-  json.object([
-    #("user_profile", encode_user_profile(props.user_profile)),
-  ])
-}
-
-/// Zero value for User Profile Page Props
-pub const zero_user_profile_page_props = UserProfilePageProps(
-  user_profile: UserProfile(
-    name: "",
-    email: "",
-    id: 0,
-    interests: [],
-    bio: "",
-  ),
-)
-
-@target(erlang)
-/// Use User Profile Page Props for the current InertiaJS handler
-pub fn with_user_profile_page_props(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> inertia.InertiaContext(UserProfilePageProps) {
-  ctx
-  |> inertia.set_props(zero_user_profile_page_props, encode_user_profile_props)
-}
-
-//prop assignment function. Generates tuple for use with inertia.prop
-pub fn user_profile(profile: UserProfile) {
-  #("user_profile", fn(_p) { UserProfilePageProps(user_profile: profile) })
+pub fn encode_user_profile_page_prop(prop: UserProfilePageProp) -> json.Json {
+  case prop {
+    UserProfileProp(user_profile) -> encode_user_profile(user_profile)
+  }
 }
 
 // ===== REQUEST TYPES (with decoders) =====

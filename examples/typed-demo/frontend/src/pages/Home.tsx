@@ -1,5 +1,5 @@
-import type { HomePageProps } from "@shared_types/shared_types/home.mjs";
-import type { ProjectType } from "../types/gleam-projections";
+import type { HomePageProp$ } from "@shared_types/shared_types/home.d.mts";
+import type { PageProps } from "../types/gleam-projections";
 import PageContainer from "../components/layout/PageContainer";
 import SectionHeader from "../components/layout/SectionHeader";
 import GridLayout from "../components/layout/GridLayout";
@@ -8,7 +8,7 @@ import ContentCard from "../components/cards/ContentCard";
 import ActionButton from "../components/interactive/ActionButton";
 import { CheckIcon, TeamIcon, MailIcon, RefreshIcon } from "../components/ui/Icons";
 
-export default function Home(props: ProjectType<HomePageProps>) {
+export default function Home(props: PageProps<HomePageProp$>) {
   console.log({ props });
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

@@ -27,7 +27,7 @@ fn get_user_by_id(id: Int) -> User {
 
 // User profile handler using typed props
 pub fn user_profile_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   user_id: Int,
 ) -> wisp.Response {
   // Simulate fetching user data
@@ -44,7 +44,7 @@ pub fn user_profile_handler(
     )
 
   ctx
-  |> users.with_user_profile_page_props()
-  |> inertia.prop(users.user_profile(user_profile))
+  |> inertia.with_encoder(users.encode_user_profile_page_prop)
+  |> inertia.prop("user_profile", users.UserProfileProp(user_profile))
   |> inertia.render("users/UserProfile")
 }

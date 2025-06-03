@@ -1,5 +1,5 @@
-import type { UserProfilePageProps } from "@shared_types/shared_types/users.mjs";
-import type { ProjectType } from "../../types/gleam-projections";
+import type { UserProfilePageProp$ } from "@shared_types/shared_types/users.d.mts";
+import type { PageProps } from "../../types/gleam-projections";
 import PageContainer from "../../components/layout/PageContainer";
 import SectionHeader from "../../components/layout/SectionHeader";
 import GridLayout from "../../components/layout/GridLayout";
@@ -7,7 +7,7 @@ import ContentCard from "../../components/cards/ContentCard";
 import ProfileSection from "../../components/data/ProfileSection";
 import TagList from "../../components/data/TagList";
 
-export default function Foo(props: ProjectType<UserProfilePageProps>) {
+export default function UserProfile(props: PageProps<UserProfilePageProp$>) {
   const userProfile = props.user_profile;
   return (
     <PageContainer>

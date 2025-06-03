@@ -12,23 +12,24 @@ import validators/user_validator
 import wisp
 
 pub fn edit_user_page(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   id_str: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
   use id <- utils.require_int(id_str)
   use user <- find_user(id, db)
-  
+
   // Create initial props
-  let initial_props = props.UserProps(
-    auth: props.unauthenticated_user(),
-    csrf_token: "",
-    users: [],
-    pagination: json.null(),
-    user: json.null(),
-    success: "",
-    errors: json.null(),
-  )
+  let initial_props =
+    props.UserProps(
+      auth: props.unauthenticated_user(),
+      csrf_token: "",
+      users: [],
+      pagination: json.null(),
+      user: json.null(),
+      success: "",
+      errors: json.null(),
+    )
 
   // Transform to typed context
   ctx
@@ -50,7 +51,7 @@ fn find_user(
 }
 
 pub fn update_user(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   id_str: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -85,21 +86,27 @@ fn validate_update_request(
 
 fn error_response(ctx, user, errors) {
   // Create initial props
-  let initial_props = props.UserProps(
-    auth: props.unauthenticated_user(),
-    csrf_token: "",
-    users: [],
-    pagination: json.null(),
-    user: json.null(),
-    success: "",
-    errors: json.null(),
-  )
+  let initial_props =
+    props.UserProps(
+      auth: props.unauthenticated_user(),
+      csrf_token: "",
+      users: [],
+      pagination: json.null(),
+      user: json.null(),
+      success: "",
+      errors: json.null(),
+    )
 
   // Transform to typed context
   ctx
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
   |> inertia.prop(props.user_user(user.user_to_json(user)))
-  |> inertia.prop(props.user_errors(json.object(dict.to_list(errors) |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }))))
+  |> inertia.prop(
+    props.user_errors(json.object(
+      dict.to_list(errors)
+      |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }),
+    )),
+  )
   |> inertia.render("EditUser")
 }

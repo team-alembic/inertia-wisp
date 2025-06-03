@@ -72,44 +72,27 @@ pub type IncludeProp {
   IncludeOptionally
 }
 
-/// A prop transformation with inclusion behavior for typed contexts
-pub type PropTransform(props) {
-  PropTransform(
-    name: String,
-    transform: fn(props) -> props,
-    include: IncludeProp,
-  )
-}
-
-/// Empty props type for middleware-before-routing pattern
-/// This allows middleware to create a context without knowing the specific prop types
-/// that will be used by individual route handlers
-pub type EmptyProps {
-  EmptyProps
+pub type Prop(prop) {
+  Prop(prop_fn: fn() -> prop, include: IncludeProp)
 }
 
 /// Encoder for EmptyProps - always produces an empty JSON object
-pub fn encode_empty_props(_props: EmptyProps) -> json.Json {
+pub fn encode_empty_props(_props: a) -> json.Json {
   json.object([])
 }
-
-
 
 /// Configuration for the Inertia adapter
 pub type Config {
   Config(version: String, ssr: Bool, encrypt_history: Bool)
 }
 
-
-
 /// Context for statically typed props
-pub type InertiaContext(props) {
+pub type InertiaContext(prop) {
   InertiaContext(
     config: Config,
     request: wisp.Request,
-    prop_transforms: List(PropTransform(props)),
-    props_encoder: fn(props) -> json.Json,
-    props_zero: props,
+    props: Dict(String, Prop(prop)),
+    prop_encoder: fn(prop) -> json.Json,
     errors: Dict(String, String),
     encrypt_history: Bool,
     clear_history: Bool,
@@ -117,15 +100,12 @@ pub type InertiaContext(props) {
   )
 }
 
-
-
-pub fn new_context(config, request, props_zero, props_encoder) {
+pub fn new_context(config, request) {
   InertiaContext(
     config: config,
     request: request,
-    prop_transforms: [],
-    props_encoder: props_encoder,
-    props_zero: props_zero,
+    props: dict.new(),
+    prop_encoder: fn(_) { json.null() },
     errors: dict.new(),
     encrypt_history: config.encrypt_history,
     clear_history: False,

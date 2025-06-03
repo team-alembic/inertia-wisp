@@ -7,7 +7,7 @@ import users/handlers/show_profile_handler
 import wisp
 
 pub fn users_router(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   request: wisp.Request,
 ) -> wisp.Response {
   case wisp.path_segments(request) {

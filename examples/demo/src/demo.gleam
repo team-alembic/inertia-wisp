@@ -102,7 +102,7 @@ fn handle_request(
 }
 
 fn home_page(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   db: sqlight.Connection,
 ) -> wisp.Response {
   let user_count = case user_data.get_all_users(db) {
@@ -132,9 +132,7 @@ fn home_page(
 }
 
 /// Example of using asset versioning with custom config
-fn versioned_page(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+fn versioned_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   // Create initial props
   let initial_props =
     props.VersionedProps(
@@ -158,7 +156,7 @@ fn versioned_page(
   |> inertia.render("VersionedPage")
 }
 
-fn about_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+fn about_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   // Create initial props
   let initial_props =
     props.AboutProps(
@@ -181,9 +179,7 @@ fn about_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response 
 }
 
 /// Demo page showcasing different prop inclusion strategies
-fn demo_features_page(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+fn demo_features_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   // Create initial props for demonstration
   let initial_props =
     props.DemoFeaturesProps(

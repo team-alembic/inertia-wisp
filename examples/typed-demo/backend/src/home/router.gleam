@@ -4,7 +4,7 @@ import inertia_wisp/inertia
 import wisp
 
 pub fn home_router(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   request: wisp.Request,
 ) -> wisp.Response {
   case wisp.path_segments(request) {

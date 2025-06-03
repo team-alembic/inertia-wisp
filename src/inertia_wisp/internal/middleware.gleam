@@ -16,7 +16,6 @@
 
 import gleam/erlang/process.{type Subject}
 import gleam/http/request
-import gleam/json
 import gleam/list
 import gleam/option.{type Option}
 import gleam/string
@@ -66,9 +65,7 @@ pub fn middleware(
   req: Request,
   config: Config,
   ssr_supervisor: Option(Subject(SSRMessage)),
-  props_zero: props,
-  props_encoder: fn(props) -> json.Json,
-  handler: fn(types.InertiaContext(props)) -> Response,
+  handler: fn(types.InertiaContext(a)) -> Response,
 ) -> Response {
   let is_inertia_request = is_inertia_request(req)
 
@@ -77,7 +74,7 @@ pub fn middleware(
     True -> version.version_mismatch_response(req)
     False -> {
       // Create typed context
-      let context = types.new_context(config, req, props_zero, props_encoder)
+      let context = types.new_context(config, req)
 
       // Configure SSR if supervisor is available
       let context = case ssr_supervisor {

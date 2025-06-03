@@ -1,43 +1,19 @@
 import gleam/dynamic/decode
 import gleam/json
 import gleam/option
-import inertia_wisp/inertia
 
 // ===== PROPS TYPES (with encoders) =====
 
-pub type ContactPageProps {
-  ContactPageProps(title: String, message: String)
+pub type ContactPageProp {
+  Title(title: String)
+  Message(message: String)
 }
 
-pub fn encode_contact_page_props(props: ContactPageProps) -> json.Json {
-  json.object([
-    #("title", json.string(props.title)),
-    #("message", json.string(props.message)),
-  ])
-}
-
-/// Zero value for Contact Page Props
-pub const zero_contact_page_props = ContactPageProps(
-  title: "",
-  message: "",
-)
-
-@target(erlang)
-/// Use Contact Page Props for the current InertiaJS handler
-pub fn with_contact_page_props(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> inertia.InertiaContext(ContactPageProps) {
-  ctx
-  |> inertia.set_props(zero_contact_page_props, encode_contact_page_props)
-}
-
-//prop assignment functions. Generates tuples for use with inertia.prop
-pub fn title(t: String) {
-  #("title", fn(p) { ContactPageProps(..p, title: t) })
-}
-
-pub fn message(m: String) {
-  #("message", fn(p) { ContactPageProps(..p, message: m) })
+pub fn encode_contact_page_prop(prop: ContactPageProp) -> json.Json {
+  case prop {
+    Title(title) -> json.string(title)
+    Message(message) -> json.string(message)
+  }
 }
 
 // ===== REQUEST TYPES (with decoders) =====

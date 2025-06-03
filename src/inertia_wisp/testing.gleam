@@ -76,10 +76,8 @@
 //// type-safe testing of response data. This catches both missing props
 //// and type mismatches at test time.
 
-import gleam/bit_array
 import gleam/dynamic
 import gleam/dynamic/decode
-import gleam/http
 import gleam/http/request
 import gleam/json.{UnableToDecode}
 import gleam/list
@@ -103,16 +101,11 @@ import wisp/testing
 /// testing.component(response) |> should.equal(Ok("HomePage"))
 /// ```
 pub fn inertia_request() -> Request {
-  testing.request(
-    http.Get,
-    "/",
-    [
-      #("accept", "application/json"),
-      #("x-inertia", "true"),
-      #("x-inertia-version", "1"),
-    ],
-    bit_array.from_string(""),
-  )
+  testing.get("/", [
+    #("accept", "application/json"),
+    #("x-inertia", "true"),
+    #("x-inertia-version", "1"),
+  ])
 }
 
 /// Add partial data headers to a request for testing partial reloads.

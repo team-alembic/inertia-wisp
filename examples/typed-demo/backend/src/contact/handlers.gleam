@@ -7,24 +7,21 @@ import wisp
 // ===== PAGE HANDLERS =====
 
 // Contact form page
-pub fn contact_page_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+pub fn contact_page_handler(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   ctx
-  |> contact.with_contact_page_props()
-  |> inertia.prop(contact.title("Contact Us"))
-  |> inertia.prop(contact.message(
-    "We'd love to hear from you. Send us a message!",
-  ))
+  |> inertia.with_encoder(contact.encode_contact_page_prop)
+  |> inertia.prop("title", contact.Title("Contact Us"))
+  |> inertia.prop(
+    "message",
+    contact.Message("We'd love to hear from you. Send us a message!"),
+  )
   |> inertia.render("contact/ContactForm")
 }
 
 // ===== FORM HANDLERS =====
 
 // Contact form handler
-pub fn contact_form_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+pub fn contact_form_handler(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   use request <- inertia.require_json(
     ctx,
     contact.contact_form_request_decoder(),

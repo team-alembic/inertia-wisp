@@ -7,15 +7,14 @@ import wisp
 // ===== PAGE HANDLERS =====
 
 // Login form page
-pub fn login_page_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+pub fn login_page_handler(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   ctx
-  |> auth.with_login_page_props()
-  |> inertia.prop(auth.title("Login"))
-  |> inertia.prop(auth.message("Please sign in to your account."))
+  |> inertia.with_encoder(auth.encode_login_page_prop)
+  |> inertia.prop("title", auth.Title("Login"))
+  |> inertia.prop("message", auth.Message("Please sign in to your account."))
   |> inertia.prop(
-    auth.demo_info(fn() { ["Demo credentials: demo@example.com / password123"] }),
+    "demo_info",
+    auth.DemoInfo(["Demo credentials: demo@example.com / password123"]),
   )
   |> inertia.render("auth/Login")
 }
@@ -23,9 +22,7 @@ pub fn login_page_handler(
 // ===== FORM HANDLERS =====
 
 // Login form handler
-pub fn login_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+pub fn login_handler(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   use request <- inertia.require_json(ctx, auth.login_request_decoder())
 
   // Validate the request

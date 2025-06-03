@@ -65,32 +65,17 @@ pub fn start_supervisor(
   Ok(sup)
 }
 
-/// Check if SSR is enabled and available
-pub fn is_enabled(supervisor: Subject(SSRMessage)) -> Bool {
-  let status = supervisor.get_status(supervisor)
-  status.enabled && status.supervisor_running
-}
-
-/// Check if the SSR supervisor is running
-pub fn is_supervisor_running(supervisor: Subject(SSRMessage)) -> Bool {
-  let status = supervisor.get_status(supervisor)
-  status.supervisor_running
-}
-
-/// Render a page using SSR with explicit supervisor
-pub fn render_page_with_supervisor(
+pub fn render_page(
   supervisor: Subject(SSRMessage),
-  component: String,
-  props: json.Json,
-  url: String,
-  version: String,
+  page: types.Page,
 ) -> types.SSRResult {
   let status = supervisor.get_status(supervisor)
   case status.enabled {
     False -> types.SSRFallback("SSR not enabled")
     True -> {
-      let page_data = create_page_data(component, props, url, version)
-      case supervisor.render_page(supervisor, page_data, component) {
+      let page_data =
+        create_page_data(page.component, page.props, page.url, page.version)
+      case supervisor.render_page(supervisor, page_data, page.component) {
         Ok(response) -> types.SSRSuccess(response)
         Error(ssr_error) -> {
           types.SSRFallback(
@@ -100,18 +85,6 @@ pub fn render_page_with_supervisor(
       }
     }
   }
-}
-
-/// Render a page using SSR - requires explicit supervisor
-/// For convenience, use render_page_with_supervisor instead
-pub fn render_page(
-  supervisor: Subject(SSRMessage),
-  component: String,
-  props: json.Json,
-  url: String,
-  version: String,
-) -> types.SSRResult {
-  render_page_with_supervisor(supervisor, component, props, url, version)
 }
 
 /// Create page data structure expected by Inertia.js SSR
@@ -128,22 +101,6 @@ fn create_page_data(
     #(dynamic.string("url"), dynamic.string(url)),
     #(dynamic.string("version"), dynamic.string(version)),
   ])
-}
-
-/// Get current SSR status
-pub fn get_status(supervisor: Subject(SSRMessage)) -> types.SSRStatus {
-  supervisor.get_status(supervisor)
-}
-
-/// Update SSR configuration
-pub fn update_config(
-  supervisor: Subject(types.SSRMessage),
-  new_config: types.SSRConfig,
-) -> Result(Nil, String) {
-  case supervisor.update_config(supervisor, new_config) {
-    Ok(result) -> Ok(result)
-    Error(_) -> Error("Failed to update configuration")
-  }
 }
 
 /// Stop SSR supervisorSSRMessage

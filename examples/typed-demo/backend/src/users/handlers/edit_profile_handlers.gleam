@@ -29,7 +29,7 @@ fn get_user_by_id(id: Int) -> User {
 
 // Edit profile form page
 pub fn edit_profile_page_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   _user_id: String,
 ) -> wisp.Response {
   // Simulate fetching user data for editing
@@ -47,8 +47,8 @@ pub fn edit_profile_page_handler(
     )
 
   ctx
-  |> users.with_user_profile_page_props()
-  |> inertia.prop(users.user_profile(user_profile))
+  |> inertia.with_encoder(users.encode_user_profile_page_prop)
+  |> inertia.prop("user_profile", users.UserProfileProp(user_profile))
   |> inertia.render("users/EditProfile")
 }
 
@@ -56,7 +56,7 @@ pub fn edit_profile_page_handler(
 
 // Update profile form handler
 pub fn update_profile_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   user_id: String,
 ) -> wisp.Response {
   use request <- inertia.require_json(
@@ -93,8 +93,8 @@ pub fn update_profile_handler(
         )
 
       ctx
-      |> users.with_user_profile_page_props()
-      |> inertia.prop(users.user_profile(user_profile))
+      |> inertia.with_encoder(users.encode_user_profile_page_prop)
+      |> inertia.prop("user_profile", users.UserProfileProp(user_profile))
       |> inertia.errors(validation_errors)
       |> inertia.render("users/EditProfile")
     }

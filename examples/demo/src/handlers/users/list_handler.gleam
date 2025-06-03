@@ -9,21 +9,22 @@ import types/user
 import wisp
 
 pub fn users_page(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   db: sqlight.Connection,
 ) -> wisp.Response {
   let users_data = get_users_data(db)
-  
+
   // Create initial props
-  let initial_props = props.UserProps(
-    auth: props.unauthenticated_user(),
-    csrf_token: "",
-    users: [],
-    pagination: json.null(),
-    user: json.null(),
-    success: "",
-    errors: json.null(),
-  )
+  let initial_props =
+    props.UserProps(
+      auth: props.unauthenticated_user(),
+      csrf_token: "",
+      users: [],
+      pagination: json.null(),
+      user: json.null(),
+      success: "",
+      errors: json.null(),
+    )
 
   // Transform to typed context
   ctx

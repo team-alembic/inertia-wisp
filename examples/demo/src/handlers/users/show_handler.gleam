@@ -8,7 +8,7 @@ import types/user.{type User}
 import wisp
 
 pub fn show_user_page(
-  req: inertia.InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id_str: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -19,19 +19,23 @@ pub fn show_user_page(
   }
 }
 
-fn render_user_page(req: inertia.InertiaContext(inertia.EmptyProps), user: User) -> wisp.Response {
+fn render_user_page(
+  req: inertia.InertiaContext(Nil),
+  user: User,
+) -> wisp.Response {
   let user_data = user.user_to_json(user)
 
   // Create initial props
-  let initial_props = props.UserProps(
-    auth: props.unauthenticated_user(),
-    csrf_token: "",
-    users: [],
-    pagination: json.null(),
-    user: json.null(),
-    success: "",
-    errors: json.null(),
-  )
+  let initial_props =
+    props.UserProps(
+      auth: props.unauthenticated_user(),
+      csrf_token: "",
+      users: [],
+      pagination: json.null(),
+      user: json.null(),
+      success: "",
+      errors: json.null(),
+    )
 
   // Transform to typed context
   req

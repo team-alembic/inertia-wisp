@@ -9,24 +9,22 @@ import wisp
 
 // Create user form page
 pub fn create_user_page_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
 ) -> wisp.Response {
   ctx
-  |> home.with_home_page_props()
-  |> inertia.prop(home.title("Create New User"))
-  |> inertia.prop(home.message(
+  |> inertia.with_encoder(home.encode_home_page_prop)
+  |> inertia.prop("title", home.Title("Create New User"))
+  |> inertia.prop("message", home.Message(
     "Fill out the form below to create a new user account.",
   ))
-  |> inertia.prop(home.features(fn() { [] }))
+  |> inertia.prop("features", home.Features([]))
   |> inertia.render("users/CreateUser")
 }
 
 // ===== FORM HANDLERS =====
 
 // Create user form handler
-pub fn create_user_handler(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
-) -> wisp.Response {
+pub fn create_user_handler(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   use request <- inertia.require_json(ctx, users.create_user_request_decoder())
 
   // Validate the request

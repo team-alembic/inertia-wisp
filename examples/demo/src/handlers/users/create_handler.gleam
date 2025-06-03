@@ -12,17 +12,18 @@ import validate
 import validators/user_validator
 import wisp
 
-pub fn create_user_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+pub fn create_user_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
   // Create initial props
-  let initial_props = props.UserProps(
-    auth: props.unauthenticated_user(),
-    csrf_token: "",
-    users: [],
-    pagination: json.null(),
-    user: json.null(),
-    success: "",
-    errors: json.null(),
-  )
+  let initial_props =
+    props.UserProps(
+      auth: props.unauthenticated_user(),
+      csrf_token: "",
+      users: [],
+      pagination: json.null(),
+      user: json.null(),
+      success: "",
+      errors: json.null(),
+    )
 
   // Transform to typed context
   ctx
@@ -32,7 +33,7 @@ pub fn create_user_page(ctx: inertia.InertiaContext(inertia.EmptyProps)) -> wisp
 }
 
 pub fn create_user(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   db: sqlight.Connection,
 ) -> wisp.Response {
   use request <- inertia.require_json(ctx, user.create_user_request_decoder())
@@ -42,7 +43,7 @@ pub fn create_user(
 }
 
 fn validate_user_request(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   user_request: user.CreateUserRequest,
   db,
   cont: fn() -> wisp.Response,
@@ -56,7 +57,7 @@ fn validate_user_request(
 }
 
 fn insert_user(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   user_request: CreateUserRequest,
   db: sqlight.Connection,
   cont: fn() -> wisp.Response,
@@ -71,24 +72,30 @@ fn insert_user(
 }
 
 fn validation_error_response(
-  ctx: inertia.InertiaContext(inertia.EmptyProps),
+  ctx: inertia.InertiaContext(Nil),
   errors: dict.Dict(String, String),
 ) -> wisp.Response {
   // Create initial props
-  let initial_props = props.UserProps(
-    auth: props.unauthenticated_user(),
-    csrf_token: "",
-    users: [],
-    pagination: json.null(),
-    user: json.null(),
-    success: "",
-    errors: json.null(),
-  )
+  let initial_props =
+    props.UserProps(
+      auth: props.unauthenticated_user(),
+      csrf_token: "",
+      users: [],
+      pagination: json.null(),
+      user: json.null(),
+      success: "",
+      errors: json.null(),
+    )
 
   // Transform to typed context
   ctx
   |> inertia.set_props(initial_props, props.encode_user_props)
   |> utils.assign_user_common_props()
-  |> inertia.prop(props.user_errors(json.object(dict.to_list(errors) |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }))))
+  |> inertia.prop(
+    props.user_errors(json.object(
+      dict.to_list(errors)
+      |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }),
+    )),
+  )
   |> inertia.render("CreateUser")
 }
