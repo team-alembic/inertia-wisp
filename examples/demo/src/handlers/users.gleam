@@ -4,25 +4,25 @@ import handlers/users/delete_handler
 import handlers/users/edit_handler
 import handlers/users/list_handler
 import handlers/users/show_handler
-import inertia_wisp/inertia.{type InertiaContext}
+import inertia_wisp/inertia
 import sqlight
 import wisp
 
 // Re-export all user handler functions for easy importing
-pub fn users_page(req: InertiaContext(inertia.EmptyProps), db: sqlight.Connection) -> wisp.Response {
+pub fn users_page(req: inertia.InertiaContext(Nil), db: sqlight.Connection) -> wisp.Response {
   list_handler.users_page(req, db)
 }
 
-pub fn create_user_page(req: InertiaContext(inertia.EmptyProps)) -> wisp.Response {
+pub fn create_user_page(req: inertia.InertiaContext(Nil)) -> wisp.Response {
   create_handler.create_user_page(req)
 }
 
-pub fn create_user(req: InertiaContext(inertia.EmptyProps), db: sqlight.Connection) -> wisp.Response {
+pub fn create_user(req: inertia.InertiaContext(Nil), db: sqlight.Connection) -> wisp.Response {
   create_handler.create_user(req, db)
 }
 
 pub fn show_user_page(
-  req: InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -30,7 +30,7 @@ pub fn show_user_page(
 }
 
 pub fn edit_user_page(
-  req: InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -38,7 +38,7 @@ pub fn edit_user_page(
 }
 
 pub fn update_user(
-  req: InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -46,7 +46,7 @@ pub fn update_user(
 }
 
 pub fn delete_user(
-  req: InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id: String,
   db: sqlight.Connection,
 ) -> wisp.Response {

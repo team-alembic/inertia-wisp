@@ -1,7 +1,7 @@
 import gleam/dynamic/decode
 import gleam/result
+import shared_types/users.{type User, User}
 import sqlight
-import types/user.{type User, User}
 
 fn user_row_decoder() {
   use user_id <- decode.field(0, decode.int)

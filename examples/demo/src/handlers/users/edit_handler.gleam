@@ -1,12 +1,10 @@
-import data/users
+import data/users as user_data
 import gleam/dict
-import gleam/json
-import gleam/list
 import handlers/utils
 import inertia_wisp/inertia
-import props
+import shared_types/users as user_props
+import shared_types/users.{type User}
 import sqlight
-import types/user.{type User}
 import validate
 import validators/user_validator
 import wisp
@@ -19,23 +17,17 @@ pub fn edit_user_page(
   use id <- utils.require_int(id_str)
   use user <- find_user(id, db)
 
-  // Create initial props
-  let initial_props =
-    props.UserProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      users: [],
-      pagination: json.null(),
-      user: json.null(),
-      success: "",
-      errors: json.null(),
-    )
+  let user_prop_data =
+    user_props.User(id: user.id, name: user.name, email: user.email)
 
-  // Transform to typed context
   ctx
-  |> inertia.set_props(initial_props, props.encode_user_props)
-  |> utils.assign_user_common_props()
-  |> inertia.prop(props.user_user(user.user_to_json(user)))
+  |> inertia.with_encoder(user_props.encode_user_page_prop)
+  |> inertia.always_prop("auth", user_props.Auth(utils.get_demo_auth()))
+  |> inertia.always_prop(
+    "csrf_token",
+    user_props.CsrfToken(utils.get_csrf_token()),
+  )
+  |> inertia.prop("user", user_props.UserProp(user_prop_data))
   |> inertia.render("EditUser")
 }
 
@@ -44,7 +36,7 @@ fn find_user(
   db: sqlight.Connection,
   cont: fn(User) -> wisp.Response,
 ) -> wisp.Response {
-  case users.find_user_by_id(db, id) {
+  case user_data.find_user_by_id(db, id) {
     Ok(user) -> cont(user)
     Error(_) -> wisp.not_found()
   }
@@ -56,11 +48,13 @@ pub fn update_user(
   db: sqlight.Connection,
 ) -> wisp.Response {
   use id <- utils.require_int(id_str)
-  let decoder = user.edit_user_request_decoder(id)
+  let decoder = users.edit_user_request_decoder(id)
   use update_request <- inertia.require_json(ctx, decoder)
   use user <- find_user(id, db)
   use <- validate_update_request(ctx, update_request, user, db)
-  case users.update_user(db, id, update_request.name, update_request.email) {
+  case
+    user_data.update_user(db, id, update_request.name, update_request.email)
+  {
     Ok(_) -> inertia.redirect(ctx.request, "/users/" <> id_str)
     Error(_) -> {
       let errors = dict.from_list([#("general", "Failed to update user")])
@@ -84,29 +78,25 @@ fn validate_update_request(
   }
 }
 
-fn error_response(ctx, user, errors) {
-  // Create initial props
-  let initial_props =
-    props.UserProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      users: [],
-      pagination: json.null(),
-      user: json.null(),
-      success: "",
-      errors: json.null(),
-    )
+fn error_response(
+  ctx: inertia.InertiaContext(Nil),
+  user: User,
+  errors: dict.Dict(String, String),
+) -> wisp.Response {
+  let user_prop_data =
+    users.User(id: user.id, name: user.name, email: user.email)
 
-  // Transform to typed context
+  let validation_errors =
+    user_props.ValidationErrors(errors: dict.to_list(errors))
+
   ctx
-  |> inertia.set_props(initial_props, props.encode_user_props)
-  |> utils.assign_user_common_props()
-  |> inertia.prop(props.user_user(user.user_to_json(user)))
-  |> inertia.prop(
-    props.user_errors(json.object(
-      dict.to_list(errors)
-      |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }),
-    )),
+  |> inertia.with_encoder(user_props.encode_user_page_prop)
+  |> inertia.always_prop("auth", user_props.Auth(utils.get_demo_auth()))
+  |> inertia.always_prop(
+    "csrf_token",
+    user_props.CsrfToken(utils.get_csrf_token()),
   )
+  |> inertia.prop("user", user_props.UserProp(user_prop_data))
+  |> inertia.prop("errors", user_props.Errors(validation_errors))
   |> inertia.render("EditUser")
 }

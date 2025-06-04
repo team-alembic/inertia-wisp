@@ -1,15 +1,17 @@
 import data/users as user_data
 import gleam/erlang/process
 import gleam/http
-import gleam/json
 import gleam/list
 import gleam/option
 import handlers/uploads
 import handlers/users
 import inertia_wisp/inertia
-
 import mist
-import props
+import shared_types/about
+import shared_types/auth
+import shared_types/demo_features
+import shared_types/home
+import shared_types/versioned
 import sqlight
 import wisp
 import wisp/wisp_mist
@@ -110,134 +112,75 @@ fn home_page(
     Error(_) -> 0
   }
 
-  // Create initial props
-  let initial_props =
-    props.HomeProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      message: "",
-      timestamp: "",
-      user_count: 0,
-    )
-
-  // Transform to typed context
   ctx
-  |> inertia.set_props(initial_props, props.encode_home_props)
-  |> inertia.always_prop(props.home_auth(props.authenticated_user("demo_user")))
-  |> inertia.always_prop(props.home_csrf_token("abc123xyz"))
-  |> inertia.prop(props.home_message("Hello from Gleam!"))
-  |> inertia.prop(props.home_timestamp("2024-01-01T00:00:00Z"))
-  |> inertia.prop(props.home_user_count(user_count))
+  |> inertia.with_encoder(home.encode_home_page_prop)
+  |> inertia.always_prop("auth", home.Auth(auth.authenticated_user("demo_user")))
+  |> inertia.always_prop("csrf_token", home.CsrfToken("abc123xyz"))
+  |> inertia.prop("message", home.Message("Hello from Gleam!"))
+  |> inertia.prop("timestamp", home.Timestamp("2024-01-01T00:00:00Z"))
+  |> inertia.prop("user_count", home.UserCount(user_count))
   |> inertia.render("Home")
 }
 
 /// Example of using asset versioning with custom config
 fn versioned_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
-  // Create initial props
-  let initial_props =
-    props.VersionedProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      version: "",
-      build_info: "",
-    )
-
-  // Transform to typed context and assign props
   ctx
-  |> inertia.set_props(initial_props, props.encode_versioned_props)
-  |> inertia.always_prop(
-    props.versioned_auth(props.authenticated_user("demo_user")),
-  )
-  |> inertia.always_prop(props.versioned_csrf_token("abc123xyz"))
-  |> inertia.prop(props.versioned_version("v2.1.0-abc123"))
-  |> inertia.prop(props.versioned_build_info(
+  |> inertia.with_encoder(versioned.encode_versioned_page_prop)
+  |> inertia.always_prop("auth", versioned.Auth(auth.authenticated_user("demo_user")))
+  |> inertia.always_prop("csrf_token", versioned.CsrfToken("abc123xyz"))
+  |> inertia.prop("version", versioned.Version("v2.1.0-abc123"))
+  |> inertia.prop("build_info", versioned.BuildInfo(
     "This page uses custom asset versioning",
   ))
   |> inertia.render("VersionedPage")
 }
 
 fn about_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
-  // Create initial props
-  let initial_props =
-    props.AboutProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      page_title: "",
-      description: "",
-    )
-
-  // Transform to typed context and assign props
   ctx
-  |> inertia.set_props(initial_props, props.encode_about_props)
-  |> inertia.always_prop(
-    props.about_auth(props.authenticated_user("demo_user")),
-  )
-  |> inertia.always_prop(props.about_csrf_token("abc123xyz"))
-  |> inertia.prop(props.about_page_title("About Us"))
-  |> inertia.prop(props.about_description("Learn more about our application"))
+  |> inertia.with_encoder(about.encode_about_page_prop)
+  |> inertia.always_prop("auth", about.Auth(auth.authenticated_user("demo_user")))
+  |> inertia.always_prop("csrf_token", about.CsrfToken("abc123xyz"))
+  |> inertia.prop("page_title", about.PageTitle("About Us"))
+  |> inertia.prop("description", about.Description("Learn more about our application"))
   |> inertia.render("About")
 }
 
 /// Demo page showcasing different prop inclusion strategies
 fn demo_features_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
-  // Create initial props for demonstration
-  let initial_props =
-    props.DemoFeaturesProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      title: "",
-      description: "",
-      expensive_data: json.null(),
-      performance_info: json.null(),
-    )
-
-  // Transform to typed context and demonstrate different inclusion strategies
   // Simulate expensive computation that should only run when needed
-  let expensive_result = fn() {
-    json.object([
-      #("computed_at", json.string("2024-01-01T00:00:00Z")),
-      #(
-        "large_dataset",
-        json.array(
-          [
-            json.string("This would be"),
-            json.string("a large dataset"),
-            json.string("that takes time"),
-            json.string("to compute"),
-          ],
-          fn(x) { x },
-        ),
-      ),
-      #(
-        "database_stats",
-        json.object([
-          #("total_users", json.int(1000)),
-          #("active_sessions", json.int(42)),
-          #("cache_hit_rate", json.float(0.95)),
-        ]),
-      ),
-    ])
-  }
+  let expensive_result = demo_features.ExpensiveData(
+    computed_at: "2024-01-01T00:00:00Z",
+    large_dataset: [
+      "This would be",
+      "a large dataset",
+      "that takes time",
+      "to compute",
+    ],
+    total_users: 1000,
+    active_sessions: 42,
+    cache_hit_rate: 0.95,
+  )
 
-  let performance_info =
-    json.object([
-      #("request_time", json.string("2024-01-01T00:00:00Z")),
-      #("render_mode", json.string("CSR")),
-      #("props_included", json.string("default")),
-    ])
+  let performance_info = demo_features.PerformanceInfo(
+    request_time: "2024-01-01T00:00:00Z",
+    render_mode: "CSR",
+    props_included: "default",
+  )
 
   ctx
-  |> inertia.set_props(initial_props, props.encode_demo_features_props)
+  |> inertia.with_encoder(demo_features.encode_demo_features_page_prop)
   // ALWAYS props - included in all requests (initial + partial)
-  |> inertia.always_prop(props.demo_auth(props.authenticated_user("demo_user")))
-  |> inertia.always_prop(props.demo_csrf_token("abc123xyz"))
+  |> inertia.always_prop("auth", demo_features.Auth(auth.authenticated_user("demo_user")))
+  |> inertia.always_prop("csrf_token", demo_features.CsrfToken("abc123xyz"))
   // DEFAULT props - included in initial requests and when specifically requested
-  |> inertia.prop(props.demo_title("Feature Demo: Prop Inclusion Strategies"))
-  |> inertia.prop(props.demo_description(
+  |> inertia.prop("title", demo_features.Title("Feature Demo: Prop Inclusion Strategies"))
+  |> inertia.prop("description", demo_features.Description(
     "This page demonstrates different prop inclusion behaviors. Check the network tab to see how partial requests include only the props they need.",
   ))
-  |> inertia.prop(props.demo_performance_info(performance_info))
+  |> inertia.prop("performance_info", demo_features.PerformanceInfoProp(performance_info))
   // OPTIONAL props - only included when specifically requested in partial reloads
-  |> inertia.optional_prop(props.demo_expensive_data(expensive_result))
+  |> inertia.optional_prop("expensive_data", fn() {
+    demo_features.ExpensiveDataProp(expensive_result)
+  })
   |> inertia.render("DemoFeatures")
 }

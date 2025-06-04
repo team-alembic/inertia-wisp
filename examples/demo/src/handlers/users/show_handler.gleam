@@ -1,10 +1,8 @@
-import data/users
-import gleam/json
+import data/users as user_data
 import handlers/utils
 import inertia_wisp/inertia
-import props
+import shared_types/users.{type User}
 import sqlight
-import types/user.{type User}
 import wisp
 
 pub fn show_user_page(
@@ -13,7 +11,7 @@ pub fn show_user_page(
   db: sqlight.Connection,
 ) -> wisp.Response {
   use id <- utils.require_int(id_str)
-  case users.find_user_by_id(db, id) {
+  case user_data.find_user_by_id(db, id) {
     Ok(user) -> render_user_page(req, user)
     Error(_) -> wisp.not_found()
   }
@@ -23,24 +21,13 @@ fn render_user_page(
   req: inertia.InertiaContext(Nil),
   user: User,
 ) -> wisp.Response {
-  let user_data = user.user_to_json(user)
+  let user_prop_data =
+    users.User(id: user.id, name: user.name, email: user.email)
 
-  // Create initial props
-  let initial_props =
-    props.UserProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      users: [],
-      pagination: json.null(),
-      user: json.null(),
-      success: "",
-      errors: json.null(),
-    )
-
-  // Transform to typed context
   req
-  |> inertia.set_props(initial_props, props.encode_user_props)
-  |> utils.assign_user_common_props()
-  |> inertia.prop(props.user_user(user_data))
+  |> inertia.with_encoder(users.encode_user_page_prop)
+  |> inertia.always_prop("auth", users.Auth(utils.get_demo_auth()))
+  |> inertia.always_prop("csrf_token", users.CsrfToken(utils.get_csrf_token()))
+  |> inertia.prop("user", users.UserProp(user_prop_data))
   |> inertia.render("ShowUser")
 }

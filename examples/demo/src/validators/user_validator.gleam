@@ -1,8 +1,8 @@
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/option
+import shared_types/users
 import sqlight
-import types/user
 import validate
 
 // Individual validator functions
@@ -27,7 +27,7 @@ pub fn validate_user_input(
 }
 
 pub fn validate_create_request(
-  create_request: user.CreateUserRequest,
+  create_request: users.CreateUserRequest,
   db: sqlight.Connection,
 ) -> validate.ValidationResult {
   validate.accumulate_errors([
@@ -37,8 +37,8 @@ pub fn validate_create_request(
 }
 
 pub fn validate_update_request(
-  user: user.User,
-  update_request: user.EditUserRequest,
+  user: users.User,
+  update_request: users.EditUserRequest,
   db: sqlight.Connection,
 ) -> validate.ValidationResult {
   validate.accumulate_errors([

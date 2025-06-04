@@ -1,11 +1,11 @@
 import data/users
 import handlers/utils
-import inertia_wisp/inertia.{type InertiaContext}
+import inertia_wisp/inertia
 import sqlight
 import wisp
 
 pub fn delete_user(
-  req: InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id_str: String,
   db: sqlight.Connection,
 ) -> wisp.Response {
@@ -17,7 +17,7 @@ pub fn delete_user(
 }
 
 fn handle_successful_deletion(
-  req: InertiaContext(inertia.EmptyProps),
+  req: inertia.InertiaContext(Nil),
   id: Int,
   db: sqlight.Connection,
 ) -> wisp.Response {

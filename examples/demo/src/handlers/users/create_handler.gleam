@@ -1,34 +1,22 @@
-import data/users
+import data/users as user_data
 import gleam/dict
-import gleam/json
-import gleam/list
 import handlers/utils
 import inertia_wisp/inertia
-
-import props
+import shared_types/users as user_props
+import shared_types/users.{type CreateUserRequest}
 import sqlight
-import types/user.{type CreateUserRequest}
 import validate
 import validators/user_validator
 import wisp
 
 pub fn create_user_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
-  // Create initial props
-  let initial_props =
-    props.UserProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      users: [],
-      pagination: json.null(),
-      user: json.null(),
-      success: "",
-      errors: json.null(),
-    )
-
-  // Transform to typed context
   ctx
-  |> inertia.set_props(initial_props, props.encode_user_props)
-  |> utils.assign_user_common_props()
+  |> inertia.with_encoder(user_props.encode_user_page_prop)
+  |> inertia.always_prop("auth", user_props.Auth(utils.get_demo_auth()))
+  |> inertia.always_prop(
+    "csrf_token",
+    user_props.CsrfToken(utils.get_csrf_token()),
+  )
   |> inertia.render("CreateUser")
 }
 
@@ -36,7 +24,7 @@ pub fn create_user(
   ctx: inertia.InertiaContext(Nil),
   db: sqlight.Connection,
 ) -> wisp.Response {
-  use request <- inertia.require_json(ctx, user.create_user_request_decoder())
+  use request <- inertia.require_json(ctx, users.create_user_request_decoder())
   use <- validate_user_request(ctx, request, db)
   use <- insert_user(ctx, request, db)
   inertia.redirect(ctx.request, "/users")
@@ -44,7 +32,7 @@ pub fn create_user(
 
 fn validate_user_request(
   ctx: inertia.InertiaContext(Nil),
-  user_request: user.CreateUserRequest,
+  user_request: users.CreateUserRequest,
   db,
   cont: fn() -> wisp.Response,
 ) -> wisp.Response {
@@ -62,7 +50,7 @@ fn insert_user(
   db: sqlight.Connection,
   cont: fn() -> wisp.Response,
 ) -> wisp.Response {
-  case users.create_user(db, user_request.name, user_request.email) {
+  case user_data.create_user(db, user_request.name, user_request.email) {
     Ok(_) -> cont()
     Error(_e) -> {
       let errors = dict.from_list([#("general", "Failed to create user")])
@@ -75,27 +63,16 @@ fn validation_error_response(
   ctx: inertia.InertiaContext(Nil),
   errors: dict.Dict(String, String),
 ) -> wisp.Response {
-  // Create initial props
-  let initial_props =
-    props.UserProps(
-      auth: props.unauthenticated_user(),
-      csrf_token: "",
-      users: [],
-      pagination: json.null(),
-      user: json.null(),
-      success: "",
-      errors: json.null(),
-    )
+  let validation_errors =
+    user_props.ValidationErrors(errors: dict.to_list(errors))
 
-  // Transform to typed context
   ctx
-  |> inertia.set_props(initial_props, props.encode_user_props)
-  |> utils.assign_user_common_props()
-  |> inertia.prop(
-    props.user_errors(json.object(
-      dict.to_list(errors)
-      |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) }),
-    )),
+  |> inertia.with_encoder(user_props.encode_user_page_prop)
+  |> inertia.always_prop("auth", user_props.Auth(utils.get_demo_auth()))
+  |> inertia.always_prop(
+    "csrf_token",
+    user_props.CsrfToken(utils.get_csrf_token()),
   )
+  |> inertia.prop("errors", user_props.Errors(validation_errors))
   |> inertia.render("CreateUser")
 }
