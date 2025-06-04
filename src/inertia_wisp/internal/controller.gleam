@@ -32,7 +32,9 @@ pub fn render_typed(
   let is_inertia = middleware.is_inertia_request(ctx.request)
   let partial_data = middleware.get_partial_data(ctx.request)
 
-  let props = evaluate_props(ctx, is_inertia, partial_data)
+  let partial_component = middleware.get_partial_component(ctx.request)
+  let props =
+    evaluate_props(ctx, is_inertia, partial_data, partial_component, component)
   let props_json = encode_props_with_errors(props, ctx.prop_encoder, ctx.errors)
   let url = wisp.path_segments(ctx.request) |> string.join("/")
   let url = "/" <> url
@@ -58,9 +60,19 @@ fn evaluate_props(
   ctx: types.InertiaContext(prop),
   is_inertia: Bool,
   partial_data: List(String),
+  partial_component: option.Option(String),
+  current_component: String,
 ) -> dict.Dict(String, prop) {
-  // Check if this is a partial reload (Inertia request with specific data requested)
-  let is_partial_reload = is_inertia && list.length(partial_data) > 0
+  // Check if this is a partial reload - requires ALL three conditions:
+  // 1. Is an Inertia request
+  // 2. Has partial data requested (X-Inertia-Partial-Data header)
+  // 3. Component matches (X-Inertia-Partial-Component header matches current component)
+  let component_matches = case partial_component {
+    option.Some(requested_component) -> requested_component == current_component
+    option.None -> False
+  }
+  let is_partial_reload =
+    is_inertia && !list.is_empty(partial_data) && component_matches
 
   let props_list = dict.to_list(ctx.props)
   props_list

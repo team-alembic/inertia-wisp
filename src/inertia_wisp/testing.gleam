@@ -19,15 +19,13 @@
 ////
 //// ```gleam
 //// import inertia_wisp/testing
-//// import gleam/should
 ////
 //// pub fn test_home_page() {
 ////   let req = testing.inertia_request()
 ////   let response = my_handler(req)
 ////
-////   testing.component(response) |> should.equal(Ok("HomePage"))
-////   testing.prop(response, "title", decode.string)
-////     |> should.equal(Ok("Welcome"))
+////   assert testing.component(response) == Ok("HomePage")
+////   assert testing.prop(response, "title", decode.string) == Ok("Welcome")
 //// }
 //// ```
 ////
@@ -40,8 +38,10 @@
 ////   let response = my_handler(req)
 ////
 ////   // Only specified props should be present
-////   testing.prop(response, "posts", decode.list(decode.string))
-////     |> should.be_ok()
+////   case testing.prop(response, "posts", decode.list(decode.string)) {
+////     Ok(_) -> Nil
+////     Error(_) -> panic as "Expected posts prop to be present"
+////   }
 //// }
 //// ```
 ////
@@ -53,12 +53,10 @@
 ////   let response = user_profile_handler(req)
 ////
 ////   // Test nested object props
-////   testing.prop(response, "user", decode.field("name", decode.string))
-////     |> should.equal(Ok("John Doe"))
+////   assert testing.prop(response, "user", decode.field("name", decode.string)) == Ok("John Doe")
 ////
 ////   // Test array props
-////   testing.prop(response, "items", decode.list(decode.int))
-////     |> should.equal(Ok([1, 2, 3]))
+////   assert testing.prop(response, "items", decode.list(decode.int)) == Ok([1, 2, 3])
 //// }
 //// ```
 ////
@@ -98,7 +96,7 @@ import wisp/testing
 /// ```gleam
 /// let req = testing.inertia_request()
 /// let response = my_handler(req)
-/// testing.component(response) |> should.equal(Ok("HomePage"))
+/// assert testing.component(response) == Ok("HomePage")
 /// ```
 pub fn inertia_request() -> Request {
   testing.get("/", [
@@ -127,6 +125,26 @@ pub fn partial_data(req: Request, props: List(String)) -> Request {
   |> request.set_header("x-inertia-partial-data", partial_data)
 }
 
+/// Add partial component header to a request for testing component matching.
+///
+/// This modifies an existing request to include the `x-inertia-partial-component`
+/// header, which specifies which component is expected for partial reloads.
+/// If the component doesn't match, it should be treated as a regular page load.
+///
+/// ## Example
+///
+/// ```gleam
+/// let req = testing.inertia_request()
+///   |> testing.partial_data(["posts"])
+///   |> testing.partial_component("HomePage")
+/// let response = my_handler(req)
+/// // Should only include partial data if component matches "HomePage"
+/// ```
+pub fn partial_component(req: Request, component: String) -> Request {
+  req
+  |> request.set_header("x-inertia-partial-component", component)
+}
+
 /// Extract the component name from an Inertia response.
 ///
 /// This works for both JSON responses (XHR requests) and HTML responses
@@ -136,7 +154,7 @@ pub fn partial_data(req: Request, props: List(String)) -> Request {
 ///
 /// ```gleam
 /// let response = my_handler(req)
-/// testing.component(response) |> should.equal(Ok("HomePage"))
+/// assert testing.component(response) == Ok("HomePage")
 /// ```
 pub fn component(response: Response) {
   response
@@ -152,16 +170,13 @@ pub fn component(response: Response) {
 ///
 /// ```gleam
 /// // Test a string prop
-/// testing.prop(response, "title", decode.string)
-/// |> should.equal(Ok("My Title"))
+/// assert testing.prop(response, "title", decode.string) == Ok("My Title")
 ///
 /// // Test an integer prop
-/// testing.prop(response, "count", decode.int)
-/// |> should.equal(Ok(42))
+/// assert testing.prop(response, "count", decode.int) == Ok(42)
 ///
 /// // Test a complex object
-/// testing.prop(response, "user", decode.field("name", decode.string))
-/// |> should.equal(Ok("John"))
+/// assert testing.prop(response, "user", decode.field("name", decode.string)) == Ok("John")
 /// ```
 pub fn prop(resp: Response, key: String, decoder: decode.Decoder(a)) {
   resp
@@ -173,7 +188,7 @@ pub fn prop(resp: Response, key: String, decoder: decode.Decoder(a)) {
 /// ## Example
 ///
 /// ```gleam
-/// testing.url(response) |> should.equal(Ok("/dashboard"))
+/// assert testing.url(response) == Ok("/dashboard")
 /// ```
 pub fn url(response: Response) {
   response
@@ -185,7 +200,7 @@ pub fn url(response: Response) {
 /// ## Example
 ///
 /// ```gleam
-/// testing.version(response) |> should.equal(Ok("1"))
+/// assert testing.version(response) == Ok("1")
 /// ```
 pub fn version(response: Response) {
   response
@@ -197,7 +212,7 @@ pub fn version(response: Response) {
 /// ## Example
 ///
 /// ```gleam
-/// testing.encrypt_history(response) |> should.equal(Ok(True))
+/// assert testing.encrypt_history(response) == Ok(True)
 /// ```
 pub fn encrypt_history(response: Response) {
   response
@@ -209,7 +224,7 @@ pub fn encrypt_history(response: Response) {
 /// ## Example
 ///
 /// ```gleam
-/// testing.clear_history(response) |> should.equal(Ok(True))
+/// assert testing.clear_history(response) == Ok(True)
 /// ```
 pub fn clear_history(response: Response) {
   response

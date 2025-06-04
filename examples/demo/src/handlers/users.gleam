@@ -9,7 +9,10 @@ import sqlight
 import wisp
 
 // Re-export all user handler functions for easy importing
-pub fn users_page(req: inertia.InertiaContext(Nil), db: sqlight.Connection) -> wisp.Response {
+pub fn users_page(
+  req: inertia.InertiaContext(Nil),
+  db: sqlight.Connection,
+) -> wisp.Response {
   list_handler.users_page(req, db)
 }
 
@@ -17,7 +20,10 @@ pub fn create_user_page(req: inertia.InertiaContext(Nil)) -> wisp.Response {
   create_handler.create_user_page(req)
 }
 
-pub fn create_user(req: inertia.InertiaContext(Nil), db: sqlight.Connection) -> wisp.Response {
+pub fn create_user(
+  req: inertia.InertiaContext(Nil),
+  db: sqlight.Connection,
+) -> wisp.Response {
   create_handler.create_user(req, db)
 }
 

@@ -39,6 +39,14 @@ pub fn get_partial_data(req: Request) -> List(String) {
   }
 }
 
+/// Get partial component from request headers
+pub fn get_partial_component(req: Request) -> Option(String) {
+  case request.get_header(req, "x-inertia-partial-component") {
+    Ok(component) -> option.Some(component)
+    _ -> option.None
+  }
+}
+
 /// Middleware for typed Inertia contexts with version checking and SSR support
 ///
 /// This middleware handles:
