@@ -16,7 +16,7 @@ Your frontend build must output a CommonJS bundle for Node.js consumption.
 {
   "scripts": {
     "build:js": "esbuild src/main.tsx --bundle --outdir=../static/js --format=esm --splitting --chunk-names=[name]-[hash] --jsx=automatic",
-    "build:ssr": "esbuild src/ssr.tsx --bundle --outdir=../static/js --format=cjs --platform=node --target=node18 --jsx=automatic",
+    "build:ssr": "esbuild src/ssr.tsx --bundle --outdir=../static/js --format=cjs --platform=node --target=node18 --jsx=automatic --outfile=../static/js/ssr.js",
     "build": "npm run build:js && npm run build:ssr"
   }
 }
@@ -55,8 +55,11 @@ Update your main application to use SSR:
 ```gleam
 import gleam/erlang/process
 import gleam/option
-import inertia_wisp/inertia
+import gleam/http
+import mist
 import wisp
+import wisp/wisp_mist
+import inertia_wisp/inertia
 
 pub fn main() {
   wisp.configure_logger()
@@ -74,7 +77,7 @@ pub fn main() {
   }
 
   let assert Ok(_) =
-    handle_request(_, ssr_supervisor)
+    fn(req) { handle_request(req, ssr_supervisor) }
     |> wisp_mist.handler("secret_key_change_me_in_production")
     |> mist.new
     |> mist.port(8000)
@@ -87,8 +90,8 @@ fn start_ssr_supervisor() {
   let config =
     inertia.ssr_config(
       enabled: True,
-      path: "./ssr",
-      module: "ssr",
+      path: "./static/js/ssr.js",
+      module: "render",
       pool_size: 4,
       timeout_ms: 5000,
       supervisor_name: "InertiaSSR",
@@ -109,7 +112,34 @@ fn handle_request(
   case wisp.path_segments(req), req.method {
     [], http.Get -> home_page(ctx)
     ["about"], http.Get -> about_page(ctx)
+    _ -> wisp.not_found()
+  }
+}
 
+// Define your props as union types and encoders
+pub type HomePageProp {
+  Title(title: String)
+  Message(message: String)
+}
+
+fn encode_home_page_prop(prop: HomePageProp) -> json.Json {
+  case prop {
+    Title(title) -> json.string(title)
+    Message(message) -> json.string(message)
+  }
+}
+
+fn home_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
+  ctx
+  |> inertia.with_encoder(encode_home_page_prop)
+  |> inertia.prop("title", Title("Home"))
+  |> inertia.prop("message", Message("Welcome to SSR!"))
+  |> inertia.render("Home")
+}
+
+fn about_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
+  inertia.render(ctx, "About")
+}
 ```
 
 ## Step 3: Build and Run

@@ -34,30 +34,21 @@
 //// }
 //// ```
 ////
-//// 3. Define your page props type and to_json function:
+//// 3. Define your page props as a union type and encoder function:
 ////
 //// ```gleam
-//// pub type User {
-////   User(name: String, email: String)
+//// pub type HomePageProp {
+////   Title(title: String)
+////   User(user: String)
+////   Count(count: Int)
 //// }
 ////
-//// pub type HomePageProps {
-////   HomePageProps(title: String, user: User)
-//// }
-////
-//// fn title_prop(title: String) { #("title", fn(p){ HomePageProps(..p, title: title) }) }
-//// fn user_prop(user: User) { #("user", fn(p){ HomePageProps(..p, user: user) }) }
-////
-//// pub const init_home_page_props = HomePageProps(title: "", user: User(name: "", email: ""))
-////
-//// pub fn home_page_props_to_json(props: HomePageProps) -> json.Json {
-////   json.object([
-////     #("title", json.string(props.title)),
-////     #("user", json.object([
-////       #("name", json.string(props.user.name)),
-////       #("email", json.string(props.user.email))
-////     ]))
-////   ])
+//// fn encode_home_page_prop(prop: HomePageProp) -> json.Json {
+////   case prop {
+////     Title(title) -> json.string(title)
+////     User(user) -> json.string(user)
+////     Count(count) -> json.int(count)
+////   }
 //// }
 //// ```
 ////
@@ -66,9 +57,10 @@
 //// ```gleam
 //// fn home_page(ctx: inertia.InertiaContext(Nil)) -> wisp.Response {
 ////   ctx
-////   |> inertia.set_props(init_home_page_props, home_page_props_to_json)
-////   |> inertia.prop(title_prop("Welcome"))
-////   |> inertia.prop(user_prop(User(name: "John", email: "john@example.com"))
+////   |> inertia.with_encoder(encode_home_page_prop)
+////   |> inertia.prop("title", Title("Welcome"))
+////   |> inertia.prop("user", User("John"))
+////   |> inertia.prop("count", Count(42))
 ////   |> inertia.render("Home")
 //// }
 //// ```
@@ -82,9 +74,9 @@
 ////
 //// let ssr_config = inertia.ssr_config(
 ////   enabled: True,
-////   path: "./static/js",
-////   module: "ssr",
-////   pool_size: 2,
+////   path: "./static/js/ssr.js",
+////   module: "render",
+////   pool_size: 4,
 ////   timeout_ms: 5000,
 ////   supervisor_name: "InertiaSSR",
 //// )
@@ -92,7 +84,7 @@
 //// let assert Ok(ssr_supervisor) = inertia.start_ssr_supervisor(ssr_config)
 ////
 //// // Use the supervisor in your middleware
-//// inertia.middleware(req, config, option.Some(ssr_supervisor), handler)
+//// use ctx <- inertia.middleware(req, config, option.Some(ssr_supervisor))
 //// ```
 
 import gleam/dict
@@ -121,6 +113,35 @@ pub type InertiaContext(props) =
 pub type SSRConfig =
   types.SSRConfig
 
+/// Converts an InertiaContext(Nil) to a typed InertiaContext(prop) with a prop encoder.
+///
+/// This function is essential for the typed props system. It takes a context from
+/// the middleware (which has type Nil) and converts it to work with your specific
+/// prop type, providing the encoder function that will serialize your props to JSON.
+///
+/// ## Example
+///
+/// ```gleam
+/// pub type HomePageProp {
+///   Title(title: String)
+///   Message(message: String)
+/// }
+///
+/// fn encode_home_page_prop(prop: HomePageProp) -> json.Json {
+///   case prop {
+///     Title(title) -> json.string(title)
+///     Message(message) -> json.string(message)
+///   }
+/// }
+///
+/// fn home_page(ctx: InertiaContext(Nil)) -> wisp.Response {
+///   ctx
+///   |> inertia.with_encoder(encode_home_page_prop)
+///   |> inertia.prop("title", Title("Welcome"))
+///   |> inertia.prop("message", Message("Hello World!"))
+///   |> inertia.render("Home")
+/// }
+/// ```
 pub fn with_encoder(
   ctx: types.InertiaContext(Nil),
   encoder: fn(prop) -> json.Json,
@@ -137,6 +158,22 @@ pub fn with_encoder(
   )
 }
 
+/// Assign a prop with default inclusion behavior.
+/// The prop will be included in initial renders and partial reloads unless
+/// specifically excluded via the X-Inertia-Partial-Data header.
+///
+/// ## Example
+///
+/// ```gleam
+/// pub type HomePageProp {
+///   Title(title: String)
+///   Message(message: String)
+/// }
+///
+/// ctx
+/// |> inertia.prop("title", Title("Welcome"))
+/// |> inertia.prop("message", Message("Hello!"))
+/// ```
 pub fn prop(ctx: InertiaContext(p), key: String, prop: p) {
   types.InertiaContext(
     ..ctx,
@@ -148,14 +185,14 @@ pub fn prop(ctx: InertiaContext(p), key: String, prop: p) {
   )
 }
 
-/// Assign a prop that is always included in renders using a tuple.
+/// Assign a prop that is always included in renders.
 /// The prop will be included in both initial renders and all partial reloads.
 ///
 /// ## Examples
 ///
 /// ```gleam
 /// ctx
-/// |> inertia.always_prop(home.auth(current_user))
+/// |> inertia.always_prop("auth", current_user)
 /// ```
 pub fn always_prop(ctx: InertiaContext(t), key: String, prop: t) {
   types.InertiaContext(
@@ -168,7 +205,7 @@ pub fn always_prop(ctx: InertiaContext(t), key: String, prop: t) {
   )
 }
 
-/// Assign a prop that is only included when specifically requested using a tuple.
+/// Assign a prop that is only included when specifically requested.
 /// The prop will be excluded from initial renders and only included in partial reloads
 /// when explicitly requested via the X-Inertia-Partial-Data header.
 ///
@@ -176,8 +213,8 @@ pub fn always_prop(ctx: InertiaContext(t), key: String, prop: t) {
 ///
 /// ```gleam
 /// ctx
-/// |> inertia.optional_prop(home.expensive_data(compute_expensive_data()))
-/// |> inertia.optional_prop(home.debug_info(get_debug_info()))
+/// |> inertia.optional_prop("expensive_data", fn() { compute_expensive_data() })
+/// |> inertia.optional_prop("debug_info", fn() { get_debug_info() })
 /// ```
 pub fn optional_prop(ctx: InertiaContext(t), key: String, func: fn() -> t) {
   types.InertiaContext(
@@ -206,7 +243,7 @@ pub fn optional_prop(ctx: InertiaContext(t), key: String, func: fn() -> t) {
 ///   #("password", "Password must be at least 8 characters"),
 /// ])
 ///
-/// ctx |> inertia.erros(errors)
+/// ctx |> inertia.errors(errors)
 /// ```
 pub fn errors(
   ctx: InertiaContext(props),
@@ -256,61 +293,19 @@ pub fn default_config() -> Config {
 /// This middleware handles version checking, SSR setup, and proper response headers
 /// for the typed prop system.
 ///
-/// ## Parameters
-///
-/// - `req`: The incoming Wisp request
-/// - `config`: Your Inertia configuration
-/// - `ssr_supervisor`: Optional SSR supervisor for server-side rendering
-/// - `props_zero`: Initial/zero value for your props type
-/// - `props_encoder`: Function to encode your props to JSON
-/// - `handler`: Your route handler function that receives a typed InertiaContext
+/// Inertia middleware for handling requests with the Inertia protocol.
+/// Creates an InertiaContext(Nil) and passes it to your handler.
+/// Use with_encoder() and prop functions in your route handlers to assign typed props.
 ///
 /// ## Example
 ///
 /// ```gleam
-/// import wisp
-/// import inertia_wisp/inertia
-///
-/// type HomeProps {
-///   HomeProps(title: String, count: Int)
-/// }
-///
-/// fn encode_home_props(props: HomeProps) -> json.Json {
-///   json.object([
-///     #("title", json.string(props.title)),
-///     #("count", json.int(props.count)),
-///   ])
-/// }
-///
 /// pub fn handle_request(req: wisp.Request) -> wisp.Response {
-///   let config = inertia.config(
-///     version: "1.0.0",
-///     ssr: False,
-///     encrypt_history: False
-///   )
-///
 ///   use ctx <- inertia.middleware(req, config, option.None)
 ///
 ///   case wisp.path_segments(req) {
-///     [] -> home_page(ctx)
-///     ["about"] -> about_page(ctx)
-///     _ -> wisp.not_found()
-///   }
-/// }
-/// ```
-/// Inertia middleware for the elegant middleware-before-routing pattern.
-/// Creates an InertiaContext(EmptyProps) and passes it to your handler.
-/// Use set_props() in your route handlers to assign typed props.
-///
-/// ## Example
-///
-/// ```gleam
-/// pub fn handle_request(req: wisp.Request) -> wisp.Response {
-///   use ctx <- inertia.middleware(req, config, ssr_supervisor)
-///
-///   case wisp.path_segments(req) {
-///     [] -> home_page(ctx)         // ctx |> set_props(HomeProps(...))
-///     ["users"] -> users_page(ctx) // ctx |> set_props(UserProps(...))
+///     [] -> home_page(ctx)     // ctx |> with_encoder(...) |> prop(...)
+///     ["users"] -> users_page(ctx)
 ///     _ -> wisp.not_found()
 ///   }
 /// }
@@ -333,25 +328,24 @@ pub fn middleware(
 /// This is the main function for returning Inertia responses. It will either
 /// return a JSON response (for Inertia requests) or render the full HTML page
 /// (for initial page loads).
-/// Renders an Inertia response with the specified component.
-///
-/// This function works with the statically typed props system, evaluating
-/// prop transformations based on whether it's a partial reload request.
 ///
 /// ## Example
 ///
 /// ```gleam
-/// type UserPageProps {
-///   UserPageProps(name: String, email: String, id: Int)
+/// pub type UserPageProp {
+///   Name(name: String)
+///   Email(email: String)
+///   Id(id: Int)
 /// }
 ///
-/// fn user_profile(ctx: inertia.InertiaContext(UserPageProps), user_id: Int) -> wisp.Response {
+/// fn user_profile(ctx: inertia.InertiaContext(Nil), user_id: Int) -> wisp.Response {
 ///   let user = get_user(user_id)
 ///
 ///   ctx
-///   |> inertia.assign_prop("name", UserPageProps(_, name: user.name))
-///   |> inertia.assign_prop("email", UserPageProps(_, email: user.email))
-///   |> inertia.assign_prop("id", UserPageProps(_, id: user.id))
+///   |> inertia.with_encoder(encode_user_page_prop)
+///   |> inertia.prop("name", Name(user.name))
+///   |> inertia.prop("email", Email(user.email))
+///   |> inertia.prop("id", Id(user.id))
 ///   |> inertia.render("UserProfile")
 /// }
 /// ```
@@ -429,17 +423,20 @@ pub fn require_json(
 /// pub fn main() {
 ///   let ssr_config = inertia.ssr_config(
 ///     enabled: True,
-///     path: "./ssr/server.js",
-///     module: "default",
-///     pool_size: 5,
+///     path: "./static/js/ssr.js",
+///     module: "render",
+///     pool_size: 4,
 ///     timeout_ms: 5000,
-///     supervisor_name: "inertia_ssr"
+///     supervisor_name: "InertiaSSR"
 ///   )
 ///
-///   let ssr_supervisor = inertia.start_ssr_supervisor(ssr_config) |> option.from_result()
+///   let ssr_supervisor = case inertia.start_ssr_supervisor(ssr_config) {
+///     Ok(supervisor) -> option.Some(supervisor)
+///     Error(_) -> option.None
+///   }
 ///
 ///   // Use ssr_supervisor in your middleware
-///   your_app_handler(_, ssr_supervisor)
+///   fn(req) { handle_request(req, ssr_supervisor) }
 ///   |> wisp_mist.handler("secret_key_change_me_in_production")
 ///   |> mist.new
 ///   |> mist.port(8000)
@@ -495,11 +492,11 @@ pub fn config(
 /// ```gleam
 /// let ssr_config = inertia.ssr_config(
 ///   enabled: True,
-///   path: "./dist/ssr/server.js",
-///   module: "default",
-///   pool_size: 3,
-///   timeout_ms: 3000,
-///   supervisor_name: "my_app_ssr"
+///   path: "./static/js/ssr.js",
+///   module: "render",
+///   pool_size: 4,
+///   timeout_ms: 5000,
+///   supervisor_name: "InertiaSSR"
 /// )
 /// ```
 pub fn ssr_config(

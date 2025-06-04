@@ -23,6 +23,7 @@ gleam add inertia_wisp
 
 ```gleam
 import gleam/erlang/process
+import gleam/json
 import gleam/option
 import mist
 import wisp
@@ -59,20 +60,38 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 
 ### 2. Create Your Pages
 
+Define your page props types and create pages:
+
 ```gleam
 import gleam/json
-import gleam/option
 import inertia_wisp/inertia.{type InertiaContext}
 
-fn home_page(ctx: InertiaContext) -> wisp.Response {
+// Define your props as a union type
+pub type HomePageProp {
+  Message(message: String)
+  User(user: String)
+  Count(count: Int)
+}
+
+// Create encoder for your props
+fn encode_home_page_prop(prop: HomePageProp) -> json.Json {
+  case prop {
+    Message(message) -> json.string(message)
+    User(user) -> json.string(user)
+    Count(count) -> json.int(count)
+  }
+}
+
+fn home_page(ctx: InertiaContext(Nil)) -> wisp.Response {
   ctx
-  |> inertia.assign_prop("message", json.string("Hello from Gleam!"))
-  |> inertia.assign_prop("user", json.string("Alice"))
-  |> inertia.assign_prop("count", json.int(42))
+  |> inertia.with_encoder(encode_home_page_prop)
+  |> inertia.prop("message", Message("Hello from Gleam!"))
+  |> inertia.prop("user", User("Alice"))
+  |> inertia.prop("count", Count(42))
   |> inertia.render("Home")
 }
 
-fn about_page(ctx: inertia.InertiaContext) -> wisp.Response {
+fn about_page(ctx: InertiaContext(Nil)) -> wisp.Response {
   inertia.render(ctx, "About")
 }
 ```
@@ -83,6 +102,8 @@ Create your React components that correspond to your Gleam page components:
 
 ```jsx
 // Home.jsx
+import { Link } from '@inertiajs/react'
+
 export default function Home({ message, user, count }) {
   return (
     <div>
@@ -95,6 +116,8 @@ export default function Home({ message, user, count }) {
 }
 
 // About.jsx
+import { Link } from '@inertiajs/react'
+
 export default function About() {
   return (
     <div>
@@ -105,21 +128,37 @@ export default function About() {
 }
 ```
 
-## Testing
+## Advanced Usage
 
-For testing Inertia applications, use the testing utilities:
+### Different Prop Types
 
 ```gleam
-import inertia_wisp/testing
-import gleam/should
+// Always included props (included in all requests)
+ctx
+|> inertia.always_prop("auth", current_user)
 
-pub fn test_home_page() {
-  let req = testing.inertia_request()
-  let response = my_handler(req)
+// Optional props (only included when specifically requested)
+ctx  
+|> inertia.optional_prop("debug", fn() { get_debug_info() })
 
-  testing.component(response) |> should.equal(Ok("HomePage"))
-  testing.prop(response, "title", decode.string)
-    |> should.equal(Ok("Welcome"))
+// Validation errors
+let errors = dict.from_list([
+  #("email", "Email is required"),
+  #("password", "Password must be at least 8 characters"),
+])
+ctx |> inertia.errors(errors)
+```
+
+### JSON Request Handling
+
+```gleam
+import gleam/dynamic/decode
+
+pub fn create_user(ctx: InertiaContext(Nil)) -> wisp.Response {
+  use user_data <- inertia.require_json(ctx, user_decoder())
+  // user_data is now the decoded user struct
+  // ... handle the user creation logic
+  inertia.redirect(ctx.request, "/users")
 }
 ```
 
