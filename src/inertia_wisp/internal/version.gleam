@@ -1,31 +1,3 @@
-//// @internal
-////
-//// Version management for Inertia.js asset cache busting and version mismatches.
-////
-//// This module handles the Inertia.js versioning system, which is crucial for
-//// proper cache busting and ensuring clients receive updated assets when the
-//// application is deployed with changes.
-////
-//// ## How Versioning Works
-////
-//// 1. The server includes a version identifier in every response
-//// 2. Client requests include the version they expect (X-Inertia-Version header)
-//// 3. If versions don't match, the server forces a full page reload
-//// 4. This ensures users always get the latest assets after deployments
-////
-//// ## Version Mismatch Handling
-////
-//// When a version mismatch is detected:
-//// - The server responds with a 409 Conflict status
-//// - The client performs a full page reload to get fresh assets
-//// - This prevents issues with stale JavaScript/CSS files
-////
-//// ## Usage
-////
-//// Version checking is automatically handled by the Inertia middleware.
-//// You configure the version in your Inertia config, and this module
-//// handles the comparison and mismatch responses.
-
 import gleam/http/request
 import gleam/result
 import gleam/string

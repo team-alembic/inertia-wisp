@@ -1,32 +1,3 @@
-//// @internal
-////
-//// Core type definitions for the Inertia.js Wisp adapter.
-////
-//// This module defines all the essential types used throughout the Inertia.js
-//// implementation, including:
-////
-//// - Page objects that represent the data sent to frontend components
-//// - Configuration types for both general settings and SSR
-//// - Context types that carry request state through the application
-//// - Prop management types for lazy evaluation and performance optimization
-//// - SSR (Server-Side Rendering) message and response types
-////
-//// ## Core Types
-////
-//// - `Page`: The main data structure sent to frontend components
-//// - `InertiaContext`: Request context with accumulated props and configuration
-//// - `Config`: Application-wide Inertia configuration
-//// - `SSRConfig`: Server-side rendering configuration
-//// - `Prop` and `PropValue`: Type-safe prop management with lazy evaluation
-////
-//// ## Design Principles
-////
-//// These types are designed to:
-//// - Maintain type safety throughout the request lifecycle
-//// - Support lazy evaluation for performance optimization
-//// - Enable clean separation between always props, regular props, and lazy props
-//// - Provide a foundation for both JSON responses and SSR HTML generation
-
 import gleam/dict.{type Dict}
 import gleam/dynamic
 import gleam/erlang/process.{type Subject}
