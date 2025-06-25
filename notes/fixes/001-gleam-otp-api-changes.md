@@ -74,3 +74,26 @@ The updated dependency versions are now:
 - gleam_otp: 0.16.1 → 1.0.0 ✅ (API compatibility fixed)
 - gleam_erlang: 0.34.0 → 1.0.0 ✅
 - Additional dependencies updated as required by the new versions
+
+## Examples Updates
+
+All example applications in the `examples/` directory were also updated:
+
+### examples/demo
+- Updated dependencies to mist 5.0.0 and wisp 1.8.0
+- Fixed `mist.start_http` → `mist.start`
+- Fixed `process.start` → `process.spawn` in dev script
+
+### examples/typed-demo/backend
+- Updated dependencies to mist 5.0.0 and wisp 1.8.0  
+- Fixed `mist.start_http` → `mist.start`
+- Fixed `process.start` → `process.spawn` in dev script
+
+### examples/typed-demo/shared_types
+- Dependencies automatically updated through the main project
+
+### Breaking Changes Fixed in Examples
+1. **mist 5.0.0**: `start_http()` function removed, replaced with `start()`
+2. **gleam_erlang 1.0.0**: `process.start(fn, bool)` replaced with `process.spawn(fn)`
+
+All examples now compile successfully and are compatible with the new versions.

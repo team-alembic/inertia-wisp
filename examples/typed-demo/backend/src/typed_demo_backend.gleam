@@ -23,7 +23,7 @@ pub fn main() {
     |> wisp_mist.handler("secret_key_change_me_in_production")
     |> mist.new
     |> mist.port(8001)
-    |> mist.start_http
+    |> mist.start
 
   wisp.log_info("Typed Demo server started on http://localhost:8001")
   process.sleep_forever()
