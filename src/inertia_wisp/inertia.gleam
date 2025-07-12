@@ -1,5 +1,6 @@
 //// Inertia.js adapter for the Gleam Wisp web framework.
 
+import gleam/dict
 import gleam/json
 import gleam/list
 import gleam/option
@@ -89,7 +90,11 @@ pub fn eval(
   types.Page(
     component: component,
     props: evaluated_props,
+    errors: option.None,
     deferred_props: deferred_props,
+    merge_props: option.None,
+    deep_merge_props: option.None,
+    match_props_on: option.None,
     encode_prop: encode_prop,
     url: url,
     version: "1",
@@ -135,25 +140,41 @@ fn is_partial_prop(prop: types.Prop(p), partial_data: List(String)) -> Bool {
 
 type PropEval(p) {
   Value(value: p)
-  Defer(name: String)
+  Defer(name: String, group: option.Option(String))
 }
 
 /// Evaluate props and separate into evaluated props and deferred prop names
 fn evaluate_and_separate_props(
   props: List(types.Prop(p)),
   is_partial: Bool,
-) -> #(List(p), List(String)) {
-  let #(evaluated, deferred) =
+) -> #(List(p), option.Option(dict.Dict(String, List(String)))) {
+  let #(evaluated, deferred_groups) =
     props
-    |> list.fold(#([], []), fn(acc, prop) {
+    |> list.fold(#([], dict.new()), fn(acc, prop) {
       let #(eval_acc, defer_acc) = acc
       case evaluate_prop(prop, is_partial) {
         Value(value) -> #([value, ..eval_acc], defer_acc)
-        Defer(name) -> #(eval_acc, [name, ..defer_acc])
+        Defer(name, group) -> {
+          let group_name = option.unwrap(group, "default")
+          let current_props =
+            dict.get(defer_acc, group_name)
+            |> option.from_result()
+            |> option.unwrap([])
+          let updated_props = [name, ..current_props]
+          #(eval_acc, dict.insert(defer_acc, group_name, updated_props))
+        }
       }
     })
 
-  #(list.reverse(evaluated), list.reverse(deferred))
+  let final_deferred = case dict.is_empty(deferred_groups) {
+    True -> option.None
+    False ->
+      option.Some(
+        deferred_groups |> dict.map_values(fn(_, v) { list.reverse(v) }),
+      )
+  }
+
+  #(list.reverse(evaluated), final_deferred)
 }
 
 /// Evaluate a single prop and return its evaluation result
@@ -163,10 +184,10 @@ fn evaluate_prop(prop: types.Prop(p), is_partial: Bool) -> PropEval(p) {
     types.LazyProp(_, resolver) -> Value(resolver())
     types.OptionalProp(_, resolver) -> Value(resolver())
     types.AlwaysProp(_, value) -> Value(value)
-    types.DeferProp(name, _, resolver) ->
+    types.DeferProp(name, group, resolver) ->
       case is_partial {
         True -> Value(resolver())
-        False -> Defer(name)
+        False -> Defer(name, group)
       }
     types.MergeProp(inner_prop, _) -> evaluate_prop(inner_prop, is_partial)
   }

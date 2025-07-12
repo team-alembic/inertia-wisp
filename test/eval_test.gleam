@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/json
 import gleam/list
 import gleam/option
@@ -35,7 +36,6 @@ fn encode_test_prop(prop: TestProp) -> #(String, json.Json) {
 
 pub fn eval_basic_functionality_test() {
   let req = wisp_testing.get("/home", [])
-
   let props = [
     types.DefaultProp("user", UserProp("John")),
     types.AlwaysProp("count", CountProp(42)),
@@ -49,12 +49,11 @@ pub fn eval_basic_functionality_test() {
   assert page.encrypt_history == False
   assert page.clear_history == False
   assert list.length(page.props) == 2
-  assert page.deferred_props == []
+  assert page.deferred_props == option.None
 }
 
 pub fn eval_root_path_test() {
   let req = wisp_testing.get("/", [])
-
   let props = [types.DefaultProp("message", MessageProp("Welcome"))]
 
   let page = inertia.eval(req, "Home", props, encode_test_prop)
@@ -64,7 +63,6 @@ pub fn eval_root_path_test() {
 
 pub fn eval_nested_path_test() {
   let req = wisp_testing.get("/users/123/edit", [])
-
   let props = [types.DefaultProp("user", UserProp("John"))]
 
   let page = inertia.eval(req, "EditUser", props, encode_test_prop)
@@ -86,7 +84,7 @@ pub fn eval_standard_inertia_request_test() {
 
   // Should include default, lazy, and always props, but not optional
   assert list.length(page.props) == 3
-  assert page.deferred_props == []
+  assert page.deferred_props == option.None
 }
 
 pub fn eval_with_deferred_props_test() {
@@ -102,7 +100,8 @@ pub fn eval_with_deferred_props_test() {
 
   // Should include default and always props, deferred should be in deferred_props list
   assert list.length(page.props) == 2
-  assert page.deferred_props == ["heavy_data"]
+  assert page.deferred_props
+    == option.Some(dict.from_list([#("default", ["heavy_data"])]))
 }
 
 pub fn eval_partial_reload_only_test() {
@@ -181,11 +180,9 @@ pub fn eval_partial_reload_component_match_test() {
 
 pub fn eval_merge_prop_default_test() {
   let req = testing.inertia_request()
-
-  let merge_prop =
-    types.MergeProp(types.DefaultProp("users", UserProp("John")), option.None)
-
-  let props = [merge_prop]
+  let props = [
+    types.MergeProp(types.DefaultProp("users", UserProp("John")), option.None),
+  ]
 
   let page = inertia.eval(req, "HomePage", props, encode_test_prop)
 
@@ -195,13 +192,12 @@ pub fn eval_merge_prop_default_test() {
 pub fn eval_merge_prop_optional_excluded_test() {
   let req = testing.inertia_request()
 
-  let merge_prop =
+  let props = [
     types.MergeProp(
       types.OptionalProp("users", fn() { UserProp("John") }),
       option.None,
-    )
-
-  let props = [merge_prop]
+    ),
+  ]
 
   let page = inertia.eval(req, "HomePage", props, encode_test_prop)
 
@@ -214,13 +210,12 @@ pub fn eval_merge_prop_partial_reload_test() {
     testing.inertia_request()
     |> testing.partial_data(["users"])
 
-  let merge_prop =
+  let props = [
     types.MergeProp(
       types.OptionalProp("users", fn() { UserProp("John") }),
       option.Some(["id"]),
-    )
-
-  let props = [merge_prop]
+    ),
+  ]
 
   let page = inertia.eval(req, "HomePage", props, encode_test_prop)
 
@@ -245,7 +240,8 @@ pub fn eval_non_inertia_request_test() {
   // Non-Inertia request should exclude optional props but include deferred props in the list
   assert list.length(page.props) == 3
   // user, settings, count
-  assert page.deferred_props == ["heavy"]
+  assert page.deferred_props
+    == option.Some(dict.from_list([#("default", ["heavy"])]))
 }
 
 pub fn eval_lazy_evaluation_test() {
@@ -294,7 +290,7 @@ pub fn eval_empty_props_test() {
 
   assert page.component == "EmptyPage"
   assert page.props == []
-  assert page.deferred_props == []
+  assert page.deferred_props == option.None
 }
 
 pub fn eval_empty_partial_data_test() {
@@ -334,7 +330,10 @@ pub fn eval_deferred_with_group_test() {
 
   assert list.length(page.props) == 1
   // only user
-  assert page.deferred_props == ["data1", "data2", "data3"]
+  assert page.deferred_props
+    == option.Some(
+      dict.from_list([#("group1", ["data1", "data2"]), #("group2", ["data3"])]),
+    )
 }
 
 pub fn eval_multiple_prop_types_test() {
@@ -394,7 +393,8 @@ pub fn eval_deferred_prop_evaluated_on_partial_reload_test() {
   // Initial request: analytics not evaluated, just in deferred list
   assert list.length(page.props) == 2
   // user, count
-  assert page.deferred_props == ["analytics"]
+  assert page.deferred_props
+    == option.Some(dict.from_list([#("default", ["analytics"])]))
 
   // Second request - partial reload requesting the deferred prop
   let deferred_req =
@@ -408,15 +408,12 @@ pub fn eval_deferred_prop_evaluated_on_partial_reload_test() {
   // Deferred request: analytics is now evaluated and included in props
   assert list.length(deferred_page.props) == 2
   // analytics, count (always)
-  assert deferred_page.deferred_props == []
+  assert deferred_page.deferred_props == option.None
   // partial reloads don't return deferred_props
 
-  // Verify the deferred prop was actually evaluated by checking its value
-  case deferred_page.props {
-    [MessageProp("Analytics Data"), CountProp(42)] -> Nil
-    [CountProp(42), MessageProp("Analytics Data")] -> Nil
-    _ -> panic as "Expected analytics prop to be evaluated"
-  }
+  // Verify the deferred prop was actually evaluated
+  assert list.contains(deferred_page.props, MessageProp("Analytics Data"))
+  assert list.contains(deferred_page.props, CountProp(42))
 }
 
 pub fn eval_deferred_prop_not_included_unless_requested_test() {
@@ -440,15 +437,13 @@ pub fn eval_deferred_prop_not_included_unless_requested_test() {
   // Should NOT include unrequested deferred "analytics"
   assert list.length(page.props) == 2
   // user, count
-  assert page.deferred_props == []
+  assert page.deferred_props == option.None
   // no deferred props in partial reload
 
-  // Verify the analytics prop was NOT evaluated by checking prop values
-  case page.props {
-    [UserProp("John"), CountProp(42)] -> Nil
-    [CountProp(42), UserProp("John")] -> Nil
-    _ -> panic as "Expected only user and count props, not analytics"
-  }
+  // Verify the analytics prop was NOT evaluated
+  assert list.contains(page.props, UserProp("John"))
+  assert list.contains(page.props, CountProp(42))
+  assert !list.contains(page.props, MessageProp("Analytics Data"))
 }
 
 pub fn eval_merge_prop_always_in_partial_reload_test() {
@@ -458,22 +453,46 @@ pub fn eval_merge_prop_always_in_partial_reload_test() {
     |> testing.partial_data(["user"])
     |> testing.partial_component("HomePage")
 
-  let merge_prop =
-    types.MergeProp(types.AlwaysProp("count", CountProp(42)), option.None)
-
-  let props = [types.DefaultProp("user", UserProp("John")), merge_prop]
+  let props = [
+    types.DefaultProp("user", UserProp("John")),
+    types.MergeProp(types.AlwaysProp("count", CountProp(42)), option.None),
+  ]
 
   let page = inertia.eval(req, "HomePage", props, encode_test_prop)
 
   // MergeProp(AlwaysProp) should be included even if not requested
   assert list.length(page.props) == 2
   // user, count
-  assert page.deferred_props == []
+  assert page.deferred_props == option.None
 
   // Verify both props are present
-  case page.props {
-    [UserProp("John"), CountProp(42)] -> Nil
-    [CountProp(42), UserProp("John")] -> Nil
-    _ -> panic as "Expected both user and count props"
-  }
+  assert list.contains(page.props, UserProp("John"))
+  assert list.contains(page.props, CountProp(42))
+}
+
+pub fn eval_errors_field_test() {
+  let req = testing.inertia_request()
+  let props = [types.DefaultProp("user", UserProp("John"))]
+
+  // Test page without errors
+  let page_no_errors = inertia.eval(req, "HomePage", props, encode_test_prop)
+  assert page_no_errors.errors == option.None
+
+  // Test page with errors
+  let errors =
+    dict.from_list([
+      #("email", "Email is required"),
+      #("name", "Name too short"),
+    ])
+  let page_with_errors =
+    types.Page(..page_no_errors, errors: option.Some(errors))
+  assert page_with_errors.errors == option.Some(errors)
+
+  // Test JSON encoding - errors should be in props when present
+  let json_with_errors = types.encode_page(page_with_errors)
+  let json_no_errors = types.encode_page(page_no_errors)
+
+  // Both should have component, url, etc. but only one should have errors in props
+  // This is a basic structural test - more detailed JSON testing would need JSON parsing
+  assert json_with_errors != json_no_errors
 }

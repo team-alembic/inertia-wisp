@@ -157,6 +157,7 @@ The current function signature is a stub and needs to be updated to include the 
    - Fixed test expectations around deferred props for non-Inertia requests
    - Handled lazy evaluation correctly to avoid unnecessary computation
    - **Critical Fix**: Corrected partial reload logic to require component header - changed `True, option.None -> True` to `True, option.None -> False` per Inertia.js documentation requirements
+   - **Laravel Compatibility**: Updated Page structure to match Laravel Inertia adapter by adding `merge_props`, `deep_merge_props`, `match_props_on` fields and changing `deferred_props` to grouped structure
 
 ### Technical Decisions
 
@@ -207,6 +208,15 @@ All 20 tests pass, covering:
 - Edge cases and error conditions
 - Partial reload behavior without component header (falls back to standard request)
 
+### Laravel Compatibility
+
+Updated the Page structure to match the Laravel Inertia adapter after analyzing the official test suite:
+
+- **Deferred Props Structure**: Changed from flat array `["prop1", "prop2"]` to grouped object `{"default": ["prop1"], "group1": ["prop2"]}`
+- **Added `merge_props`**: Array of prop names that should be merged client-side
+- **Added `deep_merge_props`**: Array of prop names that should be deep merged
+- **Added `match_props_on`**: Array of match strategies like `["prop.key"]` for merge matching
+
 ### Integration Ready
 
-The function is ready for integration with the existing Inertia adapter and can be used by higher-level functions like `render` and context builders. The implementation follows Inertia.js protocol specifications exactly, including the requirement that partial reloads must include the component header for safety, and maintains compatibility with the existing type system.
+The function is ready for integration with the existing Inertia adapter and can be used by higher-level functions like `render` and context builders. The implementation follows Inertia.js protocol specifications exactly, including the requirement that partial reloads must include the component header for safety, and maintains full compatibility with the Laravel Inertia adapter's response structure.
