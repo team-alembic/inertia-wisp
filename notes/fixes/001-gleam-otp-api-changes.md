@@ -69,10 +69,10 @@ The fix was successfully implemented and all tests pass. The new gleam_otp 1.0.0
 - Better separation of concerns in the supervision tree
 
 The updated dependency versions are now:
-- mist: 4.0.7 → 5.0.0 ✅
-- wisp: 1.7.0 → 1.8.0 ✅
-- gleam_otp: 0.16.1 → 1.0.0 ✅ (API compatibility fixed)
-- gleam_erlang: 0.34.0 → 1.0.0 ✅
+- mist: 4.0.7 → 5.0.0 ✅ (with bounds >= 5.0.0 and < 6.0.0)
+- wisp: 1.7.0 → 1.8.0 ✅ (with bounds >= 1.8.0 and < 2.0.0)  
+- gleam_otp: 0.16.1 → 1.0.0 ✅ (with bounds >= 1.0.0 and < 2.0.0, API compatibility fixed)
+- gleam_erlang: 0.34.0 → 1.0.0 ✅ (with bounds >= 1.0.0 and < 2.0.0)
 - Additional dependencies updated as required by the new versions
 
 ## Examples Updates
@@ -95,5 +95,12 @@ All example applications in the `examples/` directory were also updated:
 ### Breaking Changes Fixed in Examples
 1. **mist 5.0.0**: `start_http()` function removed, replaced with `start()`
 2. **gleam_erlang 1.0.0**: `process.start(fn, bool)` replaced with `process.spawn(fn)`
+
+### Version Bounds Applied
+All projects now use proper version bounds to prevent future breaking changes:
+- `gleam_otp = ">= 1.0.0 and < 2.0.0"`
+- `gleam_erlang = ">= 1.0.0 and < 2.0.0"`
+- `mist = ">= 5.0.0 and < 6.0.0"`
+- `wisp = ">= 1.8.0 and < 2.0.0"`
 
 All examples now compile successfully and are compatible with the new versions.

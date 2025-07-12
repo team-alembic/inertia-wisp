@@ -12,13 +12,16 @@ pub type BlogPostPageProp {
   ViewCount(view_count: option.Option(Int))
 }
 
-pub fn encode_blog_post_prop(prop: BlogPostPageProp) -> json.Json {
+pub fn encode_blog_post_prop(prop: BlogPostPageProp) -> #(String, json.Json) {
   case prop {
-    Title(title) -> json.string(title)
-    Content(content) -> json.string(content)
-    Author(author) -> json.string(author)
-    PublishedAt(published_at) -> json.string(published_at)
-    Tags(tags) -> json.array(tags, json.string)
-    ViewCount(view_count) -> json.nullable(view_count, json.int)
+    Title(title) -> #("title", json.string(title))
+    Content(content) -> #("content", json.string(content))
+    Author(author) -> #("author", json.string(author))
+    PublishedAt(published_at) -> #("published_at", json.string(published_at))
+    Tags(tags) -> #("tags", json.array(tags, json.string))
+    ViewCount(view_count) -> #(
+      "view_count",
+      json.nullable(view_count, json.int),
+    )
   }
 }
