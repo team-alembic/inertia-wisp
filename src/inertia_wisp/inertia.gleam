@@ -90,17 +90,21 @@ pub fn eval(
   types.Page(
     component: component,
     props: evaluated_props,
+    encode_prop: encode_prop,
     errors: option.None,
     deferred_props: deferred_props,
     merge_props: option.None,
     deep_merge_props: option.None,
     match_props_on: option.None,
-    encode_prop: encode_prop,
     url: url,
     version: "1",
     encrypt_history: False,
     clear_history: False,
   )
+}
+
+pub fn errors(page: Page(prop), errors: dict.Dict(String, String)) -> Page(prop) {
+  types.Page(..page, errors: option.Some(errors))
 }
 
 /// Filter props based on request type and partial reload settings
@@ -210,93 +214,3 @@ fn build_url_from_request(req: Request) -> String {
   let path = wisp.path_segments(req) |> string.join("/")
   "/" <> path
 }
-// type Product {
-//   Product(
-//     id: String,
-//     title: String,
-//     description: String,
-//     price: Int,
-//     currency: String,
-//   )
-// }
-
-// fn product_to_json(product: Product) -> json.Json {
-//   let Product(id:, title:, description:, price:, currency:) = product
-//   json.object([
-//     #("id", json.string(id)),
-//     #("title", json.string(title)),
-//     #("description", json.string(description)),
-//     #("price", json.int(price)),
-//     #("currency", json.string(currency)),
-//   ])
-// }
-
-// type ProductPageProp {
-//   ProductProp(product: Product)
-//   InStockProp(in_stock: Bool)
-//   DiscountProp(discount: Int)
-// }
-
-// const product = "product"
-
-// const in_stock = "in_stock"
-
-// const discount = "discount"
-
-// fn product_page_prop_to_json(
-//   product_page_prop: ProductPageProp,
-// ) -> #(String, json.Json) {
-//   case product_page_prop {
-//     ProductProp(p) -> #(product, product_to_json(p))
-//     InStockProp(x) -> #(in_stock, json.bool(x))
-//     DiscountProp(x) -> #(in_stock, json.int(x))
-//   }
-// }
-
-// pub fn scratch(req: Request) {
-//   let default_component = "Home"
-//   let default_props = [product, in_stock]
-//   let deferred_props = [discount]
-
-//   let #(component, props) =
-//     req
-//     |> inertia.component_and_props(req, default_component, default_props)
-//   let props = [
-//     Default(product, fn() {
-//       ProductProp(product: Product(
-//         id: "1",
-//         title: "Product Title",
-//         description: "Product Description",
-//         price: 100,
-//         currency: "USD",
-//       ))
-//     }),
-//     Optional(in_stock, fn() { InStockProp(in_stock: True) }),
-//     Always(discount, fn() { DiscountProp(discount: 10) }),
-//     Defer(onSale, fn() { DiscountProp(discount: 10) }))
-//   ]
-
-//   req
-//   |> inertia.page(
-//     resolvers,
-//     product_page_prop_to_json,
-//     default_props,
-//     always_props,
-//     optional_props,
-//     deferred_props,
-//   )
-
-//   let page =
-//     types.Page(
-//       component: component,
-//       props: list.map(props, fn(p) {
-//         dict.get(resolver, p) |> result.lazy_unwrap(fn() { todo })
-//       }),
-//       encode_prop: product_page_prop_to_json,
-//       deferred_props: [discount],
-//       url: "/" <> wisp.path_segments(req) |> string.join("/"),
-//       version: "asdf",
-//       encrypt_history: False,
-//       clear_history: False,
-//     )
-// }

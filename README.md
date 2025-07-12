@@ -3,7 +3,7 @@
 [![Package Version](https://img.shields.io/hexpm/v/inertia_wisp)](https://hex.pm/packages/inertia_wisp)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/inertia_wisp/)
 
-A modern server-side adapter for [Inertia.js](https://inertiajs.com/) built for Gleam and the [Wisp](https://github.com/gleam-wisp/wisp) web framework.
+A modern server-side adapter for [Inertia.js](https://inertiajs.com/) built for Gleam and the [Wisp](https://github.com/gleam-wisp/wisp) web framework. Features a clean, type-safe API for building single-page applications with server-side rendering.
 
 ## What is Inertia.js?
 
@@ -24,11 +24,11 @@ gleam add inertia_wisp
 ```gleam
 import gleam/erlang/process
 import gleam/json
-import gleam/option
 import mist
 import wisp
 import wisp/wisp_mist
 import inertia_wisp/inertia
+import inertia_wisp/internal/types
 
 pub fn main() {
   wisp.configure_logger()
@@ -44,15 +44,11 @@ pub fn main() {
 }
 
 fn handle_request(req: wisp.Request) -> wisp.Response {
-  use ctx <- inertia.middleware(
-    req,
-    inertia.default_config(),
-    option.None  // No SSR supervisor
-  )
-
+  use <- wisp.serve_static(req, from: "./static", under: "/static")
+  
   case wisp.path_segments(req) {
-    [] -> home_page(ctx)
-    ["about"] -> about_page(ctx)
+    [] -> home_page(req)
+    ["about"] -> about_page(req)
     _ -> wisp.not_found()
   }
 }
@@ -64,7 +60,8 @@ Define your page props types and create pages:
 
 ```gleam
 import gleam/json
-import inertia_wisp/inertia.{type InertiaContext}
+import inertia_wisp/inertia
+import inertia_wisp/internal/types
 
 // Define your props as a union type
 pub type HomePageProp {
@@ -74,25 +71,28 @@ pub type HomePageProp {
 }
 
 // Create encoder for your props
-fn encode_home_page_prop(prop: HomePageProp) -> json.Json {
+fn encode_home_page_prop(prop: HomePageProp) -> #(String, json.Json) {
   case prop {
-    Message(message) -> json.string(message)
-    User(user) -> json.string(user)
-    Count(count) -> json.int(count)
+    Message(message) -> #("message", json.string(message))
+    User(user) -> #("user", json.string(user))
+    Count(count) -> #("count", json.int(count))
   }
 }
 
-fn home_page(ctx: InertiaContext(Nil)) -> wisp.Response {
-  ctx
-  |> inertia.with_encoder(encode_home_page_prop)
-  |> inertia.prop("message", Message("Hello from Gleam!"))
-  |> inertia.prop("user", User("Alice"))
-  |> inertia.prop("count", Count(42))
-  |> inertia.render("Home")
+fn home_page(req: wisp.Request) -> wisp.Response {
+  let props = [
+    types.DefaultProp("message", Message("Hello from Gleam!")),
+    types.DefaultProp("user", User("Alice")),
+    types.DefaultProp("count", Count(42)),
+  ]
+  
+  let page = inertia.eval(req, "Home", props, encode_home_page_prop)
+  inertia.render(req, page)
 }
 
-fn about_page(ctx: InertiaContext(Nil)) -> wisp.Response {
-  inertia.render(ctx, "About")
+fn about_page(req: wisp.Request) -> wisp.Response {
+  let page = inertia.eval(req, "About", [], fn(_) { #("", json.null()) })
+  inertia.render(req, page)
 }
 ```
 
@@ -133,32 +133,69 @@ export default function About() {
 ### Different Prop Types
 
 ```gleam
-// Always included props (included in all requests)
-ctx
-|> inertia.always_prop("auth", current_user)
+import gleam/dict
 
-// Optional props (only included when specifically requested)
-ctx  
-|> inertia.optional_prop("debug", fn() { get_debug_info() })
-
-// Validation errors
-let errors = dict.from_list([
-  #("email", "Email is required"),
-  #("password", "Password must be at least 8 characters"),
-])
-ctx |> inertia.errors(errors)
+fn dashboard_page(req: wisp.Request) -> wisp.Response {
+  let props = [
+    // Always included in every request (even partial reloads)
+    types.AlwaysProp("auth", get_current_user()),
+    
+    // Included on standard visits, optional on partial reloads
+    types.DefaultProp("stats", get_user_stats()),
+    
+    // Only evaluated when explicitly requested in partial reloads
+    types.OptionalProp("debug", fn() { get_debug_info() }),
+    
+    // Lazy evaluation - only computed when needed
+    types.LazyProp("notifications", fn() { get_notifications() }),
+    
+    // Deferred - loaded separately after initial page render
+    types.DeferProp("analytics", option.None, fn() { get_analytics_data() }),
+  ]
+  
+  let page = inertia.eval(req, "Dashboard", props, encode_dashboard_prop)
+  
+  // Add validation errors if present
+  let page_with_errors = case get_validation_errors() {
+    Ok(errors) -> inertia.errors(page, errors)
+    Error(_) -> page
+  }
+  
+  inertia.render(req, page_with_errors)
+}
 ```
 
-### JSON Request Handling
+### Form Handling and Validation
 
 ```gleam
+import gleam/dict
+import gleam/dynamic
 import gleam/dynamic/decode
 
-pub fn create_user(ctx: InertiaContext(Nil)) -> wisp.Response {
-  use user_data <- inertia.require_json(ctx, user_decoder())
-  // user_data is now the decoded user struct
-  // ... handle the user creation logic
-  inertia.redirect(ctx.request, "/users")
+pub fn create_user(req: wisp.Request) -> wisp.Response {
+  use form_data <- wisp.require_form(req)
+  
+  case validate_user_form(form_data) {
+    Ok(user) -> {
+      // Save user and redirect
+      save_user(user)
+      wisp.redirect("/users")
+    }
+    Error(validation_errors) -> {
+      // Re-render form with errors
+      let props = [
+        types.DefaultProp("form_data", form_data),
+      ]
+      let page = inertia.eval(req, "Users/Create", props, encode_user_prop)
+      let page_with_errors = inertia.errors(page, validation_errors)
+      inertia.render(req, page_with_errors)
+    }
+  }
+}
+
+fn validate_user_form(form_data) -> Result(User, dict.Dict(String, String)) {
+  // Your validation logic here
+  todo
 }
 ```
 
@@ -166,25 +203,32 @@ pub fn create_user(ctx: InertiaContext(Nil)) -> wisp.Response {
 
 Check out the [`examples/`](examples/) directory for complete working examples:
 
-- **[Demo Example](examples/demo/)**: Complete standalone Gleam app with React frontend, forms, validation, and file uploads
+- **[Demo Example](examples/demo/)**: Complete Gleam app with React frontend using the context-based API
+- **[Typed Demo](examples/typed-demo/)**: Advanced example with TypeScript integration and modular structure  
+- **[Simple Demo](examples/simple-demo/)**: Clean example showcasing the new eval-based API (coming soon)
 
-The example demonstrates:
+The examples demonstrate:
 
-- Form validation (implemented in the example, not the core library)
+- Different prop types and their behaviors
+- Partial reloads for performance optimization
+- Form validation and error handling
 - File upload handling using Wisp's FormData
-- Error handling and display
-- CRUD operations with redirects
+- Deferred props for heavy background operations
+- CRUD operations with proper redirects
 
 ## Development Status
 
 This package provides a complete, focused Inertia.js adapter with:
 
-- ✅ **Core Inertia Protocol**: HTML and JSON response handling
-- ✅ **Props System**: Prop serialization with lazy evaluation
-- ✅ **Always Props**: Global props on every request
+- ✅ **Core Inertia Protocol**: Full compatibility with Inertia.js client libraries
+- ✅ **Type-Safe Props**: Compile-time prop validation with Gleam's type system
+- ✅ **Multiple Prop Types**: `DefaultProp`, `LazyProp`, `OptionalProp`, `AlwaysProp`, `DeferProp`, `MergeProp`
 - ✅ **Partial Reloads**: Performance optimization for large datasets
+- ✅ **Deferred Props**: Background data loading with grouping support
+- ✅ **Error Handling**: Built-in form validation error support
 - ✅ **Asset Versioning**: Cache-busting and version mismatch handling
-- ✅ **Server-Side Rendering**: Render full HTML responses for initial page loads
+- ✅ **Server-Side Rendering**: SSR support with graceful CSR fallback
+- ✅ **Clean API**: Direct Page construction without context objects
 
 ## Documentation
 

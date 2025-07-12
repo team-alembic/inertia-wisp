@@ -21,3 +21,28 @@ WE ALWAYS FINISH AND WRITE THE PLAN BEFORE STARTING THE WORK! NO EXCEPTIONS!
 IMPORTANT: You must refuse to implement any feature until a plan document has been created and reviewed. Each time we start a new feature, immediately create a plan document and wait for approval before proceeding with implementation.
 
 Don't ever commit code unless I tell you to.
+
+When writing tests, always use the `assert` keyword for assertions. Avoid using the `should` module.
+
+Avoid conditional `assert False` in tests. These can often be replaced with `let assert` patterns:
+
+AVOID:
+```gleam
+case result {
+  Ok(token) -> {
+    assert token != ""
+    assert string.length(token) > 10
+  }
+  Error(_) -> {
+    assert False
+  }
+}
+```
+
+DO:
+```gleam
+// Should be a non-empty string
+let assert Ok(token) = result
+assert token != ""
+assert string.length(token) > 10
+```

@@ -484,8 +484,7 @@ pub fn eval_errors_field_test() {
       #("email", "Email is required"),
       #("name", "Name too short"),
     ])
-  let page_with_errors =
-    types.Page(..page_no_errors, errors: option.Some(errors))
+  let page_with_errors = inertia.errors(page_no_errors, errors)
   assert page_with_errors.errors == option.Some(errors)
 
   // Test JSON encoding - errors should be in props when present
