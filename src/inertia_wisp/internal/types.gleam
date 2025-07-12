@@ -49,13 +49,10 @@ pub fn encode_page(page: Page(prop)) -> json.Json {
     |> maybe_prepend(page.errors, _, fn(errors_dict) {
       #(
         "errors",
-        json.object(
-          dict.to_list(errors_dict)
-          |> list.map(fn(pair) {
-            let #(k, v) = pair
-            #(k, json.string(v))
-          }),
-        ),
+        errors_dict
+          |> dict.to_list()
+          |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
+          |> json.object(),
       )
     })
     |> json.object
@@ -71,13 +68,10 @@ pub fn encode_page(page: Page(prop)) -> json.Json {
   |> maybe_prepend(page.deferred_props, _, fn(deferred_dict) {
     #(
       "deferredProps",
-      json.object(
-        dict.to_list(deferred_dict)
-        |> list.map(fn(pair) {
-          let #(group, props) = pair
-          #(group, json.array(props, json.string))
-        }),
-      ),
+      deferred_dict
+        |> dict.to_list()
+        |> list.map(fn(pair) { #(pair.0, json.array(pair.1, json.string)) })
+        |> json.object(),
     )
   })
   |> maybe_prepend(page.merge_props, _, fn(merge_list) {
