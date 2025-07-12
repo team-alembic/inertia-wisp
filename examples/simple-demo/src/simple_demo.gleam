@@ -4,10 +4,14 @@
 //// the InertiaContext type, instead constructing Page objects directly
 //// and using regular Wisp functionality.
 
+import data/users as data_users
 import gleam/erlang/process
 import gleam/http
+import gleam/result
 import handlers/home
+import handlers/users
 import mist
+import sqlight
 import wisp
 import wisp/wisp_mist
 
@@ -35,8 +39,19 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 
 /// Route requests to appropriate handlers
 fn route_request(req: wisp.Request) -> wisp.Response {
+  let assert Ok(db) = sqlight.open(":memory:")
+  let assert Ok(_) = create_sample_database(db)
+
   case wisp.path_segments(req), req.method {
     [], http.Get -> home.home_page(req)
+    ["users"], http.Get -> users.users_index(req, db)
+    ["users", "create"], http.Get -> users.users_create_form(req, db)
+    ["users"], http.Post -> users.users_create(req, db)
+    ["users", id], http.Get -> users.users_show(req, id, db)
+    ["users", id, "edit"], http.Get -> users.users_edit_form(req, id, db)
+    ["users", id], http.Put -> users.users_update(req, id, db)
+    ["users", id], http.Post -> users.users_update(req, id, db)
+    ["users", id], http.Delete -> users.users_delete(req, id, db)
     _, _ -> wisp.not_found()
   }
 }
@@ -54,4 +69,10 @@ fn get_server_port() -> Int {
 /// Get the static files path
 fn get_static_path() -> String {
   "./static"
+}
+
+/// Create and initialize the database with sample data
+fn create_sample_database(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
+  use _ <- result.try(data_users.create_users_table(db))
+  data_users.init_sample_data(db)
 }

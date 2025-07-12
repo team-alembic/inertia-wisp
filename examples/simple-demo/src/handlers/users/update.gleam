@@ -6,10 +6,8 @@
 
 import data/users
 import gleam/dict
-import gleam/dynamic
-import gleam/dynamic/decode
-import gleam/int
 import gleam/list
+import handlers/users/utils
 import inertia_wisp/inertia
 import inertia_wisp/internal/types
 import props/user_props
@@ -19,41 +17,22 @@ import wisp.{type Request, type Response}
 /// Handle user update (POST)
 pub fn handler(req: Request, id: String, db: Connection) -> Response {
   use json_data <- wisp.require_json(req)
-
-  case int.parse(id) {
-    Error(_) -> wisp.not_found()
-    Ok(user_id) ->
-      case decode_update_user_request(json_data, user_id) {
-        Error(_) -> wisp.redirect("/users/" <> id <> "/edit")
-        Ok(request) ->
-          case users.validate_update_user(db, request) {
-            Error(validation_errors) ->
-              render_edit_form_with_validation_errors(
-                req,
-                request,
-                validation_errors,
-              )
-            Ok(validated_request) ->
-              case users.update_user(db, validated_request) {
-                Error(_) -> wisp.redirect("/users/" <> id <> "/edit")
-                Ok(_) -> wisp.redirect("/users/" <> id)
-              }
-          }
-      }
-  }
-}
-
-/// Decode JSON into UpdateUserRequest
-fn decode_update_user_request(
-  json_data: dynamic.Dynamic,
-  id: Int,
-) -> Result(users.UpdateUserRequest, List(decode.DecodeError)) {
-  let decoder = {
-    use name <- decode.field("name", decode.string)
-    use email <- decode.field("email", decode.string)
-    decode.success(users.UpdateUserRequest(id, name, email))
-  }
-  decode.run(json_data, decoder)
+  use user_id <- utils.parse_user_id_or_404(id)
+  use request <- utils.decode_update_user_request(json_data, user_id, fn() {
+    wisp.redirect("/users/" <> id <> "/edit")
+  })
+  use validated_request <- utils.validate_update_user_request(
+    req,
+    request,
+    db,
+    render_edit_form_with_validation_errors,
+  )
+  utils.update_user_in_database(
+    validated_request,
+    db,
+    fn() { wisp.redirect("/users/" <> id <> "/edit") },
+    fn() { wisp.redirect("/users/" <> id) },
+  )
 }
 
 /// Helper to render edit form with validation errors

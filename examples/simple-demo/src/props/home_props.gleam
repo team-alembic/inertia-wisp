@@ -45,6 +45,7 @@ pub fn encode_home_prop(prop: HomeProp) -> #(String, json.Json) {
 pub fn get_default_navigation() -> List(NavigationItem) {
   [
     NavigationItem("Home", "/", True),
+    NavigationItem("Users", "/users", False),
     NavigationItem("About", "/about", False),
     NavigationItem("Contact", "/contact", False),
   ]

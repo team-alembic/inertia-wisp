@@ -69,6 +69,40 @@ export default function Home({
           </div>
         </section>
 
+        {/* User Management Demo */}
+        <section className="section">
+          <h2 className="section-title">User Management Demo</h2>
+          <div className="demo-features">
+            <p>
+              Explore the complete CRUD functionality built with the new{" "}
+              <code>inertia.eval()</code> API:
+            </p>
+            <div className="feature-grid">
+              <Link href="/users" className="feature-card">
+                <h3>👥 View All Users</h3>
+                <p>
+                  Browse users with search functionality and LazyProp
+                  demonstration
+                </p>
+              </Link>
+              <Link href="/users/create" className="feature-card">
+                <h3>➕ Create User</h3>
+                <p>Add new users with form validation and error handling</p>
+              </Link>
+              <Link href="/users/1" className="feature-card">
+                <h3>👤 User Details</h3>
+                <p>View individual user information and account details</p>
+              </Link>
+              <Link href="/users/1/edit" className="feature-card">
+                <h3>✏️ Edit User</h3>
+                <p>
+                  Update user information with validation and deletion options
+                </p>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* API Demo Info */}
         <section className="section api-demo-section">
           <h2 className="section-title">New API Demonstration</h2>
@@ -86,10 +120,15 @@ export default function Home({
                 <strong>DefaultProp:</strong> Welcome message, user info, and
                 app version
               </li>
+              <li>
+                <strong>LazyProp:</strong> User listing and count (expensive
+                operations)
+              </li>
             </ul>
             <p>
               Backend constructed the Page object directly without
-              InertiaContext, using regular Wisp functionality.
+              InertiaContext, using regular Wisp functionality with modular
+              handlers.
             </p>
           </div>
         </section>

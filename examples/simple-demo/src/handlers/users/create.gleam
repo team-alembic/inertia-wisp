@@ -6,9 +6,8 @@
 
 import data/users
 import gleam/dict
-import gleam/dynamic
-import gleam/dynamic/decode
 import gleam/list
+import handlers/users/utils
 import inertia_wisp/inertia
 import inertia_wisp/internal/types
 import props/user_props
@@ -18,25 +17,27 @@ import wisp.{type Request, type Response}
 /// Handle user creation (POST)
 pub fn handler(req: Request, db: Connection) -> Response {
   use json_data <- wisp.require_json(req)
-
-  case decode_create_user_request(json_data) {
-    Error(_) -> render_create_form_with_empty_data(req)
-    Ok(request) ->
-      case users.validate_create_user(db, request) {
-        Error(validation_errors) ->
-          render_create_form_with_validation_errors(
-            req,
-            request,
-            validation_errors,
-          )
-        Ok(validated_request) ->
-          case users.create_user(db, validated_request) {
-            Error(_) ->
-              render_create_form_with_data(req, request.name, request.email)
-            Ok(_) -> wisp.redirect("/users")
-          }
-      }
-  }
+  use request <- utils.decode_create_user_request(json_data, fn() {
+    render_create_form_with_empty_data(req)
+  })
+  use validated_request <- utils.validate_create_user_request(
+    req,
+    request,
+    db,
+    render_create_form_with_validation_errors,
+  )
+  utils.create_user_in_database(
+    validated_request,
+    db,
+    fn(failed_request) {
+      render_create_form_with_data(
+        req,
+        failed_request.name,
+        failed_request.email,
+      )
+    },
+    fn() { wisp.redirect("/users") },
+  )
 }
 
 /// Helper to render the create form with empty data
@@ -77,18 +78,6 @@ fn render_create_form_with_validation_errors(
     inertia.eval(req, "Users/Create", props, user_props.encode_user_prop)
     |> inertia.errors(validation_errors_to_dict(validation_errors))
   inertia.render(req, page)
-}
-
-/// Decode JSON into CreateUserRequest
-fn decode_create_user_request(
-  json_data: dynamic.Dynamic,
-) -> Result(users.CreateUserRequest, List(decode.DecodeError)) {
-  let decoder = {
-    use name <- decode.field("name", decode.string)
-    use email <- decode.field("email", decode.string)
-    decode.success(users.CreateUserRequest(name, email))
-  }
-  decode.run(json_data, decoder)
 }
 
 /// Convert validation errors to error dict for Inertia
