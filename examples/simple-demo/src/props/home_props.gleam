@@ -27,11 +27,17 @@ pub type NavigationItem {
 /// Encode a HomeProp to a name/JSON pair for Inertia
 pub fn encode_home_prop(prop: HomeProp) -> #(String, json.Json) {
   case prop {
-    WelcomeMessage(message) -> encode_welcome_message(message)
-    NavigationItems(items) -> encode_navigation_items(items)
-    CsrfToken(token) -> encode_csrf_token(token)
-    AppVersion(version) -> encode_app_version(version)
-    CurrentUser(name, email) -> encode_current_user(name, email)
+    WelcomeMessage(message) -> #("welcome_message", json.string(message))
+    NavigationItems(items) -> #(
+      "navigation",
+      json.array(items, encode_navigation_item),
+    )
+    CsrfToken(token) -> #("csrf_token", json.string(token))
+    AppVersion(version) -> #("app_version", json.string(version))
+    CurrentUser(name, email) -> #(
+      "current_user",
+      json.object([#("name", json.string(name)), #("email", json.string(email))]),
+    )
   }
 }
 
@@ -42,34 +48,6 @@ pub fn get_default_navigation() -> List(NavigationItem) {
     NavigationItem("About", "/about", False),
     NavigationItem("Contact", "/contact", False),
   ]
-}
-
-/// Encode welcome message prop
-fn encode_welcome_message(message: String) -> #(String, json.Json) {
-  #("welcome_message", json.string(message))
-}
-
-/// Encode navigation items prop
-fn encode_navigation_items(items: List(NavigationItem)) -> #(String, json.Json) {
-  #("navigation", json.array(items, encode_navigation_item))
-}
-
-/// Encode CSRF token prop
-fn encode_csrf_token(token: String) -> #(String, json.Json) {
-  #("csrf_token", json.string(token))
-}
-
-/// Encode app version prop
-fn encode_app_version(version: String) -> #(String, json.Json) {
-  #("app_version", json.string(version))
-}
-
-/// Encode current user prop
-fn encode_current_user(name: String, email: String) -> #(String, json.Json) {
-  #(
-    "current_user",
-    json.object([#("name", json.string(name)), #("email", json.string(email))]),
-  )
 }
 
 /// Encode a single navigation item to JSON
