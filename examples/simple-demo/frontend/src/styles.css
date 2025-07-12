@@ -1,0 +1,253 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f9fafb;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+/* Main container */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+}
+
+.header h1 {
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.header p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Navigation */
+.nav-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.nav-list {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.nav-item a {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-item a.active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.nav-item a:not(.active) {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.nav-item a:not(.active):hover {
+  background-color: #e5e7eb;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.welcome-section {
+  background-color: #f0f9ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.welcome-message {
+  font-size: 1.125rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.user-section {
+  background-color: #fefce8;
+  border-left: 4px solid #eab308;
+}
+
+.user-section .section-title {
+  color: #92400e;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-info p {
+  margin: 0;
+  color: #78350f;
+}
+
+.user-info strong {
+  color: #92400e;
+}
+
+/* App info grid */
+.app-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.info-card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.version-card {
+  background-color: #ecfdf5;
+  border-left: 4px solid #10b981;
+}
+
+.version-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #065f46;
+}
+
+.version-card p {
+  margin: 0;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  color: #047857;
+  font-weight: 600;
+}
+
+.csrf-card {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+}
+
+.csrf-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #991b1b;
+}
+
+.csrf-card p {
+  margin: 0;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #dc2626;
+  word-break: break-all;
+}
+
+/* API demo section */
+.api-demo-section {
+  background-color: #f5f3ff;
+  border-left: 4px solid #8b5cf6;
+}
+
+.api-demo-section .section-title {
+  color: #5b21b6;
+}
+
+.api-demo-content {
+  font-size: 0.875rem;
+  color: #6b21a8;
+  line-height: 1.6;
+}
+
+.api-demo-content p {
+  margin-bottom: 0.75rem;
+}
+
+.api-demo-content p:last-child {
+  margin-bottom: 0;
+}
+
+.api-demo-content ul {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.api-demo-content li {
+  margin-bottom: 0.25rem;
+}
+
+.api-demo-content strong {
+  color: #5b21b6;
+}
+
+.api-demo-content code {
+  background-color: #f3f4f6;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.85em;
+  color: #374151;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .nav-list {
+    flex-direction: column;
+  }
+
+  .app-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+  }
+}
