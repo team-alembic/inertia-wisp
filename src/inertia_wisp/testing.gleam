@@ -74,8 +74,10 @@
 //// type-safe testing of response data. This catches both missing props
 //// and type mismatches at test time.
 
+import gleam/bit_array
 import gleam/dynamic
 import gleam/dynamic/decode
+import gleam/http
 import gleam/http/request
 import gleam/json.{UnableToDecode}
 import gleam/list
@@ -99,7 +101,25 @@ import wisp/testing
 /// assert testing.component(response) == Ok("HomePage")
 /// ```
 pub fn inertia_request() -> Request {
-  testing.get("/", [
+  inertia_request_to("/")
+}
+
+/// Create a mock Inertia XHR request for testing with a custom path.
+///
+/// This creates a request with the necessary Inertia headers:
+/// - `x-inertia: true` to indicate this is an Inertia request
+/// - `x-inertia-version: 1` for version matching
+/// - `accept: application/json` for JSON responses
+///
+/// ## Example
+///
+/// ```gleam
+/// let req = testing.inertia_request_to("/users?search=Demo")
+/// let response = my_handler(req)
+/// assert testing.component(response) == Ok("Users/Index")
+/// ```
+pub fn inertia_request_to(path: String) -> Request {
+  testing.get(path, [
     #("accept", "application/json"),
     #("x-inertia", "true"),
     #("x-inertia-version", "1"),
@@ -143,6 +163,54 @@ pub fn partial_data(req: Request, props: List(String)) -> Request {
 pub fn partial_component(req: Request, component: String) -> Request {
   req
   |> request.set_header("x-inertia-partial-component", component)
+}
+
+/// Create an Inertia JSON POST request for testing form submissions.
+///
+/// This creates a POST request with the necessary headers for Inertia.js form
+/// submissions using JSON data (as sent by useForm().post() or router.post()).
+///
+/// The request will include:
+/// - `Content-Type: application/json`
+/// - `Accept: application/json`
+/// - `X-Inertia: true`
+/// - `X-Inertia-Version: 1`
+///
+/// ## Examples
+///
+/// Testing user creation:
+/// ```gleam
+/// let data = json.object([
+///   #("name", json.string("John Doe")),
+///   #("email", json.string("john@example.com")),
+/// ])
+/// let req = testing.inertia_post("/users", data)
+/// let response = create_user_handler(req, db)
+/// assert testing.component(response) == Error(_) // Should redirect on success
+/// ```
+///
+/// Testing validation errors:
+/// ```gleam
+/// let invalid_data = json.object([
+///   #("name", json.string("")),  // Invalid: empty name
+///   #("email", json.string("invalid-email")),  // Invalid: bad format
+/// ])
+/// let req = testing.inertia_post("/users", invalid_data)
+/// let response = create_user_handler(req, db)
+/// assert testing.component(response) == Ok("Users/Create") // Should return form with errors
+/// ```
+pub fn inertia_post(path: String, data: json.Json) -> Request {
+  testing.request(
+    http.Post,
+    path,
+    [
+      #("content-type", "application/json"),
+      #("accept", "application/json"),
+      #("x-inertia", "true"),
+      #("x-inertia-version", "1"),
+    ],
+    json.to_string(data) |> bit_array.from_string,
+  )
 }
 
 /// Extract the component name from an Inertia response.
