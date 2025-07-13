@@ -1,19 +1,26 @@
-//// User creation form handler for the simple demo application.
+//// User create form handler for the simple demo application.
 ////
-//// This module handles displaying the user creation form page.
-//// It provides an empty form for creating new users.
+//// This module handles GET requests to show the create form for new users.
+//// It demonstrates the Response Builder API with empty form data.
 
 import inertia_wisp/inertia
-import inertia_wisp/internal/types
 import props/user_props
 import sqlight.{type Connection}
 import wisp.{type Request, type Response}
 
-/// Show user creation form
+/// Handle user create form (GET)
+///
+/// This demonstrates the Response Builder API pattern:
+/// 1. Create a response builder with component name
+/// 2. Add props using the props() method
+/// 3. Generate the response using the response() method
+///
+/// Shows an empty form for creating new users.
 pub fn handler(req: Request, _db: Connection) -> Response {
-  let props = [types.DefaultProp("form_data", user_props.UserFormData("", ""))]
+  let props = [user_props.form_data("", "")]
 
-  let page =
-    inertia.eval(req, "Users/Create", props, user_props.encode_user_prop)
-  inertia.render(req, page)
+  req
+  |> inertia.response_builder("Users/Create")
+  |> inertia.props(props, user_props.user_prop_to_json)
+  |> inertia.response()
 }

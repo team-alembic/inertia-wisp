@@ -1,43 +1,86 @@
 //// User index handler for the simple demo application.
 ////
-//// This module handles the users index page which displays a list of all users
-//// with search functionality. It demonstrates LazyProp usage for expensive
-//// database operations.
+//// This module handles GET requests to list all users.
+//// Demonstrates Response Builder API with search functionality and LazyProps.
 
 import data/users
-import gleam/http/request
+import gleam/dict
 import gleam/list
+import gleam/option
+import gleam/uri
 import inertia_wisp/inertia
-import inertia_wisp/internal/types
+
 import props/user_props
 import sqlight.{type Connection}
 import wisp.{type Request, type Response}
 
-/// Display list of all users (demonstrates LazyProp for expensive operations)
+/// Handle user index (GET)
+///
+/// This demonstrates the Response Builder API with:
+/// 1. User listing (expensive operation - good for LazyProp)
+/// 2. Search functionality via query parameters
+/// 3. User count (another expensive operation)
+/// 4. Error handling for database operations
 pub fn handler(req: Request, db: Connection) -> Response {
-  let search_query = case request.get_query(req) {
-    Ok(query_params) -> {
-      case list.key_find(query_params, "search") {
-        Ok(query) -> query
+  let search_query = get_search_query(req)
+  let search_result = get_users(search_query, db)
+
+  case search_result {
+    Ok(users_data) -> {
+      let props = [
+        user_props.user_list(users_data),
+        user_props.user_count(list.length(users_data)),
+        user_props.search_query(search_query),
+      ]
+
+      req
+      |> inertia.response_builder("Users/Index")
+      |> inertia.props(props, user_props.user_prop_to_json)
+      |> inertia.response()
+    }
+    Error(errors) -> {
+      req
+      |> inertia.response_builder("Error")
+      |> inertia.errors(errors)
+      |> inertia.response()
+    }
+  }
+}
+
+/// Get users from search_query, handling database errors
+fn get_users(
+  search_query: String,
+  db: Connection,
+) -> Result(List(users.User), dict.Dict(String, String)) {
+  case users.search_users(db, search_query) {
+    Ok(users_data) -> Ok(users_data)
+    Error(_) -> {
+      Error(
+        dict.from_list([
+          #(
+            "message",
+            "Database error occurred while fetching users. Please try again later.",
+          ),
+        ]),
+      )
+    }
+  }
+}
+
+/// Extract search query from request parameters
+fn get_search_query(req: Request) -> String {
+  case req.query {
+    option.Some(query_string) -> {
+      case uri.parse_query(query_string) {
+        Ok(params) -> {
+          case list.key_find(params, "search") {
+            Ok(search_term) -> search_term
+            Error(_) -> ""
+          }
+        }
         Error(_) -> ""
       }
     }
-    Error(_) -> ""
+    option.None -> ""
   }
-
-  let props = [
-    types.LazyProp("users", fn() {
-      let assert Ok(users_list) = users.search_users(db, search_query)
-      user_props.UserList(users_list)
-    }),
-    types.LazyProp("user_count", fn() {
-      let assert Ok(count) = users.get_user_count(db)
-      user_props.UserCount(count)
-    }),
-    types.DefaultProp("search_query", user_props.SearchQuery(search_query)),
-  ]
-
-  let page =
-    inertia.eval(req, "Users/Index", props, user_props.encode_user_prop)
-  inertia.render(req, page)
 }

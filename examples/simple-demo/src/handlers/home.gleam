@@ -1,20 +1,19 @@
 //// Home page handler for the simple demo application.
 ////
-//// This module demonstrates the new inertia.eval API design with basic page rendering
+//// This module demonstrates the Response Builder API design with basic page rendering
 //// using DefaultProp and AlwaysProp types. The handler showcases how to construct
-//// Page objects directly without using the InertiaContext type.
+//// responses using the fluent builder pattern.
 
 import inertia_wisp/inertia
-import inertia_wisp/internal/types
 import props/home_props
 import wisp.{type Request, type Response}
 
 /// Handle requests to the home page
 ///
-/// This demonstrates the new API pattern:
-/// 1. Create a list of props with different types
-/// 2. Use inertia.eval() to construct a Page object
-/// 3. Use inertia.render() to generate the response
+/// This demonstrates the Response Builder API pattern:
+/// 1. Create a response builder with component name
+/// 2. Add props using the props() method
+/// 3. Generate the response using the response() method
 ///
 /// Example props used:
 /// - AlwaysProp: Navigation items (always included)
@@ -22,30 +21,19 @@ import wisp.{type Request, type Response}
 /// - AlwaysProp: CSRF token (always included for security)
 /// - DefaultProp: App version (included on standard visits)
 pub fn home_page(req: Request) -> Response {
-  let props = build_home_page_props()
-  let page = inertia.eval(req, "Home", props, home_props.encode_home_prop)
-  inertia.render(req, page)
-}
-
-/// Build the complete props list for the home page
-fn build_home_page_props() -> List(types.Prop(home_props.HomeProp)) {
   let #(user_name, user_email) = get_current_user()
-  [
-    types.DefaultProp(
-      "welcome_message",
-      home_props.WelcomeMessage("Welcome to Simple Demo"),
-    ),
-    types.AlwaysProp(
-      "navigation",
-      home_props.NavigationItems(get_navigation_items()),
-    ),
-    types.AlwaysProp("csrf_token", home_props.CsrfToken(generate_csrf_token())),
-    types.DefaultProp("app_version", home_props.AppVersion(get_app_version())),
-    types.DefaultProp(
-      "current_user",
-      home_props.CurrentUser(user_name, user_email),
-    ),
+  let props = [
+    home_props.welcome_message("Welcome to Simple Demo"),
+    home_props.navigation_items(get_navigation_items()),
+    home_props.csrf_token(generate_csrf_token()),
+    home_props.app_version(get_app_version()),
+    home_props.current_user(user_name, user_email),
   ]
+
+  req
+  |> inertia.response_builder("Home")
+  |> inertia.props(props, home_props.home_prop_to_json)
+  |> inertia.response()
 }
 
 /// Get navigation items for the application

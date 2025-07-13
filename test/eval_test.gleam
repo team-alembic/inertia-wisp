@@ -181,7 +181,11 @@ pub fn eval_partial_reload_component_match_test() {
 pub fn eval_merge_prop_default_test() {
   let req = testing.inertia_request()
   let props = [
-    types.MergeProp(types.DefaultProp("users", UserProp("John")), option.None),
+    types.MergeProp(
+      types.DefaultProp("users", UserProp("John")),
+      option.None,
+      False,
+    ),
   ]
 
   let page = inertia.eval(req, "HomePage", props, encode_test_prop)
@@ -196,6 +200,7 @@ pub fn eval_merge_prop_optional_excluded_test() {
     types.MergeProp(
       types.OptionalProp("users", fn() { UserProp("John") }),
       option.None,
+      False,
     ),
   ]
 
@@ -214,6 +219,7 @@ pub fn eval_merge_prop_partial_reload_test() {
     types.MergeProp(
       types.OptionalProp("users", fn() { UserProp("John") }),
       option.Some(["id"]),
+      False,
     ),
   ]
 
@@ -346,6 +352,7 @@ pub fn eval_multiple_prop_types_test() {
     types.MergeProp(
       types.DefaultProp("merged", MessageProp("Merged")),
       option.None,
+      False,
     ),
   ]
 
@@ -455,7 +462,11 @@ pub fn eval_merge_prop_always_in_partial_reload_test() {
 
   let props = [
     types.DefaultProp("user", UserProp("John")),
-    types.MergeProp(types.AlwaysProp("count", CountProp(42)), option.None),
+    types.MergeProp(
+      types.AlwaysProp("count", CountProp(42)),
+      option.None,
+      False,
+    ),
   ]
 
   let page = inertia.eval(req, "HomePage", props, encode_test_prop)
@@ -484,7 +495,7 @@ pub fn eval_errors_field_test() {
       #("email", "Email is required"),
       #("name", "Name too short"),
     ])
-  let page_with_errors = inertia.errors(page_no_errors, errors)
+  let page_with_errors = inertia.page_errors(page_no_errors, errors)
   assert page_with_errors.errors == option.Some(errors)
 
   // Test JSON encoding - errors should be in props when present

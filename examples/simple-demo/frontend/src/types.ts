@@ -54,7 +54,7 @@ export interface UsersShowProps {
 }
 
 export interface UsersEditProps {
-  user: User;
-  form_data: UserFormData;
+  user?: User;
+  form_data?: UserFormData;
   errors?: Record<string, string>;
 }

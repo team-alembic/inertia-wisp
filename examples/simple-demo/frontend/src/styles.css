@@ -812,3 +812,56 @@ body {
         font-size: 0.875rem;
     }
 }
+
+/* Error Page Styles */
+.error-section {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+
+.error-section .section-title {
+    color: #991b1b;
+}
+
+.error-message {
+    color: #7f1d1d;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+}
+
+.help-section {
+    background-color: #f0f9ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.help-section .section-title {
+    color: #1e40af;
+}
+
+.help-content {
+    color: #1e3a8a;
+    font-size: 0.875rem;
+}
+
+.help-content p {
+    margin: 0 0 0.75rem 0;
+}
+
+.help-content ul {
+    margin: 0 0 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.help-content li {
+    margin-bottom: 0.25rem;
+}
+
+.button-with-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.button-icon {
+    margin-right: 0.5rem;
+}

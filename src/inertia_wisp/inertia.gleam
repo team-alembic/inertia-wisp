@@ -9,7 +9,12 @@ import gleam/string_tree
 import inertia_wisp/internal/html
 import inertia_wisp/internal/middleware
 import inertia_wisp/internal/types.{type Page}
+import inertia_wisp/response_builder
 import wisp.{type Request, type Response}
+
+// Re-export Response Builder API
+pub type InertiaResponseBuilder =
+  response_builder.InertiaResponseBuilder
 
 pub fn render(req: Request, page: Page(prop)) -> Response {
   case middleware.is_inertia_request(req) {
@@ -103,7 +108,10 @@ pub fn eval(
   )
 }
 
-pub fn errors(page: Page(prop), errors: dict.Dict(String, String)) -> Page(prop) {
+pub fn page_errors(
+  page: Page(prop),
+  errors: dict.Dict(String, String),
+) -> Page(prop) {
   types.Page(..page, errors: option.Some(errors))
 }
 
@@ -127,7 +135,7 @@ fn filter_props_for_request(
 fn is_non_partial_prop(prop: types.Prop(p)) -> Bool {
   case prop {
     types.OptionalProp(_, _) -> False
-    types.MergeProp(inner_prop, _) -> is_non_partial_prop(inner_prop)
+    types.MergeProp(inner_prop, _, _) -> is_non_partial_prop(inner_prop)
     _ -> True
   }
 }
@@ -137,7 +145,8 @@ fn is_non_partial_prop(prop: types.Prop(p)) -> Bool {
 fn is_partial_prop(prop: types.Prop(p), partial_data: List(String)) -> Bool {
   case prop {
     types.AlwaysProp(_, _) -> True
-    types.MergeProp(inner_prop, _) -> is_partial_prop(inner_prop, partial_data)
+    types.MergeProp(inner_prop, _, _) ->
+      is_partial_prop(inner_prop, partial_data)
     _ -> list.contains(partial_data, prop_name(prop))
   }
 }
@@ -193,7 +202,7 @@ fn evaluate_prop(prop: types.Prop(p), is_partial: Bool) -> PropEval(p) {
         True -> Value(resolver())
         False -> Defer(name, group)
       }
-    types.MergeProp(inner_prop, _) -> evaluate_prop(inner_prop, is_partial)
+    types.MergeProp(inner_prop, _, _) -> evaluate_prop(inner_prop, is_partial)
   }
 }
 
@@ -205,7 +214,7 @@ fn prop_name(prop: types.Prop(p)) -> String {
     types.OptionalProp(name, _) -> name
     types.AlwaysProp(name, _) -> name
     types.DeferProp(name, _, _) -> name
-    types.MergeProp(inner_prop, _) -> prop_name(inner_prop)
+    types.MergeProp(inner_prop, _, _) -> prop_name(inner_prop)
   }
 }
 
@@ -213,4 +222,55 @@ fn prop_name(prop: types.Prop(p)) -> String {
 fn build_url_from_request(req: Request) -> String {
   let path = wisp.path_segments(req) |> string.join("/")
   "/" <> path
+}
+
+// Response Builder API re-exports
+pub fn response_builder(
+  req: Request,
+  component: String,
+) -> InertiaResponseBuilder {
+  response_builder.response_builder(req, component)
+}
+
+pub fn props(
+  builder: InertiaResponseBuilder,
+  props: List(types.Prop(p)),
+  encode_prop: fn(p) -> json.Json,
+) -> InertiaResponseBuilder {
+  response_builder.props(builder, props, encode_prop)
+}
+
+pub fn errors(
+  builder: InertiaResponseBuilder,
+  errors: dict.Dict(String, String),
+) -> InertiaResponseBuilder {
+  response_builder.errors(builder, errors)
+}
+
+pub fn redirect(
+  builder: InertiaResponseBuilder,
+  url: String,
+) -> InertiaResponseBuilder {
+  response_builder.redirect(builder, url)
+}
+
+pub fn clear_history(builder: InertiaResponseBuilder) -> InertiaResponseBuilder {
+  response_builder.clear_history(builder)
+}
+
+pub fn encrypt_history(
+  builder: InertiaResponseBuilder,
+) -> InertiaResponseBuilder {
+  response_builder.encrypt_history(builder)
+}
+
+pub fn version(
+  builder: InertiaResponseBuilder,
+  version: String,
+) -> InertiaResponseBuilder {
+  response_builder.version(builder, version)
+}
+
+pub fn response(builder: InertiaResponseBuilder) -> Response {
+  response_builder.response(builder)
 }

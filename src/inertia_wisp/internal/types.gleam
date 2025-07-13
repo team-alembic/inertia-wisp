@@ -115,7 +115,8 @@ pub type Prop(p) {
   /// Indicates that a Prop should be merged client-side
   /// During the merging process, if the value is an array, the incoming items will be appended to the existing array, not merged by index.
   /// However, you may provide a list of attribute names in `match_on` to determine how existing items should be matched and updated.
-  MergeProp(prop: Prop(p), match_on: option.Option(List(String)))
+  /// The `deep` flag indicates whether deep merging should be used.
+  MergeProp(prop: Prop(p), match_on: option.Option(List(String)), deep: Bool)
 }
 
 /// Configuration for the Inertia adapter

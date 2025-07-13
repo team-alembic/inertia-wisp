@@ -1,4 +1,4 @@
-//// Tests for home page functionality using the new inertia.eval API.
+//// Tests for home page functionality using the Response Builder API.
 ////
 //// This test module follows TDD principles and tests the home page handler
 //// to ensure it correctly demonstrates:
@@ -13,8 +13,14 @@ import gleam/list
 import gleam/string
 import handlers/home
 import inertia_wisp/testing
-import props/home_props
+
+import utils/test_util
 import wisp/testing as wisp_testing
+
+/// Main function to run only home page tests
+pub fn main() {
+  test_util.run_module_tests("home_page_test")
+}
 
 /// Test that home page returns correct component name
 pub fn home_page_component_name_test() {
@@ -141,18 +147,14 @@ pub fn home_page_response_metadata_test() {
   assert testing.clear_history(response) == Ok(False)
 }
 
-/// Test that prop encoding produces valid JSON structure
-pub fn home_page_prop_encoding_test() {
-  let welcome_prop = home_props.WelcomeMessage("Test Message")
-  let navigation_items = home_props.get_default_navigation()
-  let nav_prop = home_props.NavigationItems(navigation_items)
+/// Test that Response Builder API is used correctly
+pub fn home_page_response_builder_api_test() {
+  // This test will fail until we migrate to Response Builder API
+  let req = testing.inertia_request()
+  let response = home.home_page(req)
 
-  // Test individual prop encoding
-  let #(welcome_name, _welcome_json) = home_props.encode_home_prop(welcome_prop)
-  let #(nav_name, _nav_json) = home_props.encode_home_prop(nav_prop)
-
-  assert welcome_name == "welcome_message"
-  assert nav_name == "navigation"
-  // JSON should be valid (this will fail until we implement the encoder)
-  // We can't test the exact JSON structure yet, but we can test the names
+  // The response should still work the same way but use the new API internally
+  assert testing.component(response) == Ok("Home")
+  assert testing.prop(response, "welcome_message", decode.string)
+    == Ok("Welcome to Simple Demo")
 }

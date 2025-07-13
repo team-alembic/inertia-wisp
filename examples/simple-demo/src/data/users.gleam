@@ -4,6 +4,7 @@
 //// and LazyProp evaluation. It provides CRUD operations for user management
 //// to showcase the new inertia.eval API with real database interactions.
 
+import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/list
 import gleam/option.{type Option}
@@ -18,6 +19,19 @@ pub type User {
 /// User creation request (without ID)
 pub type CreateUserRequest {
   CreateUserRequest(name: String, email: String)
+}
+
+/// Decoder for CreateUserRequest from JSON
+pub fn decode_create_user_request(
+  json_data: dynamic.Dynamic,
+) -> Result(CreateUserRequest, List(decode.DecodeError)) {
+  let decoder = {
+    use name <- decode.field("name", decode.string)
+    use email <- decode.field("email", decode.string)
+    decode.success(CreateUserRequest(name, email))
+  }
+
+  decode.run(json_data, decoder)
 }
 
 /// User update request

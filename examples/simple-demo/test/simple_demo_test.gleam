@@ -1,5 +1,5 @@
-import gleeunit
+import utils/test_util
 
 pub fn main() {
-  gleeunit.main()
+  test_util.main_with_args()
 }

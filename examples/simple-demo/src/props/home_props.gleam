@@ -4,6 +4,7 @@
 //// Each prop type represents a different piece of data that the frontend will receive.
 
 import gleam/json
+import inertia_wisp/internal/types
 
 /// Represents the different types of props that can be sent to the Home page
 pub type HomeProp {
@@ -41,6 +42,18 @@ pub fn encode_home_prop(prop: HomeProp) -> #(String, json.Json) {
   }
 }
 
+/// Encode a HomeProp to JSON only (for Response Builder API)
+pub fn home_prop_to_json(prop: HomeProp) -> json.Json {
+  case prop {
+    WelcomeMessage(message) -> json.string(message)
+    NavigationItems(items) -> json.array(items, encode_navigation_item)
+    CsrfToken(token) -> json.string(token)
+    AppVersion(version) -> json.string(version)
+    CurrentUser(name, email) ->
+      json.object([#("name", json.string(name)), #("email", json.string(email))])
+  }
+}
+
 /// Helper function to get default navigation items
 pub fn get_default_navigation() -> List(NavigationItem) {
   [
@@ -58,4 +71,31 @@ fn encode_navigation_item(item: NavigationItem) -> json.Json {
     #("url", json.string(item.url)),
     #("active", json.bool(item.active)),
   ])
+}
+
+// Factory functions for creating Prop(HomeProp) instances
+
+/// Create a welcome message prop (DefaultProp)
+pub fn welcome_message(message: String) -> types.Prop(HomeProp) {
+  types.DefaultProp("welcome_message", WelcomeMessage(message))
+}
+
+/// Create a navigation items prop (AlwaysProp)
+pub fn navigation_items(items: List(NavigationItem)) -> types.Prop(HomeProp) {
+  types.AlwaysProp("navigation", NavigationItems(items))
+}
+
+/// Create a CSRF token prop (AlwaysProp)
+pub fn csrf_token(token: String) -> types.Prop(HomeProp) {
+  types.AlwaysProp("csrf_token", CsrfToken(token))
+}
+
+/// Create an app version prop (DefaultProp)
+pub fn app_version(version: String) -> types.Prop(HomeProp) {
+  types.DefaultProp("app_version", AppVersion(version))
+}
+
+/// Create a current user prop (DefaultProp)
+pub fn current_user(name: String, email: String) -> types.Prop(HomeProp) {
+  types.DefaultProp("current_user", CurrentUser(name, email))
 }

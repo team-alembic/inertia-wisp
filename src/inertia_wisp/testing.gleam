@@ -126,6 +126,39 @@ pub fn inertia_request_to(path: String) -> Request {
   ])
 }
 
+/// Create a regular HTTP request for testing initial page loads.
+///
+/// This creates a request WITHOUT Inertia headers, simulating a direct
+/// browser visit or page refresh. The response should be HTML with
+/// embedded JSON data in the data-page attribute.
+///
+/// ## Example
+///
+/// ```gleam
+/// let req = testing.regular_request()
+/// let response = my_handler(req)
+/// assert testing.component(response) == Ok("HomePage")
+/// ```
+pub fn regular_request() -> Request {
+  regular_request_to("/")
+}
+
+/// Create a regular HTTP request for testing initial page loads with a custom path.
+///
+/// This creates a request WITHOUT Inertia headers, simulating a direct
+/// browser visit or page refresh to a specific URL.
+///
+/// ## Example
+///
+/// ```gleam
+/// let req = testing.regular_request_to("/users/123")
+/// let response = my_handler(req)
+/// assert testing.component(response) == Ok("Users/Show")
+/// ```
+pub fn regular_request_to(path: String) -> Request {
+  testing.get(path, [#("accept", "text/html")])
+}
+
 /// Add partial data headers to a request for testing partial reloads.
 ///
 /// This modifies an existing request to include the `x-inertia-partial-data`
@@ -297,6 +330,50 @@ pub fn encrypt_history(response: Response) {
 pub fn clear_history(response: Response) {
   response
   |> inertia_data(decode.at(["clearHistory"], decode.bool))
+}
+
+/// Extract deferred props from an Inertia response.
+///
+/// ```gleam
+/// assert testing.deferred_props(response, "default", decode.list(decode.string)) == Ok(["expensive"])
+/// ```
+pub fn deferred_props(
+  response: Response,
+  group: String,
+  decoder: decode.Decoder(a),
+) {
+  response
+  |> inertia_data(decode.at(["deferredProps", group], decoder))
+}
+
+/// Extract merge props from an Inertia response.
+///
+/// ```gleam
+/// assert testing.merge_props(response, decode.list(decode.string)) == Ok(["posts", "comments"])
+/// ```
+pub fn merge_props(response: Response, decoder: decode.Decoder(a)) {
+  response
+  |> inertia_data(decode.at(["mergeProps"], decoder))
+}
+
+/// Extract deep merge props from an Inertia response.
+///
+/// ```gleam
+/// assert testing.deep_merge_props(response, decode.list(decode.string)) == Ok(["nested", "deep"])
+/// ```
+pub fn deep_merge_props(response: Response, decoder: decode.Decoder(a)) {
+  response
+  |> inertia_data(decode.at(["deepMergeProps"], decoder))
+}
+
+/// Extract match props on from an Inertia response.
+///
+/// ```gleam
+/// assert testing.match_props_on(response, decode.list(decode.string)) == Ok(["posts.id", "posts.slug"])
+/// ```
+pub fn match_props_on(response: Response, decoder: decode.Decoder(a)) {
+  response
+  |> inertia_data(decode.at(["matchPropsOn"], decoder))
 }
 
 // Private helper functions below this line

@@ -2,82 +2,84 @@
 ////
 //// This module handles POST requests to create new users, including
 //// JSON decoding, validation, and error handling. It demonstrates
-//// proper form processing with Inertia.js.
+//// proper form processing with the Response Builder API.
+////
+//// Key insight: When validation fails, only errors need to be returned.
+//// Inertia.js preserves form state on the frontend, eliminating the need
+//// to echo form data back from the server.
 
 import data/users
 import gleam/dict
 import gleam/list
-import handlers/users/utils
+import gleam/result
 import inertia_wisp/inertia
-import inertia_wisp/internal/types
-import props/user_props
+
 import sqlight.{type Connection}
 import wisp.{type Request, type Response}
 
 /// Handle user creation (POST)
+///
+/// This demonstrates the simplified Response Builder API pattern:
+/// 1. Decode JSON data from request
+/// 2. Validate the data
+/// 3. Create user in database
+/// 4. On success: redirect to users index
+/// 5. On error: return only errors (frontend preserves form state)
 pub fn handler(req: Request, db: Connection) -> Response {
+  use request <- decode_request(req)
+  let create_result = {
+    use validated_request <- result.try(validate_request(db, request))
+    create_user(db, validated_request)
+  }
+
+  case create_result {
+    Ok(_user) -> {
+      wisp.redirect("/users")
+    }
+    Error(errors_dict) -> {
+      req
+      |> inertia.response_builder("Users/Create")
+      |> inertia.errors(errors_dict)
+      |> inertia.response()
+    }
+  }
+}
+
+/// Require JSON and decode user request, handling errors with form response
+fn decode_request(
+  req: Request,
+  cont: fn(users.CreateUserRequest) -> Response,
+) -> Response {
   use json_data <- wisp.require_json(req)
-  use request <- utils.decode_create_user_request(json_data, fn() {
-    render_create_form_with_empty_data(req)
-  })
-  use validated_request <- utils.validate_create_user_request(
-    req,
-    request,
-    db,
-    render_create_form_with_validation_errors,
-  )
-  utils.create_user_in_database(
-    validated_request,
-    db,
-    fn(failed_request) {
-      render_create_form_with_data(
-        req,
-        failed_request.name,
-        failed_request.email,
-      )
-    },
-    fn() { wisp.redirect("/users") },
-  )
+
+  case users.decode_create_user_request(json_data) {
+    Error(_) -> {
+      // JSON decoding failed - return to form with errors only
+      req
+      |> inertia.response_builder("Users/Create")
+      |> inertia.errors(dict.from_list([#("form", "Invalid form data")]))
+      |> inertia.response()
+    }
+    Ok(request) -> cont(request)
+  }
 }
 
-/// Helper to render the create form with empty data
-fn render_create_form_with_empty_data(req: Request) -> Response {
-  let props = [types.DefaultProp("form_data", user_props.UserFormData("", ""))]
-  let page =
-    inertia.eval(req, "Users/Create", props, user_props.encode_user_prop)
-  inertia.render(req, page)
-}
-
-/// Helper to render form with existing data (no errors shown)
-fn render_create_form_with_data(
-  req: Request,
-  name: String,
-  email: String,
-) -> Response {
-  let props = [
-    types.DefaultProp("form_data", user_props.UserFormData(name, email)),
-  ]
-  let page =
-    inertia.eval(req, "Users/Create", props, user_props.encode_user_prop)
-  inertia.render(req, page)
-}
-
-/// Helper to render form with validation errors
-fn render_create_form_with_validation_errors(
-  req: Request,
+fn validate_request(
+  db: Connection,
   request: users.CreateUserRequest,
-  validation_errors: List(users.UserValidationError),
-) -> Response {
-  let props = [
-    types.DefaultProp(
-      "form_data",
-      user_props.UserFormData(request.name, request.email),
-    ),
-  ]
-  let page =
-    inertia.eval(req, "Users/Create", props, user_props.encode_user_prop)
-    |> inertia.errors(validation_errors_to_dict(validation_errors))
-  inertia.render(req, page)
+) -> Result(users.CreateUserRequest, dict.Dict(String, String)) {
+  users.validate_create_user(db, request)
+  |> result.map_error(validation_errors_to_dict)
+}
+
+fn create_user(
+  db: Connection,
+  validated_request: users.CreateUserRequest,
+) -> Result(users.User, dict.Dict(String, String)) {
+  users.create_user(db, validated_request)
+  |> result.map_error(fn(_) {
+    dict.from_list([#("general", "Failed to create user")])
+  })
 }
 
 /// Convert validation errors to error dict for Inertia

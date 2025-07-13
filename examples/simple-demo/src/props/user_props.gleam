@@ -6,6 +6,7 @@
 
 import data/users
 import gleam/json
+import inertia_wisp/internal/types
 
 /// Represents the different types of props that can be sent to user pages
 pub type UserProp {
@@ -25,23 +26,31 @@ pub type UserProp {
   LoadingState(is_loading: Bool)
 }
 
-/// Encode a UserProp to a name/JSON pair for Inertia
-pub fn encode_user_prop(prop: UserProp) -> #(String, json.Json) {
-  case prop {
-    UserList(users) -> #("users", encode_user_list(users))
-    UserCount(count) -> #("user_count", json.int(count))
-    UserData(user) -> #("user", encode_user(user))
-    UserFormData(name, email) -> #(
-      "form_data",
-      json.object([#("name", json.string(name)), #("email", json.string(email))]),
-    )
-    SearchQuery(query) -> #("search_query", json.string(query))
-    PaginationInfo(current, total, per_page) -> #(
-      "pagination",
-      encode_pagination(current, total, per_page),
-    )
-    LoadingState(is_loading) -> #("is_loading", json.bool(is_loading))
-  }
+// Factory functions for creating Prop(UserProp) instances
+
+/// Create a form data prop (DefaultProp)
+pub fn form_data(name: String, email: String) -> types.Prop(UserProp) {
+  types.DefaultProp("form_data", UserFormData(name, email))
+}
+
+/// Create a user data prop (DefaultProp)
+pub fn user_data(user: users.User) -> types.Prop(UserProp) {
+  types.DefaultProp("user", UserData(user))
+}
+
+/// Create a user list prop (DefaultProp)
+pub fn user_list(users: List(users.User)) -> types.Prop(UserProp) {
+  types.DefaultProp("users", UserList(users))
+}
+
+/// Create a user count prop (DefaultProp)
+pub fn user_count(count: Int) -> types.Prop(UserProp) {
+  types.DefaultProp("user_count", UserCount(count))
+}
+
+/// Create a search query prop (DefaultProp)
+pub fn search_query(query: String) -> types.Prop(UserProp) {
+  types.DefaultProp("search_query", SearchQuery(query))
 }
 
 /// Helper function to encode a single user to JSON
@@ -66,4 +75,19 @@ fn encode_pagination(current: Int, total: Int, per_page: Int) -> json.Json {
     #("total_pages", json.int(total)),
     #("per_page", json.int(per_page)),
   ])
+}
+
+/// Encode a UserProp to JSON only (for Response Builder API)
+pub fn user_prop_to_json(prop: UserProp) -> json.Json {
+  case prop {
+    UserList(users) -> encode_user_list(users)
+    UserCount(count) -> json.int(count)
+    UserData(user) -> encode_user(user)
+    UserFormData(name, email) ->
+      json.object([#("name", json.string(name)), #("email", json.string(email))])
+    SearchQuery(query) -> json.string(query)
+    PaginationInfo(current, total, per_page) ->
+      encode_pagination(current, total, per_page)
+    LoadingState(is_loading) -> json.bool(is_loading)
+  }
 }

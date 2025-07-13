@@ -11,25 +11,32 @@ export default function Edit({ user, form_data, errors }: UsersEditProps) {
     processing,
     errors: formErrors,
   } = useForm({
-    name: form_data?.name || user.name,
-    email: form_data?.email || user.email,
+    id: user?.id || 0,
+    name: user?.name || "",
+    email: user?.email || "",
   });
+  console.log({ user, data });
 
   // Merge server-side errors with client-side errors
   const allErrors = { ...errors, ...formErrors };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    put(`/users/${user.id}`);
+    // Extract user ID from current URL if user prop not available
+    const userId = data.id;
+    put(`/users/${userId}`);
   };
 
   const handleDelete = () => {
+    const userName = data.name;
+    const userId = data.id;
+
     if (
       confirm(
-        `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+        `Are you sure you want to delete ${userName}? This action cannot be undone.`,
       )
     ) {
-      router.delete(`/users/${user.id}`, {
+      router.delete(`/users/${userId}`, {
         onError: () => {
           alert("Failed to delete user. Please try again.");
         },
@@ -39,13 +46,13 @@ export default function Edit({ user, form_data, errors }: UsersEditProps) {
 
   return (
     <>
-      <Head title={`Edit User: ${user.name}`} />
+      <Head title={`Edit User: ${data.name}`} />
 
       <div className="container">
         {/* Header */}
         <header className="header">
           <h1>Edit User</h1>
-          <p>Update information for {user.name}</p>
+          <p>Update information for {data.name}</p>
         </header>
 
         {/* Navigation */}
@@ -53,18 +60,20 @@ export default function Edit({ user, form_data, errors }: UsersEditProps) {
           <Link href="/users" className="nav-link">
             ← Back to Users
           </Link>
-          <Link href={`/users/${user.id}`} className="nav-link">
+          <Link href={`/users/${data.id}`} className="nav-link">
             View User
           </Link>
         </nav>
 
         {/* User Info Summary */}
-        <section className="section">
-          <div className="user-summary">
-            <h3>Editing User #{user.id}</h3>
-            <p>Created: {new Date(user.created_at).toLocaleDateString()}</p>
-          </div>
-        </section>
+        {user && (
+          <section className="section">
+            <div className="user-summary">
+              <h3>Editing User #{user.id}</h3>
+              <p>Created: {new Date(user.created_at).toLocaleDateString()}</p>
+            </div>
+          </section>
+        )}
 
         {/* Form Section */}
         <section className="section">
@@ -110,7 +119,7 @@ export default function Edit({ user, form_data, errors }: UsersEditProps) {
 
               {/* Form Actions */}
               <div className="form-actions">
-                <Link href={`/users/${user.id}`} className="button secondary">
+                <Link href={`/users/${data.id}`} className="button secondary">
                   Cancel
                 </Link>
                 <button
@@ -126,22 +135,24 @@ export default function Edit({ user, form_data, errors }: UsersEditProps) {
         </section>
 
         {/* Danger Zone */}
-        <section className="section danger-section">
-          <h2 className="section-title danger">Danger Zone</h2>
-          <div className="danger-content">
-            <p>
-              Permanently delete this user and all associated data. This action
-              cannot be undone.
-            </p>
-            <button
-              onClick={handleDelete}
-              className="button danger"
-              disabled={processing}
-            >
-              Delete User
-            </button>
-          </div>
-        </section>
+        {user && (
+          <section className="section danger-section">
+            <h2 className="section-title danger">Danger Zone</h2>
+            <div className="danger-content">
+              <p>
+                Permanently delete this user and all associated data. This
+                action cannot be undone.
+              </p>
+              <button
+                onClick={handleDelete}
+                className="button danger"
+                disabled={processing}
+              >
+                Delete User
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* Form Demo Info */}
         <section className="section api-demo-section">
