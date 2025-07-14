@@ -39,8 +39,8 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 
 /// Route requests to appropriate handlers
 fn route_request(req: wisp.Request) -> wisp.Response {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = create_sample_database(db)
+  let assert Ok(db) = sqlight.open("simple_demo.db")
+  let assert Ok(_) = ensure_database_setup(db)
 
   case wisp.path_segments(req), req.method {
     [], http.Get -> home.home_page(req)
@@ -72,7 +72,14 @@ fn get_static_path() -> String {
 }
 
 /// Create and initialize the database with sample data
-fn create_sample_database(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
+fn ensure_database_setup(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
   use _ <- result.try(data_users.create_users_table(db))
-  data_users.init_sample_data(db)
+  // Only initialize sample data if table is empty
+  case data_users.get_user_count(db) {
+    Ok(0) -> data_users.init_sample_data(db)
+    Ok(_) -> Ok(Nil)
+    // Data already exists, don't reinitialize
+    Error(_) -> data_users.init_sample_data(db)
+    // Error checking, so initialize
+  }
 }
