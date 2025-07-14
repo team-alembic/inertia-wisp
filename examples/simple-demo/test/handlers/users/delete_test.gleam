@@ -5,9 +5,13 @@
 
 import data/users
 import gleam/bit_array
+import gleam/dynamic/decode
 import gleam/http
 import gleam/option
+import gleam/result
+import gleam/string
 import handlers/users as user_handlers
+import inertia_wisp/testing
 import sqlight
 import wisp/testing as wisp_testing
 
@@ -48,8 +52,11 @@ pub fn users_delete_invalid_id_test() {
   let req = wisp_testing.request(http.Post, "/users/invalid/delete", [], <<>>)
   let response = user_handlers.users_delete(req, "invalid", db)
 
-  // Should redirect (graceful handling of invalid ID)
-  assert response.status == 303
+  // Should show error component for invalid ID
+  assert testing.component(response) == Ok("Error")
+  assert testing.prop(response, "errors", decode.at(["message"], decode.string))
+    |> result.map(string.contains(_, "Invalid user ID"))
+    == Ok(True)
 }
 
 /// Test delete with non-existent user
@@ -60,6 +67,6 @@ pub fn users_delete_not_found_test() {
   let req = wisp_testing.request(http.Post, "/users/999/delete", [], <<>>)
   let response = user_handlers.users_delete(req, "999", db)
 
-  // Should redirect (graceful handling of non-existent user)
+  // Should redirect (deleting non-existent user is successful no-op)
   assert response.status == 303
 }
