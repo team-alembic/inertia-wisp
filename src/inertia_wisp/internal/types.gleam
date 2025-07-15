@@ -96,12 +96,15 @@ pub type Prop(p) {
   /// ALWAYS included on standard visits
   /// OPTIONALLY included on partial reloads
   /// ONLY evaluated when needed
-  LazyProp(name: String, resolver: fn() -> p)
+  LazyProp(name: String, resolver: fn() -> Result(p, dict.Dict(String, String)))
 
   /// NEVER included on standard visits
   /// OPTIONALLY included on partial reloads
   /// ONLY evaluated when needed
-  OptionalProp(name: String, resolver: fn() -> p)
+  OptionalProp(
+    name: String,
+    resolver: fn() -> Result(p, dict.Dict(String, String)),
+  )
 
   /// ALWAYS included on standard visits
   /// ALWAYS included on partial reloads
@@ -110,7 +113,11 @@ pub type Prop(p) {
 
   /// A LazyProp fetched in a separate request sent from the client
   /// A group name can be optionally supplied to fetch deferred props in multiple separate requests.
-  DeferProp(name: String, group: option.Option(String), resolver: fn() -> p)
+  DeferProp(
+    name: String,
+    group: option.Option(String),
+    resolver: fn() -> Result(p, dict.Dict(String, String)),
+  )
 
   /// Indicates that a Prop should be merged client-side
   /// During the merging process, if the value is an array, the incoming items will be appended to the existing array, not merged by index.

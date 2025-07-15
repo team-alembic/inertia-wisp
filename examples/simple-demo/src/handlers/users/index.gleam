@@ -7,6 +7,7 @@ import data/users
 import gleam/dict
 import gleam/list
 import gleam/option
+import gleam/result
 import gleam/uri
 import inertia_wisp/inertia
 
@@ -31,11 +32,14 @@ pub fn handler(req: Request, db: Connection) -> Response {
         user_props.user_list(users_data),
         user_props.user_count(list.length(users_data)),
         user_props.search_query(search_query),
+        user_props.user_analytics(fn() { compute_user_analytics(db) }),
+        user_props.user_report(fn() { generate_user_report(db) }),
       ]
 
       req
       |> inertia.response_builder("Users/Index")
       |> inertia.props(props, user_props.user_prop_to_json)
+      |> inertia.on_error("Error")
       |> inertia.response()
     }
     Error(errors) -> {
@@ -48,6 +52,17 @@ pub fn handler(req: Request, db: Connection) -> Response {
 }
 
 /// Get users from search_query, handling database errors
+fn generate_user_report(
+  db: Connection,
+) -> Result(users.UserReport, dict.Dict(String, String)) {
+  users.generate_user_report(db)
+  |> result.map_error(fn(_) {
+    dict.from_list([
+      #("report", "Unable to generate user report. Please try again later."),
+    ])
+  })
+}
+
 fn get_users(
   search_query: String,
   db: Connection,
@@ -83,4 +98,13 @@ fn get_search_query(req: Request) -> String {
     }
     option.None -> ""
   }
+}
+
+fn compute_user_analytics(
+  db: Connection,
+) -> Result(users.UserAnalytics, dict.Dict(String, String)) {
+  users.compute_user_analytics(db)
+  |> result.map_error(fn(_) {
+    dict.from_list([#("analytics", "Unable to compute user analytics")])
+  })
 }

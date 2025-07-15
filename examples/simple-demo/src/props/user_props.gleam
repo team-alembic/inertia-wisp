@@ -5,25 +5,21 @@
 //// showcases dynamic data handling with database integration.
 
 import data/users
+import gleam/dict
 import gleam/json
+import gleam/option
 import inertia_wisp/internal/types
 
 /// Represents the different types of props that can be sent to user pages
 pub type UserProp {
-  /// List of users (expensive operation, good for LazyProp)
   UserList(List(users.User))
-  /// Total user count (expensive operation)
   UserCount(Int)
-  /// Individual user data
   UserData(users.User)
-  /// Form data for user creation/editing
   UserFormData(name: String, email: String)
-  /// Search query for user filtering
   SearchQuery(String)
-  /// Pagination information
   PaginationInfo(current_page: Int, total_pages: Int, per_page: Int)
-  /// Loading state for expensive operations
-  LoadingState(is_loading: Bool)
+  UserAnalytics(users.UserAnalytics)
+  UserReport(users.UserReport)
 }
 
 // Factory functions for creating Prop(UserProp) instances
@@ -53,6 +49,32 @@ pub fn search_query(query: String) -> types.Prop(UserProp) {
   types.DefaultProp("search_query", SearchQuery(query))
 }
 
+/// Create a user analytics prop (OptionalProp)
+/// This is expensive to compute and should only be included when specifically requested
+pub fn user_analytics(
+  analytics_fn: fn() -> Result(users.UserAnalytics, dict.Dict(String, String)),
+) -> types.Prop(UserProp) {
+  types.OptionalProp("user_analytics", fn() {
+    case analytics_fn() {
+      Ok(analytics) -> Ok(UserAnalytics(analytics))
+      Error(error_dict) -> Error(error_dict)
+    }
+  })
+}
+
+/// Create a user report prop (DeferProp)
+/// This is very expensive to compute and should be deferred until specifically requested
+pub fn user_report(
+  report_fn: fn() -> Result(users.UserReport, dict.Dict(String, String)),
+) -> types.Prop(UserProp) {
+  types.DeferProp("user_report", option.Some("reports"), fn() {
+    case report_fn() {
+      Ok(report) -> Ok(UserReport(report))
+      Error(error_dict) -> Error(error_dict)
+    }
+  })
+}
+
 /// Helper function to encode a single user to JSON
 fn encode_user(user: users.User) -> json.Json {
   json.object([
@@ -77,6 +99,40 @@ fn encode_pagination(current: Int, total: Int, per_page: Int) -> json.Json {
   ])
 }
 
+/// Helper function to encode user report to JSON
+fn encode_user_report(report: users.UserReport) -> json.Json {
+  json.object([
+    #("total_users", json.int(report.total_users)),
+    #("active_users", json.int(report.active_users)),
+    #("inactive_users", json.int(report.inactive_users)),
+    #("recent_signups", json.array(report.recent_signups, encode_user)),
+    #(
+      "top_domains",
+      json.array(report.top_domains, fn(pair) {
+        json.object([
+          #("domain", json.string(pair.0)),
+          #("count", json.int(pair.1)),
+        ])
+      }),
+    ),
+    #("activity_summary", json.string(report.activity_summary)),
+  ])
+}
+
+/// Helper function to encode user analytics to JSON
+fn encode_user_analytics(analytics: users.UserAnalytics) -> json.Json {
+  json.object([
+    #("total_users", json.int(analytics.total_users)),
+    #("active_users", json.int(analytics.active_users)),
+    #("growth_rate", json.float(analytics.growth_rate)),
+    #("new_users_this_month", json.int(analytics.new_users_this_month)),
+    #(
+      "average_session_duration",
+      json.float(analytics.average_session_duration),
+    ),
+  ])
+}
+
 /// Encode a UserProp to JSON only (for Response Builder API)
 pub fn user_prop_to_json(prop: UserProp) -> json.Json {
   case prop {
@@ -88,6 +144,7 @@ pub fn user_prop_to_json(prop: UserProp) -> json.Json {
     SearchQuery(query) -> json.string(query)
     PaginationInfo(current, total, per_page) ->
       encode_pagination(current, total, per_page)
-    LoadingState(is_loading) -> json.bool(is_loading)
+    UserAnalytics(analytics) -> encode_user_analytics(analytics)
+    UserReport(report) -> encode_user_report(report)
   }
 }

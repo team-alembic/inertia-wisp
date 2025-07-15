@@ -239,7 +239,7 @@ pub fn deferred_props_not_evaluated_test() {
     types.DefaultProp("user", UserData("John", "john@example.com")),
     types.DeferProp("expensive", option.None, fn() {
       // This should NOT be called during response building
-      panic as "DeferProp should not be evaluated!"
+      panic as "Should not be evaluated"
     }),
   ]
 
@@ -257,8 +257,10 @@ pub fn deferred_props_included_in_json_test() {
   let req = testing.inertia_request()
   let props = [
     types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { CountData(42) }),
-    types.DeferProp("analytics", option.Some("custom"), fn() { CountData(100) }),
+    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
+    types.DeferProp("analytics", option.Some("custom"), fn() {
+      Ok(CountData(100))
+    }),
   ]
 
   let response =
@@ -355,10 +357,10 @@ pub fn mixed_advanced_props_test() {
   let req = testing.inertia_request()
   let props = [
     types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { CountData(42) }),
+    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
     types.MergeProp(
       types.DeferProp("analytics", option.Some("custom"), fn() {
-        CountData(100)
+        Ok(CountData(100))
       }),
       option.None,
       False,
@@ -488,7 +490,7 @@ pub fn partial_reload_optional_props_test() {
 
   let props = [
     types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.OptionalProp("optional", fn() { CountData(42) }),
+    types.OptionalProp("optional", fn() { Ok(CountData(42)) }),
     types.AlwaysProp("always", CountData(100)),
   ]
 
@@ -544,7 +546,7 @@ pub fn partial_reload_deferred_props_test() {
 
   let props = [
     types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { CountData(42) }),
+    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
     types.AlwaysProp("always", CountData(100)),
   ]
 
@@ -579,8 +581,10 @@ pub fn initial_page_load_deferred_props_test() {
   let req = testing.regular_request()
   let props = [
     types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { CountData(42) }),
-    types.DeferProp("analytics", option.Some("custom"), fn() { CountData(100) }),
+    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
+    types.DeferProp("analytics", option.Some("custom"), fn() {
+      Ok(CountData(100))
+    }),
   ]
 
   let response =
@@ -622,4 +626,72 @@ pub fn fluent_api_chaining_test() {
   // Should successfully chain all builder methods
   let assert Ok("application/json; charset=utf-8") =
     response.get_header(response, "content-type")
+}
+
+pub fn test_lazy_prop_error_handling() {
+  let req = testing.inertia_request()
+  let error_dict = dict.from_list([#("database", "Connection failed")])
+  let failing_prop = types.LazyProp("user_count", fn() { Error(error_dict) })
+
+  let response =
+    req
+    |> response_builder.response_builder("Users/Index")
+    |> response_builder.props([failing_prop], encode_test_prop)
+    |> response_builder.on_error("Error")
+    |> response_builder.response()
+
+  // Test that the response contains the error in the props
+  let assert Ok(errors) =
+    testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  assert dict.has_key(errors, "database")
+  let assert Ok(error_message) = dict.get(errors, "database")
+  assert error_message == "Connection failed"
+}
+
+pub fn test_optional_prop_error_handling() {
+  let req =
+    testing.inertia_request()
+    |> testing.partial_data(["user_analytics"])
+    |> testing.partial_component("Users/Index")
+  let error_dict = dict.from_list([#("analytics", "Service unavailable")])
+  let failing_prop =
+    types.OptionalProp("user_analytics", fn() { Error(error_dict) })
+
+  let response =
+    req
+    |> response_builder.response_builder("Users/Index")
+    |> response_builder.props([failing_prop], encode_test_prop)
+    |> response_builder.on_error("Error")
+    |> response_builder.response()
+
+  // Test that the response contains the error in the props
+  let assert Ok(errors) =
+    testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  assert dict.has_key(errors, "analytics")
+  let assert Ok(error_message) = dict.get(errors, "analytics")
+  assert error_message == "Service unavailable"
+}
+
+pub fn test_defer_prop_error_handling() {
+  let req =
+    testing.inertia_request()
+    |> testing.partial_data(["external_data"])
+    |> testing.partial_component("Users/Index")
+  let error_dict = dict.from_list([#("external_api", "Timeout")])
+  let failing_prop =
+    types.DeferProp("external_data", option.None, fn() { Error(error_dict) })
+
+  let response =
+    req
+    |> response_builder.response_builder("Users/Index")
+    |> response_builder.props([failing_prop], encode_test_prop)
+    |> response_builder.on_error("Error")
+    |> response_builder.response()
+
+  // Test that the response contains the error in the props
+  let assert Ok(errors) =
+    testing.prop(response, "errors", decode.dict(decode.string, decode.string))
+  assert dict.has_key(errors, "external_api")
+  let assert Ok(error_message) = dict.get(errors, "external_api")
+  assert error_message == "Timeout"
 }

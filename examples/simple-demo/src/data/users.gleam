@@ -4,12 +4,25 @@
 //// and LazyProp evaluation. It provides CRUD operations for user management
 //// to showcase the new inertia.eval API with real database interactions.
 
+import gleam/dict
 import gleam/dynamic
 import gleam/dynamic/decode
+import gleam/int
 import gleam/list
 import gleam/option.{type Option}
 import gleam/string
 import sqlight.{type Connection}
+
+/// User analytics data (expensive to compute)
+pub type UserAnalytics {
+  UserAnalytics(
+    total_users: Int,
+    active_users: Int,
+    growth_rate: Float,
+    new_users_this_month: Int,
+    average_session_duration: Float,
+  )
+}
 
 /// User data structure
 pub type User {
@@ -417,4 +430,105 @@ fn check_email_exists_excluding_user(
     Ok(_) -> Ok(False)
     Error(err) -> Error(err)
   }
+}
+
+/// Compute user analytics (expensive operation for OptionalProp demo)
+/// This simulates expensive calculations that should only be done when needed
+pub fn compute_user_analytics(
+  db: Connection,
+) -> Result(UserAnalytics, sqlight.Error) {
+  // Get total users
+  let total_result = get_user_count(db)
+
+  // Simulate expensive calculations
+  case total_result {
+    Ok(total) -> {
+      let active_users = total * 80 / 100
+      // 80% active rate
+      let growth_rate = 15.5
+      // 15.5% growth
+      let new_users_this_month = total * 12 / 100
+      // 12% new this month
+      let avg_session = 8.5
+      // 8.5 minutes average session
+
+      Ok(UserAnalytics(
+        total_users: total,
+        active_users: active_users,
+        growth_rate: growth_rate,
+        new_users_this_month: new_users_this_month,
+        average_session_duration: avg_session,
+      ))
+    }
+    Error(err) -> Error(err)
+  }
+}
+
+/// User report data structure for deferred loading
+pub type UserReport {
+  UserReport(
+    total_users: Int,
+    active_users: Int,
+    inactive_users: Int,
+    recent_signups: List(User),
+    top_domains: List(#(String, Int)),
+    activity_summary: String,
+  )
+}
+
+/// Generate comprehensive user report (expensive operation for DeferProp demo)
+/// This simulates a very expensive operation that should be deferred
+pub fn generate_user_report(db: Connection) -> Result(UserReport, sqlight.Error) {
+  // Get all users for comprehensive analysis
+  let users_result = get_all_users(db)
+
+  case users_result {
+    Ok(users) -> {
+      let total_users = list.length(users)
+      let active_users = total_users * 85 / 100
+      // 85% active rate
+      let inactive_users = total_users - active_users
+
+      // Get recent signups (last 10 users)
+      let recent_signups = list.take(users, 10)
+
+      // Analyze email domains
+      let top_domains = analyze_email_domains(users)
+
+      // Generate activity summary
+      let activity_summary = case total_users {
+        0 -> "No users found"
+        n if n < 10 -> "Small user base - growing"
+        n if n < 100 -> "Medium user base - active"
+        _ -> "Large user base - very active"
+      }
+
+      Ok(UserReport(
+        total_users: total_users,
+        active_users: active_users,
+        inactive_users: inactive_users,
+        recent_signups: recent_signups,
+        top_domains: top_domains,
+        activity_summary: activity_summary,
+      ))
+    }
+    Error(err) -> Error(err)
+  }
+}
+
+/// Analyze email domains from user list
+fn analyze_email_domains(users: List(User)) -> List(#(String, Int)) {
+  users
+  |> list.map(fn(user) {
+    case string.split_once(user.email, "@") {
+      Ok(#(_, domain)) -> domain
+      Error(_) -> "unknown"
+    }
+  })
+  |> list.group(fn(domain) { domain })
+  |> dict.to_list()
+  |> list.map(fn(pair) { #(pair.0, list.length(pair.1)) })
+  |> list.sort(fn(a, b) { int.compare(b.1, a.1) })
+  |> list.take(5)
+  // Top 5 domains
 }

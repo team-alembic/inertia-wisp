@@ -6,6 +6,7 @@
 import data/users
 import gleam/dynamic/decode
 import gleam/list
+import gleam/result
 import gleam/string
 import handlers/users as user_handlers
 import inertia_wisp/testing
@@ -83,4 +84,60 @@ pub fn users_index_search_route_test() {
 
   assert testing.component(response) == Ok("Users/Index")
   assert testing.prop(response, "search_query", decode.string) == Ok("Demo")
+}
+
+/// Test that regular request EXCLUDES optional analytics prop
+/// This demonstrates that OptionalProp is excluded by default for performance
+pub fn users_index_excludes_analytics_by_default_test() {
+  let assert Ok(db) = sqlight.open(":memory:")
+  let assert Ok(_) = users.create_users_table(db)
+  let assert Ok(_) = users.init_sample_data(db)
+
+  let req = testing.inertia_request()
+  let response = user_handlers.users_index(req, db)
+
+  // Should NOT include analytics in regular request (expensive computation)
+  let analytics_result =
+    testing.prop(response, "user_analytics", decode.dynamic)
+  assert analytics_result |> result.is_error
+}
+
+/// Test that partial request with "only" parameter INCLUDES optional analytics
+/// This demonstrates OptionalProp inclusion when specifically requested
+pub fn users_index_includes_analytics_when_requested_test() {
+  let assert Ok(db) = sqlight.open(":memory:")
+  let assert Ok(_) = users.create_users_table(db)
+  let assert Ok(_) = users.init_sample_data(db)
+
+  // Create partial request that specifically asks for analytics using proper header
+  let req =
+    testing.inertia_request()
+    |> testing.partial_data(["user_analytics"])
+    |> testing.partial_component("Users/Index")
+  let response = user_handlers.users_index(req, db)
+
+  // Should include analytics when specifically requested
+  let analytics_decoder = decode.at(["total_users"], decode.int)
+  let assert Ok(total_users) =
+    testing.prop(response, "user_analytics", analytics_decoder)
+  assert total_users == 3
+}
+
+/// Test analytics computation returns expected structure
+/// This tests the actual analytics data structure and computation
+pub fn users_analytics_computation_test() {
+  let assert Ok(db) = sqlight.open(":memory:")
+  let assert Ok(_) = users.create_users_table(db)
+  let assert Ok(_) = users.init_sample_data(db)
+
+  // Test analytics computation directly
+  let assert Ok(analytics) = users.compute_user_analytics(db)
+
+  assert analytics.total_users == 3
+  assert analytics.active_users == 2
+  // 80% of 3 = 2.4 -> 2
+  assert analytics.growth_rate == 15.5
+  assert analytics.new_users_this_month == 0
+  // 12% of 3 = 0.36 -> 0
+  assert analytics.average_session_duration == 8.5
 }

@@ -22,6 +22,7 @@ import wisp.{type Request, type Response}
 type PropEval {
   Evaluated(name: String, value: json.Json, merge_opts: MergeOpts)
   Deferred(name: String, group: String)
+  PropError(name: String, errors: Dict(String, String))
 }
 
 /// Merge options for props
@@ -45,6 +46,7 @@ pub opaque type InertiaResponseBuilder {
     merge_props: List(String),
     deep_merge_props: List(String),
     match_props_on: List(String),
+    error_component: Option(String),
   )
 }
 
@@ -66,6 +68,7 @@ pub fn response_builder(
     merge_props: [],
     deep_merge_props: [],
     match_props_on: [],
+    error_component: option.None,
   )
 }
 
@@ -106,6 +109,7 @@ pub fn props(
     merge_props,
     deep_merge_props,
     match_props_on,
+    prop_errors,
   ) = process_props(filtered_props, encode_prop, partial_data)
 
   let combined_props = dict.merge(builder.props, evaluated_props)
@@ -114,6 +118,7 @@ pub fn props(
   let combined_deep_merge =
     list.append(builder.deep_merge_props, deep_merge_props)
   let combined_match_on = list.append(builder.match_props_on, match_props_on)
+  let combined_errors = dict.merge(builder.errors, prop_errors)
 
   InertiaResponseBuilder(
     ..builder,
@@ -122,6 +127,7 @@ pub fn props(
     merge_props: combined_merge,
     deep_merge_props: combined_deep_merge,
     match_props_on: combined_match_on,
+    errors: combined_errors,
   )
 }
 
@@ -139,6 +145,17 @@ pub fn redirect(
   url: String,
 ) -> InertiaResponseBuilder {
   InertiaResponseBuilder(..builder, redirect_url: option.Some(url))
+}
+
+/// Set error component for prop resolution errors
+pub fn on_error(
+  builder: InertiaResponseBuilder,
+  error_component: String,
+) -> InertiaResponseBuilder {
+  InertiaResponseBuilder(
+    ..builder,
+    error_component: option.Some(error_component),
+  )
 }
 
 /// Clear browser history for this response
@@ -159,6 +176,23 @@ pub fn version(
   version: String,
 ) -> InertiaResponseBuilder {
   InertiaResponseBuilder(..builder, version: option.Some(version))
+}
+
+/// Helper function to resolve Result-based prop resolvers
+fn resolve_prop_result(
+  name: String,
+  resolver: fn() -> Result(p, Dict(String, String)),
+  encode_prop: fn(p) -> json.Json,
+) -> PropEval {
+  case resolver() {
+    Ok(value) -> {
+      let json_value = encode_prop(value)
+      Evaluated(name, json_value, NoMerge)
+    }
+    Error(error_dict) -> {
+      PropError(name, error_dict)
+    }
+  }
 }
 
 /// Build the final Inertia response
@@ -256,6 +290,7 @@ fn process_props(
   List(String),
   List(String),
   List(String),
+  Dict(String, String),
 ) {
   let #(
     evaluated,
@@ -263,60 +298,98 @@ fn process_props(
     merge_props,
     deep_merge_props,
     match_props_on,
+    prop_errors,
   ) =
     props
-    |> list.fold(#(dict.new(), dict.new(), [], [], []), fn(acc, prop) {
-      let #(eval_acc, defer_acc, merge_acc, deep_merge_acc, match_acc) = acc
-      let prop_eval = process_single_prop(prop, encode_prop, partial_data)
+    |> list.fold(
+      #(dict.new(), dict.new(), [], [], [], dict.new()),
+      fn(acc, prop) {
+        let #(
+          eval_acc,
+          defer_acc,
+          merge_acc,
+          deep_merge_acc,
+          match_acc,
+          error_acc,
+        ) = acc
+        let prop_eval = process_single_prop(prop, encode_prop, partial_data)
 
-      case prop_eval {
-        Evaluated(name, value, merge_opts) -> {
-          let new_eval_acc = dict.insert(eval_acc, name, value)
-          case merge_opts {
-            NoMerge -> #(
-              new_eval_acc,
+        case prop_eval {
+          Evaluated(name, value, merge_opts) -> {
+            let new_eval_acc = dict.insert(eval_acc, name, value)
+            case merge_opts {
+              NoMerge -> #(
+                new_eval_acc,
+                defer_acc,
+                merge_acc,
+                deep_merge_acc,
+                match_acc,
+                error_acc,
+              )
+              Merge(match_on, deep) -> {
+                let new_merge_acc = case deep {
+                  False -> [name, ..merge_acc]
+                  True -> merge_acc
+                }
+                let new_deep_merge_acc = case deep {
+                  True -> [name, ..deep_merge_acc]
+                  False -> deep_merge_acc
+                }
+                let new_match_acc = case match_on {
+                  option.Some(match_keys) -> {
+                    let match_entries =
+                      list.map(match_keys, fn(key) { name <> "." <> key })
+                    list.append(match_entries, match_acc)
+                  }
+                  option.None -> match_acc
+                }
+                #(
+                  new_eval_acc,
+                  defer_acc,
+                  new_merge_acc,
+                  new_deep_merge_acc,
+                  new_match_acc,
+                  error_acc,
+                )
+              }
+            }
+          }
+          Deferred(name, group) -> {
+            let current_props = dict.get(defer_acc, group) |> result.unwrap([])
+            let updated_props = [name, ..current_props]
+            let new_defer_acc = dict.insert(defer_acc, group, updated_props)
+            #(
+              eval_acc,
+              new_defer_acc,
+              merge_acc,
+              deep_merge_acc,
+              match_acc,
+              error_acc,
+            )
+          }
+          PropError(_name, error_dict) -> {
+            let new_error_acc = dict.merge(error_acc, error_dict)
+            #(
+              eval_acc,
               defer_acc,
               merge_acc,
               deep_merge_acc,
               match_acc,
+              new_error_acc,
             )
-            Merge(match_on, deep) -> {
-              let new_merge_acc = case deep {
-                False -> [name, ..merge_acc]
-                True -> merge_acc
-              }
-              let new_deep_merge_acc = case deep {
-                True -> [name, ..deep_merge_acc]
-                False -> deep_merge_acc
-              }
-              let new_match_acc = case match_on {
-                option.Some(match_keys) -> {
-                  let match_entries =
-                    list.map(match_keys, fn(key) { name <> "." <> key })
-                  list.append(match_entries, match_acc)
-                }
-                option.None -> match_acc
-              }
-              #(
-                new_eval_acc,
-                defer_acc,
-                new_merge_acc,
-                new_deep_merge_acc,
-                new_match_acc,
-              )
-            }
           }
         }
-        Deferred(name, group) -> {
-          let current_props = dict.get(defer_acc, group) |> result.unwrap([])
-          let updated_props = [name, ..current_props]
-          let new_defer_acc = dict.insert(defer_acc, group, updated_props)
-          #(eval_acc, new_defer_acc, merge_acc, deep_merge_acc, match_acc)
-        }
-      }
-    })
+      },
+    )
 
-  #(evaluated, deferred_groups, merge_props, deep_merge_props, match_props_on)
+  #(
+    evaluated,
+    deferred_groups,
+    merge_props,
+    deep_merge_props,
+    match_props_on,
+    prop_errors,
+  )
 }
 
 /// Process a single prop and return its evaluation result
@@ -331,14 +404,10 @@ fn process_single_prop(
       let json_value = encode_prop(value)
       Evaluated(name, json_value, NoMerge)
     }
-    types.LazyProp(name, resolver) -> {
-      let json_value = encode_prop(resolver())
-      Evaluated(name, json_value, NoMerge)
-    }
-    types.OptionalProp(name, resolver) -> {
-      let json_value = encode_prop(resolver())
-      Evaluated(name, json_value, NoMerge)
-    }
+    types.LazyProp(name, resolver) ->
+      resolve_prop_result(name, resolver, encode_prop)
+    types.OptionalProp(name, resolver) ->
+      resolve_prop_result(name, resolver, encode_prop)
     types.AlwaysProp(name, value) -> {
       let json_value = encode_prop(value)
       Evaluated(name, json_value, NoMerge)
@@ -351,9 +420,8 @@ fn process_single_prop(
         option.Some(requested_props) -> {
           case list.contains(requested_props, name) {
             True -> {
-              // This deferred prop was requested in partial reload, so evaluate it as a regular prop
-              let json_value = encode_prop(resolver())
-              Evaluated(name, json_value, NoMerge)
+              // This deferred prop was requested in partial reload, so evaluate it
+              resolve_prop_result(name, resolver, encode_prop)
             }
             False -> {
               // This deferred prop was not requested, so track it for later
@@ -378,6 +446,9 @@ fn process_single_prop(
         }
         Deferred(name, group) -> {
           Deferred(name, group)
+        }
+        PropError(name, errors) -> {
+          PropError(name, errors)
         }
       }
     }
