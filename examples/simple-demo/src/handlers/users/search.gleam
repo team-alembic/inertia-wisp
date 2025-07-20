@@ -36,7 +36,9 @@ pub fn handler(req: Request, db: Connection) -> Response {
     user_props.search_filters(filters),
     user_props.search_results(search_results),
     // OptionalProp - analytics excluded by default, included when requested
-    user_props.search_analytics(fn() { compute_search_analytics(db, search_results) }),
+    user_props.search_analytics(fn() {
+      compute_search_analytics(db, search_results)
+    }),
   ]
 
   req
@@ -66,6 +68,7 @@ fn compute_search_analytics(
   Ok(data_users.SearchAnalytics(
     total_filtered: total_filtered,
     matching_percentage: matching_percentage,
-    filter_performance_ms: 25, // Simulated performance metric
+    filter_performance_ms: 25,
+    // Simulated performance metric
   ))
 }

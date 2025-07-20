@@ -472,6 +472,62 @@ Before writing any test, ask:
 
 **This rule applies to ALL tests in ALL modules. Violations will be rejected.**
 
+## TEST QUALITY ENFORCEMENT - MANDATORY PROCESS
+
+**ALL test implementation must follow this mandatory review process to prevent rule violations.**
+
+### Pre-Test Writing Checklist (MANDATORY)
+
+Before writing ANY test function, you MUST ask and answer these questions:
+
+1. **"What specific behavior am I claiming to test?"**
+   - Write down the exact behavior in one sentence
+   - If you can't articulate it clearly, the test is unnecessary
+
+2. **"What assertions will prove that behavior works?"**
+   - List the specific values/conditions you'll assert on
+   - Vague assertions like "result.is_ok()" are insufficient
+
+3. **"What would break if I removed this test that wouldn't be caught by other tests?"**
+   - If the answer is "nothing", the test is redundant
+
+4. **"Does my test name match what I'm actually asserting?"**
+   - Test name must precisely describe the verified behavior
+
+### Post-Test Writing Review (MANDATORY)
+
+After writing tests, you MUST:
+
+1. **Re-read each test against FORBIDDEN examples**
+   - Compare your test to the "FORBIDDEN" patterns in this document
+   - Eliminate any test that matches forbidden patterns
+
+2. **Verify assertion-to-behavior alignment**
+   - Read test name, then read assertions
+   - Confirm assertions actually verify the claimed behavior
+
+3. **Apply the "Exercise vs Behavior" test**
+   - If your test only calls functions without meaningful assertions, DELETE IT
+   - If your test just verifies "no crash", DELETE IT
+
+### Active Rule Application (MANDATORY)
+
+When implementing tests:
+
+1. **Keep CLAUDE.md open** - Reference testing rules actively, not from memory
+2. **Quote relevant rules** - When explaining test design, cite specific rule violations prevented
+3. **Justify every test** - Be prepared to defend why each test adds unique value
+
+### Enforcement Questions
+
+When presenting tests, be prepared to answer:
+- "What specific behavior does test X verify?"
+- "How do these assertions prove the claimed behavior?"
+- "Which tests would you remove and why?"
+- "What rule violations did you prevent?"
+
+**FAILURE TO FOLLOW THIS PROCESS WILL RESULT IN REJECTED IMPLEMENTATIONS**
+
 ## PRODUCTION CODE PURITY RULES - STRICTLY ENFORCED
 
 **NEVER add conditional behavior in production code that checks for test environment. This indicates poor abstraction.**

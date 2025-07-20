@@ -23,19 +23,18 @@ import wisp.{type Request, type Response}
 pub fn dashboard_page(req: Request, db: Connection) -> Response {
   // Get delay parameter from query string (default to 2000ms for demo)
   let delay_ms = get_delay_param(req)
-  echo delay_ms
 
   case users.get_user_count(db) {
     Ok(count) -> {
       // Create basic props that load immediately (included in initial loads only)
       let basic_props = [
-        types.DefaultProp("user_count", user_props.UserCount(count))
+        types.DefaultProp("user_count", user_props.UserCount(count)),
       ]
 
       // Create deferred props that load only when requested
       let deferred_props = [
         dashboard_analytics_prop(db, delay_ms),
-        activity_feed_prop(db, delay_ms)
+        activity_feed_prop(db, delay_ms),
       ]
 
       // Combine all props
@@ -58,7 +57,10 @@ pub fn dashboard_page(req: Request, db: Connection) -> Response {
 
 /// Helper function to create dashboard analytics prop (DeferredProp)
 /// This represents expensive analytics calculations that should be deferred
-fn dashboard_analytics_prop(db: Connection, delay_ms: Int) -> types.Prop(user_props.UserProp) {
+fn dashboard_analytics_prop(
+  db: Connection,
+  delay_ms: Int,
+) -> types.Prop(user_props.UserProp) {
   types.DeferProp("analytics", option.None, fn() {
     // Artificial delay to demonstrate progressive loading
     process.sleep(delay_ms)
@@ -78,20 +80,26 @@ fn get_delay_param(req: Request) -> Int {
       case list.key_find(query_params, "delay") {
         Ok(delay_str) -> {
           case int.parse(delay_str) {
-            Ok(delay) if delay >= 0 && delay <= 10000 -> delay
-            _ -> 0  // Default 0ms (no delay) if invalid
+            Ok(delay) if delay >= 0 && delay <= 10_000 -> delay
+            _ -> 0
+            // Default 0ms (no delay) if invalid
           }
         }
-        Error(_) -> 0  // Default 0ms (no delay) if no delay param
+        Error(_) -> 0
+        // Default 0ms (no delay) if no delay param
       }
     }
-    Error(_) -> 0  // Default 0ms (no delay) if query parsing fails
+    Error(_) -> 0
+    // Default 0ms (no delay) if query parsing fails
   }
 }
 
 /// Helper function to create activity feed prop (DeferredProp)
 /// This represents expensive activity feed generation that should be deferred
-fn activity_feed_prop(db: Connection, delay_ms: Int) -> types.Prop(user_props.UserProp) {
+fn activity_feed_prop(
+  db: Connection,
+  delay_ms: Int,
+) -> types.Prop(user_props.UserProp) {
   types.DeferProp("activity_feed", option.Some("activity"), fn() {
     // Artificial delay to demonstrate progressive loading
     process.sleep(delay_ms)

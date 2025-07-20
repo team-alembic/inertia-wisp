@@ -4,6 +4,7 @@
 //// the InertiaContext type, instead constructing Page objects directly
 //// and using regular Wisp functionality.
 
+import data/articles as data_articles
 import data/users as data_users
 import gleam/erlang/process
 import gleam/http
@@ -77,6 +78,8 @@ fn get_static_path() -> String {
 /// Create and initialize the database tables
 fn ensure_database_setup(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
   use _ <- result.try(data_users.create_users_table(db))
+  use _ <- result.try(data_articles.create_articles_table(db))
+  use _ <- result.try(data_articles.create_article_reads_table(db))
   // Only initialize sample data if table is empty for demo purposes
   case data_users.get_user_count(db) {
     Ok(0) -> init_demo_data(db)
@@ -96,5 +99,6 @@ fn init_demo_data(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
     ('Demo User 2', 'demo2@example.com'),
     ('Demo User 3', 'demo3@example.com')
   "
-  sqlight.exec(sql, db)
+  use _ <- result.try(sqlight.exec(sql, db))
+  data_articles.init_sample_data(db)
 }

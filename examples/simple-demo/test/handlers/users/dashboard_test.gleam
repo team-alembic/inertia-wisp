@@ -43,7 +43,8 @@ pub fn dashboard_includes_single_deferred_prop_when_requested_test() {
   let assert Ok(db) = test_db.setup_test_database()
 
   // Request with partial reload for analytics using correct API
-  let req = testing.inertia_request()
+  let req =
+    testing.inertia_request()
     |> testing.partial_data(["analytics"])
     |> testing.partial_component("Dashboard/Index")
   let response = dashboard.dashboard_page(req, db)
@@ -54,13 +55,13 @@ pub fn dashboard_includes_single_deferred_prop_when_requested_test() {
 
   // DeferredProp analytics should be included when specifically requested
   let analytics_decoder = decode.at(["total_users"], decode.int)
-  let assert Ok(total_users) = testing.prop(response, "analytics", analytics_decoder)
+  let assert Ok(total_users) =
+    testing.prop(response, "analytics", analytics_decoder)
   assert total_users == 3
 
   // Should NOT include other deferred props not requested
   let activity_result = testing.prop(response, "activity_feed", decode.dynamic)
   assert result.is_error(activity_result)
-
   // Partial requests do not include deferredProps metadata
   // The requested prop is evaluated and returned, others are excluded
 }
@@ -69,7 +70,8 @@ pub fn dashboard_includes_multiple_deferred_props_when_requested_test() {
   let assert Ok(db) = test_db.setup_test_database()
 
   // Request multiple deferred props using correct API
-  let req = testing.inertia_request()
+  let req =
+    testing.inertia_request()
     |> testing.partial_data(["analytics", "activity_feed"])
     |> testing.partial_component("Dashboard/Index")
   let response = dashboard.dashboard_page(req, db)
@@ -80,12 +82,14 @@ pub fn dashboard_includes_multiple_deferred_props_when_requested_test() {
 
   // Both deferred props should be included when specifically requested
   let analytics_decoder = decode.at(["total_users"], decode.int)
-  let assert Ok(total_users) = testing.prop(response, "analytics", analytics_decoder)
+  let assert Ok(total_users) =
+    testing.prop(response, "analytics", analytics_decoder)
   assert total_users == 3
 
-  let activity_decoder = decode.at(["recent_activities"], decode.list(decode.dynamic))
-  let assert Ok(_recent_activities) = testing.prop(response, "activity_feed", activity_decoder)
-
+  let activity_decoder =
+    decode.at(["recent_activities"], decode.list(decode.dynamic))
+  let assert Ok(_recent_activities) =
+    testing.prop(response, "activity_feed", activity_decoder)
   // Partial requests do not include deferredProps metadata
   // Both requested props are evaluated and returned
 }

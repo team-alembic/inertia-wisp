@@ -563,12 +563,7 @@ pub type ActivityFeed {
 
 /// Individual activity item
 pub type Activity {
-  Activity(
-    id: Int,
-    user_name: String,
-    action: String,
-    timestamp: String,
-  )
+  Activity(id: Int, user_name: String, action: String, timestamp: String)
 }
 
 /// Decoder for UserAnalytics
@@ -580,7 +575,10 @@ pub fn decode_user_analytics(
     use active_users <- decode.field("active_users", decode.int)
     use growth_rate <- decode.field("growth_rate", decode.float)
     use new_users_this_month <- decode.field("new_users_this_month", decode.int)
-    use average_session_duration <- decode.field("average_session_duration", decode.float)
+    use average_session_duration <- decode.field(
+      "average_session_duration",
+      decode.float,
+    )
     decode.success(UserAnalytics(
       total_users: total_users,
       active_users: active_users,
@@ -610,7 +608,10 @@ pub fn decode_activity_feed(
   }
 
   let decoder = {
-    use recent_activities <- decode.field("recent_activities", decode.list(activity_decoder))
+    use recent_activities <- decode.field(
+      "recent_activities",
+      decode.list(activity_decoder),
+    )
     use total_activities <- decode.field("total_activities", decode.int)
     use last_updated <- decode.field("last_updated", decode.string)
     decode.success(ActivityFeed(
@@ -631,7 +632,8 @@ pub fn parse_search_filters(
     Error(_) -> ""
   }
 
-  let category = list.key_find(query_params, "category")
+  let category =
+    list.key_find(query_params, "category")
     |> option.from_result
 
   let sort_by = case list.key_find(query_params, "sort_by") {
