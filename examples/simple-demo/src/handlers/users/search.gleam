@@ -44,7 +44,7 @@ pub fn handler(req: Request, db: Connection) -> Response {
   req
   |> inertia.response_builder("Users/Search")
   |> inertia.props(props, user_props.user_prop_to_json)
-  |> inertia.response()
+  |> inertia.response(200)
 }
 
 /// Compute search analytics for filtered results (OptionalProp)

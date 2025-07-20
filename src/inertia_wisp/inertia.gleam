@@ -93,6 +93,6 @@ pub fn version(
   response_builder.version(builder, version)
 }
 
-pub fn response(builder: InertiaResponseBuilder) -> Response {
-  response_builder.response(builder)
+pub fn response(builder: InertiaResponseBuilder, status: Int) -> Response {
+  response_builder.response(builder, status)
 }

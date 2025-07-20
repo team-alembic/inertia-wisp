@@ -47,6 +47,7 @@ pub opaque type InertiaResponseBuilder {
     deep_merge_props: List(String),
     match_props_on: List(String),
     error_component: Option(String),
+    status: Option(Int),
   )
 }
 
@@ -69,6 +70,7 @@ pub fn response_builder(
     deep_merge_props: [],
     match_props_on: [],
     error_component: option.None,
+    status: option.None,
   )
 }
 
@@ -195,8 +197,8 @@ fn resolve_prop_result(
   }
 }
 
-/// Build the final Inertia response
-pub fn response(builder: InertiaResponseBuilder) -> Response {
+/// Build the final Inertia response with optional status code
+pub fn response(builder: InertiaResponseBuilder, status: Int) -> Response {
   let component_name = case builder.component {
     option.Some(name) -> name
     option.None -> ""
@@ -239,18 +241,18 @@ pub fn response(builder: InertiaResponseBuilder) -> Response {
     |> maybe_add_match_props_on(builder.match_props_on)
 
   case middleware.is_inertia_request(builder.request) {
-    True -> build_json_response(final_json)
-    False -> build_html_response(final_json, component_name)
+    True -> build_json_response(final_json, status)
+    False -> build_html_response(final_json, component_name, status)
   }
 }
 
 /// Build JSON response for Inertia requests
-fn build_json_response(final_json: List(#(String, json.Json))) -> Response {
+fn build_json_response(final_json: List(#(String, json.Json)), status: Int) -> Response {
   let json_body = json.object(final_json) |> json.to_string()
 
   json_body
   |> string_tree.from_string()
-  |> wisp.json_response(200)
+  |> wisp.json_response(status)
   |> middleware.add_inertia_headers()
 }
 
@@ -258,6 +260,7 @@ fn build_json_response(final_json: List(#(String, json.Json))) -> Response {
 fn build_html_response(
   final_json: List(#(String, json.Json)),
   component_name: String,
+  status: Int,
 ) -> Response {
   let json_string = json.object(final_json) |> json.to_string()
   let escaped_json = escape_html(json_string)
@@ -276,7 +279,7 @@ fn build_html_response(
 </body>
 </html>"
 
-  wisp.html_response(string_tree.from_string(html_content), 200)
+  wisp.html_response(string_tree.from_string(html_content), status)
 }
 
 /// Process props and separate them into evaluated props, deferred props, and merge metadata

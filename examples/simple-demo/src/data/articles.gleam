@@ -378,7 +378,8 @@ pub fn get_user_read_status(
   user_id: Int,
   article_id: Int,
 ) -> Result(Bool, sqlight.Error) {
-  let sql = "
+  let sql =
+    "
     SELECT 1 FROM article_reads
     WHERE user_id = ? AND article_id = ?
   "

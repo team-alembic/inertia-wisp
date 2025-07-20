@@ -41,7 +41,7 @@ pub fn handler(req: Request, id: String, db: Connection) -> Response {
       req
       |> inertia.response_builder("Users/Edit")
       |> inertia.errors(errors_dict)
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }
@@ -75,7 +75,7 @@ fn decode_request(
       req
       |> inertia.response_builder("Users/Edit")
       |> inertia.errors(errors_dict)
-      |> inertia.response()
+      |> inertia.response(200)
     }
     Ok(user_id) -> {
       use json_data <- wisp.require_json(req)
@@ -89,7 +89,7 @@ fn decode_request(
               #("message", "Invalid JSON format in request body."),
             ]),
           )
-          |> inertia.response()
+          |> inertia.response(200)
         }
         Ok(request) -> cont(request)
       }

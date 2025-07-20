@@ -5,8 +5,8 @@ import gleam/list
 import gleam/option
 
 import gleam/string
-import news/props
 import inertia_wisp/internal/types
+import news/props
 
 // Test data for prop factories
 const test_article = articles.Article(
@@ -114,7 +114,8 @@ pub fn unread_count_factory_test() {
 }
 
 pub fn news_prop_to_json_article_test() {
-  let json_result = props.news_prop_to_json(props.ArticleData(test_article_with_read_status))
+  let json_result =
+    props.news_prop_to_json(props.ArticleData(test_article_with_read_status))
   let json_string = json.to_string(json_result)
 
   // Verify JSON contains all required article fields
@@ -141,7 +142,8 @@ pub fn news_prop_to_json_news_feed_test() {
 }
 
 pub fn news_prop_to_json_pagination_test() {
-  let json_result = props.news_prop_to_json(props.PaginationMeta(test_pagination_meta))
+  let json_result =
+    props.news_prop_to_json(props.PaginationMeta(test_pagination_meta))
   let json_string = json.to_string(json_result)
 
   // Verify JSON contains all required pagination fields

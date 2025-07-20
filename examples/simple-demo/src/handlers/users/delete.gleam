@@ -32,7 +32,7 @@ pub fn handler(req: Request, id: String, db: Connection) -> Response {
       req
       |> inertia.response_builder("Error")
       |> inertia.errors(errors_dict)
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }

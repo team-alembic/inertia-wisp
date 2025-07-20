@@ -42,13 +42,13 @@ pub fn handler(req: Request, db: Connection) -> Response {
       |> inertia.response_builder("Users/Index")
       |> inertia.on_error("Error")
       |> inertia.props(props, user_props.user_prop_to_json)
-      |> inertia.response()
+      |> inertia.response(200)
     }
     Error(errors) -> {
       req
       |> inertia.response_builder("Error")
       |> inertia.errors(errors)
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }

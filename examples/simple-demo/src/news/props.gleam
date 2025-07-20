@@ -35,11 +35,10 @@ pub fn news_feed(feed: articles.NewsFeed) -> types.Prop(NewsProp) {
 
 /// Create an article list prop (OptionalProp for expensive operations)
 pub fn article_list(
-  articles_fn: fn() -> Result(List(articles.ArticleWithReadStatus), dict.Dict(String, String)),
+  articles_fn: fn() ->
+    Result(List(articles.ArticleWithReadStatus), dict.Dict(String, String)),
 ) -> types.Prop(NewsProp) {
-  types.OptionalProp("articles", fn() {
-    result.map(articles_fn(), ArticleList)
-  })
+  types.OptionalProp("articles", fn() { result.map(articles_fn(), ArticleList) })
 }
 
 /// Create pagination metadata prop (DefaultProp)
@@ -48,7 +47,9 @@ pub fn pagination_meta(meta: articles.PaginationMeta) -> types.Prop(NewsProp) {
 }
 
 /// Create a single article prop (DefaultProp)
-pub fn article_data(article: articles.ArticleWithReadStatus) -> types.Prop(NewsProp) {
+pub fn article_data(
+  article: articles.ArticleWithReadStatus,
+) -> types.Prop(NewsProp) {
   types.DefaultProp("article", ArticleData(article))
 }
 
@@ -61,11 +62,9 @@ pub fn category_filter(category: String) -> types.Prop(NewsProp) {
 pub fn unread_count(
   count_fn: fn() -> Result(Int, dict.Dict(String, String)),
 ) -> types.Prop(NewsProp) {
-  types.DeferProp(
-    name: "unread_count",
-    group: option.None,
-    resolver: fn() { result.map(count_fn(), UnreadCount) },
-  )
+  types.DeferProp(name: "unread_count", group: option.None, resolver: fn() {
+    result.map(count_fn(), UnreadCount)
+  })
 }
 
 /// Helper function to encode article category to JSON
@@ -94,7 +93,9 @@ fn encode_article(article: articles.Article) -> json.Json {
 }
 
 /// Helper function to encode article with read status to JSON
-fn encode_article_with_read_status(article: articles.ArticleWithReadStatus) -> json.Json {
+fn encode_article_with_read_status(
+  article: articles.ArticleWithReadStatus,
+) -> json.Json {
   json.object([
     #("article", encode_article(article.article)),
     #("is_read", json.bool(article.is_read)),
@@ -103,7 +104,9 @@ fn encode_article_with_read_status(article: articles.ArticleWithReadStatus) -> j
 }
 
 /// Helper function to encode article list to JSON
-fn encode_article_list(articles: List(articles.ArticleWithReadStatus)) -> json.Json {
+fn encode_article_list(
+  articles: List(articles.ArticleWithReadStatus),
+) -> json.Json {
   json.array(articles, encode_article_with_read_status)
 }
 

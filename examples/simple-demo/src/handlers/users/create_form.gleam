@@ -22,5 +22,5 @@ pub fn handler(req: Request, _db: Connection) -> Response {
   req
   |> inertia.response_builder("Users/Create")
   |> inertia.props(props, user_props.user_prop_to_json)
-  |> inertia.response()
+  |> inertia.response(200)
 }

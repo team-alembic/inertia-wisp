@@ -33,7 +33,7 @@ pub fn home_page(req: Request) -> Response {
   req
   |> inertia.response_builder("Home")
   |> inertia.props(props, home_props.home_prop_to_json)
-  |> inertia.response()
+  |> inertia.response(200)
 }
 
 /// Get navigation items for the application

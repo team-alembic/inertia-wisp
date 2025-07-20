@@ -34,7 +34,7 @@ pub fn response_builder_creates_empty_builder_test() {
   let response =
     req
     |> response_builder.response_builder("TestComponent")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should create valid response with component name
   let assert Ok("TestComponent") = testing.component(response)
@@ -45,7 +45,7 @@ pub fn component_sets_component_name_test() {
   let response =
     req
     |> response_builder.response_builder("Users/Show")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should set component name correctly
   let assert Ok("Users/Show") = testing.component(response)
@@ -60,7 +60,7 @@ pub fn props_with_single_prop_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include the prop in the response
   let assert Ok("John") =
@@ -78,7 +78,7 @@ pub fn props_with_multiple_props_test() {
     req
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include both props in the response
   let assert Ok("John") =
@@ -99,7 +99,7 @@ pub fn errors_sets_validation_errors_test() {
     req
     |> response_builder.response_builder("Users/Create")
     |> response_builder.errors(errors)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include errors in the response
   let assert Ok("Name is required") =
@@ -115,7 +115,7 @@ pub fn redirect_sets_redirect_url_test() {
     req
     |> response_builder.response_builder("Users/Create")
     |> response_builder.redirect("/users/create")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should be a JSON response (redirect doesn't change response type)
   let assert Ok("application/json; charset=utf-8") =
@@ -130,7 +130,7 @@ pub fn clear_history_sets_flag_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.clear_history()
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should set clear_history flag to true
   let assert Ok(True) = testing.clear_history(response)
@@ -143,7 +143,7 @@ pub fn encrypt_history_sets_flag_test() {
     req
     |> response_builder.response_builder("SecurePage")
     |> response_builder.encrypt_history()
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should set encrypt_history flag to true
   let assert Ok(True) = testing.encrypt_history(response)
@@ -156,7 +156,7 @@ pub fn version_sets_version_string_test() {
     req
     |> response_builder.response_builder("HomePage")
     |> response_builder.version("2.1.0")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should set version string correctly
   let assert Ok("2.1.0") = testing.version(response)
@@ -171,7 +171,7 @@ pub fn response_builds_basic_response_test() {
     req
     |> response_builder.response_builder("HomePage")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should build a valid response
   response
@@ -188,7 +188,7 @@ pub fn response_builds_error_only_response_test() {
     |> response_builder.response_builder("FormPage")
     |> response_builder.errors(errors)
     |> response_builder.redirect("/form")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should build a valid response with errors
   response
@@ -204,7 +204,7 @@ pub fn response_includes_props_in_json_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include props in JSON response
   response
@@ -221,7 +221,7 @@ pub fn response_includes_errors_in_json_test() {
     |> response_builder.response_builder("Users/Create")
     |> response_builder.errors(errors)
     |> response_builder.redirect("/users/create")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include errors in JSON response
   let assert Ok("application/json; charset=utf-8") =
@@ -247,7 +247,7 @@ pub fn deferred_props_not_evaluated_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should succeed without panic - deferred prop not evaluated
   let assert Ok("Users/Show") = testing.component(response)
@@ -267,7 +267,7 @@ pub fn deferred_props_included_in_json_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include deferred props metadata in JSON (at top level, not in props)
   let assert Ok(["expensive"]) =
@@ -296,7 +296,7 @@ pub fn merge_props_metadata_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include merge props metadata (at top level, not in props)
   let assert Ok(["posts", "comments"]) =
@@ -319,7 +319,7 @@ pub fn deep_merge_props_metadata_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include deep merge props metadata (at top level, not in props)
   let assert Ok(["nested", "deep"]) =
@@ -346,7 +346,7 @@ pub fn match_props_on_metadata_test() {
     req
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include match props on metadata (at top level, not in props)
   let assert Ok(["posts.slug", "posts.id", "comments.user_id"]) =
@@ -376,7 +376,7 @@ pub fn mixed_advanced_props_test() {
     req
     |> response_builder.response_builder("Dashboard")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should handle mixed deferred and merge props correctly (at top level, not in props)
   let assert Ok(["expensive"]) =
@@ -413,7 +413,7 @@ pub fn partial_reload_component_match_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Component match should respect partial reload
   // Should include: user (requested) + count (AlwaysProp) = 2 props
@@ -441,7 +441,7 @@ pub fn partial_reload_component_mismatch_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Component mismatch should ignore partial reload and include all non-optional props
   let assert Ok("John") =
@@ -467,7 +467,7 @@ pub fn partial_reload_always_props_included_test() {
     req
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include requested prop + all AlwaysProps
   let assert Ok(42) = testing.prop(response, "specific", decode.int)
@@ -498,7 +498,7 @@ pub fn partial_reload_optional_props_test() {
     req
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should include requested OptionalProp + AlwaysProp
   // Should include requested OptionalProp + AlwaysProps, exclude others
@@ -529,7 +529,7 @@ pub fn partial_reload_no_component_header_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // No component header means no partial reload - should include all non-optional props
   let assert Ok("John") =
@@ -554,7 +554,7 @@ pub fn partial_reload_deferred_props_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should evaluate and return the requested deferred prop as a regular prop
   let assert Ok(42) = testing.prop(response, "expensive", decode.int)
@@ -591,7 +591,7 @@ pub fn initial_page_load_deferred_props_test() {
     req
     |> response_builder.response_builder("Users/Show")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should be HTML response for initial page load
   let assert Ok("text/html; charset=utf-8") =
@@ -621,7 +621,7 @@ pub fn fluent_api_chaining_test() {
     |> response_builder.errors(errors)
     |> response_builder.version("1.0.0")
     |> response_builder.clear_history()
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Should successfully chain all builder methods
   let assert Ok("application/json; charset=utf-8") =
@@ -638,7 +638,7 @@ pub fn test_lazy_prop_error_handling() {
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props([failing_prop], encode_test_prop)
     |> response_builder.on_error("Error")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Test that the response contains the error in the props
   let assert Ok(errors) =
@@ -662,7 +662,7 @@ pub fn test_optional_prop_error_handling() {
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props([failing_prop], encode_test_prop)
     |> response_builder.on_error("Error")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Test that the response contains the error in the props
   let assert Ok(errors) =
@@ -686,7 +686,7 @@ pub fn test_defer_prop_error_handling() {
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props([failing_prop], encode_test_prop)
     |> response_builder.on_error("Error")
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // Test that the response contains the error in the props
   let assert Ok(errors) =
@@ -704,7 +704,7 @@ pub fn url_without_query_params_test() {
     req
     |> response_builder.response_builder("Dashboard/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // URL should be just the path without query parameters
   let assert Ok(url) = testing.url(response)
@@ -719,7 +719,7 @@ pub fn url_with_query_params_test() {
     req
     |> response_builder.response_builder("Dashboard/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // URL should include the query parameters
   let assert Ok(url) = testing.url(response)
@@ -734,7 +734,7 @@ pub fn url_with_multiple_query_params_test() {
     req
     |> response_builder.response_builder("Users/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // URL should include all query parameters
   let assert Ok(url) = testing.url(response)
@@ -749,7 +749,7 @@ pub fn url_with_empty_query_string_test() {
     req
     |> response_builder.response_builder("Dashboard/Index")
     |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response()
+    |> response_builder.response(200)
 
   // URL should not include empty query string
   let assert Ok(url) = testing.url(response)

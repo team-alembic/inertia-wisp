@@ -43,14 +43,14 @@ pub fn dashboard_page(req: Request, db: Connection) -> Response {
       req
       |> inertia.response_builder("Dashboard/Index")
       |> inertia.props(all_props, user_props.user_prop_to_json)
-      |> inertia.response()
+      |> inertia.response(200)
     }
     Error(_) -> {
       // Handle database error
       req
       |> inertia.response_builder("Dashboard/Index")
       |> inertia.props([], user_props.user_prop_to_json)
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }

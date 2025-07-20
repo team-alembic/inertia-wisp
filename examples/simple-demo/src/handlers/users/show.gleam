@@ -27,7 +27,7 @@ pub fn handler(req: Request, id: String, db: Connection) -> Response {
   req
   |> inertia.response_builder("Users/Show")
   |> inertia.props(props, user_props.user_prop_to_json)
-  |> inertia.response()
+  |> inertia.response(200)
 }
 
 /// Parse user ID or show error page
@@ -51,7 +51,7 @@ fn parse_user_id_or_error(
           ),
         ]),
       )
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }
@@ -78,7 +78,7 @@ fn get_user_or_error(
           ),
         ]),
       )
-      |> inertia.response()
+      |> inertia.response(200)
     }
     Error(_) -> {
       req
@@ -91,7 +91,7 @@ fn get_user_or_error(
           ),
         ]),
       )
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }

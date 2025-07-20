@@ -36,13 +36,13 @@ pub fn handler(req: Request, id: String, db: Connection) -> Response {
       req
       |> inertia.response_builder("Users/Edit")
       |> inertia.props(props, user_props.user_prop_to_json)
-      |> inertia.response()
+      |> inertia.response(200)
     }
     Error(errors) -> {
       req
       |> inertia.response_builder("Error")
       |> inertia.errors(errors)
-      |> inertia.response()
+      |> inertia.response(200)
     }
   }
 }

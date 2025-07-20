@@ -271,10 +271,10 @@ pub type NewsProp {
 - [x] Write unit tests for data layer including multi-user read tracking
 
 ### Phase 2: Backend Handlers
-- [ ] Implement news_feed handler with MergeProp
-- [ ] Implement individual article handler
-- [ ] Add category filtering support
-- [ ] Write integration tests for handlers
+- [x] Implement news_feed handler with MergeProp
+- [x] Implement individual article handler
+- [x] Add category filtering support
+- [x] Write integration tests for handlers
 
 ### Phase 3: Frontend Components
 - [ ] Create ArticleCard component
