@@ -128,9 +128,9 @@ Don't ever commit code unless I tell you to.
 ### TDD Cycle - Red, Green, Refactor
 
 1. **RED**: Write a failing test first
-   - Define types and function signatures using `todo` keyword
-   - Write the simplest possible test that describes the desired behavior
-   - Run test to confirm it fails for the right reason
+   - **FIRST**: Define function signatures using `todo` keyword in production code
+   - **THEN**: Write the simplest possible test that describes the desired behavior
+   - **FINALLY**: Run test to confirm it fails for the right reason (logic failure, NOT compilation error)
 
 2. **GREEN**: Make the test pass with minimal code
    - Implement just enough code to make the test pass
@@ -147,14 +147,14 @@ Don't ever commit code unless I tell you to.
 
 ### TDD Implementation Rules
 
-**Phase 1: Define Types and Stubs**
+**Phase 1: Define Types and Function Stubs (MANDATORY FIRST STEP)**
 ```gleam
 // Define types first
 pub type User {
   User(name: String, email: String)
 }
 
-// Create function stubs with todo
+// Create function stubs with todo - THIS MUST BE DONE BEFORE WRITING TESTS
 pub fn create_user(name: String, email: String) -> User {
   todo as "implement create_user"
 }
@@ -163,6 +163,8 @@ pub fn validate_email(email: String) -> Bool {
   todo as "implement validate_email"
 }
 ```
+
+**CRITICAL**: Function stubs must exist in production code BEFORE writing tests. Tests failing due to compilation errors (missing functions) violates TDD - tests should fail due to logic, not missing interfaces.
 
 **Phase 2: Write Tests**
 ```gleam
@@ -478,7 +480,14 @@ Before writing any test, ask:
 
 ### Pre-Test Writing Checklist (MANDATORY)
 
-Before writing ANY test function, you MUST ask and answer these questions:
+Before writing ANY test function, you MUST:
+
+**STEP 0: Define Function Interfaces (if testing new functions)**
+- Add function stubs with `todo` to production code FIRST
+- Ensure all tests will COMPILE before writing them
+- RED phase = logic failure, NOT compilation failure
+
+Then ask and answer these questions:
 
 1. **"What specific behavior am I claiming to test?"**
    - Write down the exact behavior in one sentence

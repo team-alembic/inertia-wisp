@@ -111,3 +111,30 @@ pub fn multi_user_read_tracking_test() {
 
   sqlight.close(db)
 }
+
+pub fn get_user_read_status_test() {
+  let assert Ok(db) = sqlight.open(":memory:")
+  let assert Ok(_) = articles.create_articles_table(db)
+  let assert Ok(_) = articles.create_article_reads_table(db)
+  let assert Ok(_) = articles.init_sample_data(db)
+
+  // Initially, article should be unread
+  let assert Ok(is_read_before) =
+    articles.get_user_read_status(db, test_user_1, 1)
+  assert is_read_before == False
+
+  // Mark article as read
+  let assert Ok(_) = articles.mark_article_read(db, test_user_1, 1)
+
+  // Now article should be read
+  let assert Ok(is_read_after) =
+    articles.get_user_read_status(db, test_user_1, 1)
+  assert is_read_after == True
+
+  // Different user should still see it as unread
+  let assert Ok(is_read_other_user) =
+    articles.get_user_read_status(db, test_user_2, 1)
+  assert is_read_other_user == False
+
+  sqlight.close(db)
+}

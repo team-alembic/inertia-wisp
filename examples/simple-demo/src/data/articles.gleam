@@ -372,3 +372,27 @@ pub fn find_article_by_id(
       ))
   }
 }
+
+pub fn get_user_read_status(
+  db: Connection,
+  user_id: Int,
+  article_id: Int,
+) -> Result(Bool, sqlight.Error) {
+  let sql = "
+    SELECT 1 FROM article_reads
+    WHERE user_id = ? AND article_id = ?
+  "
+
+  let decoder = decode.at([0], decode.int)
+  use rows <- result.try(sqlight.query(
+    sql,
+    on: db,
+    with: [sqlight.int(user_id), sqlight.int(article_id)],
+    expecting: decoder,
+  ))
+  case rows {
+    [_] -> Ok(True)
+    [] -> Ok(False)
+    _ -> Ok(False)
+  }
+}

@@ -246,9 +246,9 @@ pub type PaginationMeta {
 ## Implementation Tasks
 
 ### Phase 1: Core Data Layer
-- [ ] Create article database schema and seed data
-- [ ] Create article_reads junction table for per-user read tracking
-- [ ] Implement article queries with pagination and user read status
+- [x] Create article database schema and seed data
+- [x] Create article_reads junction table for per-user read tracking
+- [x] Implement article queries with pagination and user read status
 - [ ] Create article prop factories with read status
 - [ ] Write unit tests for data layer including multi-user read tracking
 
