@@ -249,8 +249,8 @@ pub type PaginationMeta {
 - [x] Create article database schema and seed data
 - [x] Create article_reads junction table for per-user read tracking
 - [x] Implement article queries with pagination and user read status
-- [ ] Create article prop factories with read status
-- [ ] Write unit tests for data layer including multi-user read tracking
+- [x] Create article prop factories with read status
+- [x] Write unit tests for data layer including multi-user read tracking
 
 ### Phase 2: Backend Handlers
 - [ ] Implement news_feed handler with MergeProp
