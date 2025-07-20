@@ -112,7 +112,7 @@ pub type ArticleWithReadStatus {
   ArticleWithReadStatus(
     article: Article,
     is_read: Bool,
-    read_at: Option(String),
+    read_at: String,
   )
 }
 
@@ -122,7 +122,7 @@ pub type NewsFeed {
     meta: PaginationMeta,
     has_more: Bool,
     total_unread: Int,
-    current_category: Option(ArticleCategory),
+    current_category: String,
   )
 }
 
@@ -133,6 +133,17 @@ pub type PaginationMeta {
     total_count: Int,
     last_page: Int,
   )
+}
+
+// Prop types for Inertia.js integration
+pub type NewsProp {
+  NewsFeed(NewsFeed)
+  ArticleList(List(ArticleWithReadStatus))
+  ArticleData(ArticleWithReadStatus)
+  PaginationMeta(PaginationMeta)
+  CategoryFilter(String)
+  UnreadCount(Int)
+  LoadingState(Bool)
 }
 ```
 
@@ -203,17 +214,24 @@ pub type PaginationMeta {
 - Query parameter parsing for filters/pagination
 
 #### `examples/simple-demo/src/news/props.gleam`
-- `news_feed/3` - Factory for NewsFeed props
-- `article_list/2` - Factory for article collections
-- `pagination_meta/3` - Factory for pagination metadata
+- `news_feed/1` - MergeProp factory for infinite scroll merging
+- `article_list/1` - OptionalProp factory for expensive operations
+- `article_data/1` - DefaultProp factory for single articles
+- `pagination_meta/1` - DefaultProp factory for pagination metadata
+- `category_filter/1` - DefaultProp factory for category filtering
+- `unread_count/1` - DeferProp factory for expensive calculations
+- `news_prop_to_json/1` - JSON encoding for all prop types
 
-#### `examples/simple-demo/src/news/queries.gleam`
-- `get_articles_paginated/5` - Main pagination query with user_id
-- `get_articles_by_category/5` - Category filtering with user read status
-- `mark_article_read/3` - Read tracking per user
-- `get_article_by_id/3` - Individual article fetch with user read status
+#### `examples/simple-demo/src/data/articles.gleam` (implemented)
+- `create_articles_table/1` - Article schema creation
+- `create_article_reads_table/1` - Per-user read tracking schema
+- `get_articles_paginated/5` - Main pagination query with user read status
+- `mark_article_read/3` - Per-user read tracking
+- `find_article_by_id/3` - Individual article fetch with user read status
 - `get_unread_count_for_user/2` - Count unread articles for specific user
 - `get_user_read_status/3` - Check if user has read specific article
+- `get_total_article_count/2` - Total article counting with category filter
+- `init_sample_data/1` - 65 sample articles for testing pagination
 
 ## Testing Plan
 

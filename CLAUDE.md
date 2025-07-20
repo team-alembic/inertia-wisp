@@ -1,50 +1,86 @@
-Note: For detailed implementation of decoders, especially for JSON data, consult the source code in build/packages/, particularly build/packages/gleam_stdlib/src/gleam/dynamic/decode.gleam. This module provides comprehensive examples and patterns for defining custom decoders.
+## WORKFLOW AND PLANNING PROCESS - MANDATORY
 
-We will work by specifying one feature at a time, and then implementing it.
+We work by specifying one feature or fix at a time, following a structured planning and implementation process.
 
-The workflow:
+### Planning Templates
 
-1. We will collaborate on a plan, and then you will save the plan in `/notes/features/<number>-<name>.md` under the `## Plan` heading. THIS MUST BE COMPLETED BEFORE ANY IMPLEMENTATION WORK BEGINS.
-2. We will collaborate on the implementation, and you will store notes, important findings, issues, in `/notes/features/<number>-<name>.md` under the `## Log` heading.
-3. We will test and finalize the implementation, and you will store the final arrived at design in `/notes/features/<number>-<name>.md` under the `## Conclusion` heading.
+**For Features**: Use `/notes/templates/feature-plan-template.md`
+**For Bugs/Fixes**: Use `/notes/templates/fix-plan-template.md`
 
-For bugs and fixes:
+### Feature Development Workflow
 
-1. We will document the issue in `/notes/fixes/<number>-<name>.md` under the `## Issue` heading.
-2. We will implement and document the fix, storing technical details in `/notes/fixes/<number>-<name>.md` under the `## Fix` heading.
-3. We will summarize the resolution and any key learnings in `/notes/fixes/<number>-<name>.md` under the `## Conclusion` heading.
+1. **Planning Phase** (MANDATORY FIRST STEP)
+   - Copy `/notes/templates/feature-plan-template.md` to `/notes/features/<number>-<name>.md`
+   - Complete all sections of the plan template
+   - Get human approval before proceeding
+   - **NO IMPLEMENTATION WORK BEGINS WITHOUT AN APPROVED PLAN**
 
-Just like with features, we must document the issue and plan the fix before implementing it.
+2. **Implementation Phase**
+   - Follow TDD process strictly (Red → Green → Refactor with human review)
+   - One git commit per implementation task
+   - Stop for human review after each task completion
+   - Update plan tasks to mark completion status
 
-WE ALWAYS FINISH AND WRITE THE PLAN BEFORE STARTING THE WORK! NO EXCEPTIONS!
+3. **Completion Phase**
+   - Update plan to reflect any changes from original design
+   - Ensure all implementation tasks are marked complete
 
-IMPORTANT: You must refuse to implement any feature until a plan document has been created and reviewed. Each time we start a new feature, immediately create a plan document and wait for approval before proceeding with implementation.
+### Bug/Fix Development Workflow
 
-### Planning and Analysis Requirements
+1. **Issue Documentation** (MANDATORY FIRST STEP)
+   - Copy `/notes/templates/fix-plan-template.md` to `/notes/fixes/<number>-<name>.md`
+   - Complete investigation and root cause analysis
+   - Design fix approach and get approval
+   - **NO FIX IMPLEMENTATION WITHOUT DOCUMENTED ROOT CAUSE**
 
-**BEFORE any implementation work:**
+2. **Fix Implementation**
+   - Follow TDD process for fix and regression tests
+   - Test fix thoroughly before deployment
+   - Update plan tasks to mark completion status
 
-1. **Investigate and understand the current system** - Read relevant code, check existing patterns
-2. **Define the problem precisely** - What exactly is broken/missing/needed?
-3. **Research established solutions** - How do others solve this problem?
-4. **Create a plan document** - Document the approach and get approval
-5. **ONLY THEN implement** - Follow TDD process strictly
+3. **Resolution Documentation**
+   - Update monitoring and testing to prevent recurrence
 
-**Process Violation Examples to NEVER do:**
-```
-❌ Implementing code without tests
-❌ Rewriting components without a plan
-❌ Making architectural changes based on assumptions
-❌ Proposing solutions without investigating the problem
-```
+### Critical Rules
 
-**Required Process:**
-```
-✅ Investigate → Plan → Test → Implement → Review
-✅ Ask clarifying questions when problem definition is unclear
-✅ Research similar solutions before proposing approach
-✅ Create plan document before any substantial changes
-```
+- **REFUSE TO IMPLEMENT** any feature without an approved plan document
+- **REFUSE TO FIX** any bug without documented root cause analysis
+- **ALWAYS COMPLETE PLANNING** before starting work
+- **ONE COMMIT PER TASK** with human review between tasks
+- **DOCUMENT ALL DECISIONS** in the appropriate plan sections
+
+### Template Usage Guidelines
+
+**For Feature Planning:**
+1. Copy `feature-plan-template.md` to `/notes/features/<number>-<name>.md`
+2. Complete all six sections thoroughly:
+   - Product Level Requirements (business objectives, success metrics)
+   - User Level Requirements (motivations, UX affordances)
+   - Architectural Constraints (system integration, technical limits)
+   - Implementation Design (domain model, workflows, modules)
+   - Testing Plan (TDD, integration, performance, product)
+   - Implementation Tasks (phased breakdown with checkboxes)
+
+**For Bug/Fix Planning:**
+1. Copy `fix-plan-template.md` to `/notes/fixes/<number>-<name>.md`
+2. Complete all four sections thoroughly:
+   - Issue (problem description, impact, reproduction steps)
+   - Root Cause Analysis (investigation findings, system behavior)
+   - Fix Design (proposed solution, implementation approach)
+   - Testing Plan (verification, regression, production monitoring)
+
+### Implementation Process Rules
+
+**MANDATORY SEQUENCE:**
+1. **Planning** → Complete template → Get approval
+2. **Implementation** → TDD with human review after each task
+3. **Tracking** → Update task completion status in plan
+
+**FORBIDDEN PATTERNS:**
+- Starting implementation without approved plan
+- Making architectural changes based on assumptions
+- Implementing fixes without root cause analysis
+- Committing code without explicit human approval
 
 Don't ever commit code unless I tell you to.
 
@@ -73,14 +109,14 @@ Don't ever commit code unless I tell you to.
 **BEFORE proposing any fix or implementation:**
 
 1. **Read actual code/documentation** - Don't assume how libraries or frameworks work
-2. **Verify the problem precisely** - Understand exactly what's broken vs what's working  
+2. **Verify the problem precisely** - Understand exactly what's broken vs what's working
 3. **Research established patterns** - Check how official implementations handle similar cases
 4. **Confirm expectations** - Ask clarifying questions about expected vs actual behavior
 
 **FORBIDDEN: Making assumptions about system behavior**
 ```
 ❌ "The component should work like this..."
-❌ "This is probably because..."  
+❌ "This is probably because..."
 ❌ "Let me implement this fix..."
 ```
 
@@ -165,6 +201,8 @@ pub fn validate_email(email: String) -> Bool {
 ```
 
 **CRITICAL**: Function stubs must exist in production code BEFORE writing tests. Tests failing due to compilation errors (missing functions) violates TDD - tests should fail due to logic, not missing interfaces.
+
+**VIOLATION PREVENTION**: If you find yourself writing tests for non-existent functions that cause compilation errors, STOP. Go back and create the function stubs with `todo` first.
 
 **Phase 2: Write Tests**
 ```gleam
@@ -333,6 +371,22 @@ let assert Error(_) = result
 assert result.is_error(result)
 ```
 
+**CRITICAL VIOLATION PREVENTION**: Never use `case` statements with `assert False` fallbacks in tests. This is a code smell that indicates you should use `let assert` patterns instead.
+
+```gleam
+// FORBIDDEN - conditional assert False
+case result {
+  Ok(value) -> {
+    // assertions here
+  }
+  _ -> assert False  // NEVER DO THIS
+}
+
+// REQUIRED - let assert patterns
+let assert Ok(value) = result
+// assertions here
+```
+
 This rule applies to ALL test code without exception. The `should` module creates verbose, less idiomatic Gleam code and must never be used.
 
 ## GLEAM-SPECIFIC TESTING RULES - STRICTLY ENFORCED
@@ -357,6 +411,26 @@ pub fn some_function_test() {
 }
 ```
 
+**FORBIDDEN - "Doesn't crash" tests:**
+```gleam
+pub fn json_encoding_test() {
+  let json_result = encode_data(data)
+  // BAD: Only tests that function doesn't crash
+  assert json.to_string(json_result) != ""
+}
+```
+
+**REQUIRED - Tests that verify actual data:**
+```gleam
+pub fn json_encoding_test() {
+  let json_result = encode_data(data)
+  let json_string = json.to_string(json_result)
+  // GOOD: Verifies actual JSON structure and values
+  assert string.contains(json_string, "\"name\":\"John\"")
+  assert string.contains(json_string, "\"active\":true")
+}
+```
+
 **Key Principles:**
 1. **Gleam's type system guarantees functions won't "crash"** - don't test for this
 2. **Return types are enforced by the compiler** - don't test that functions return "proper types"
@@ -370,7 +444,7 @@ pub fn user_prop_integration_test() {
   let assert Ok(db) = setup_test_database()
   let req = testing.inertia_request()
   let response = handlers.users_index(req, db)
-  
+
   // Assert on actual data returned
   let assert Ok(user_names) = testing.prop(response, "users", decode.list(decode.string))
   assert user_names == ["Alice", "Bob", "Charlie"]
@@ -415,14 +489,14 @@ pub fn caching_improves_performance_test() {
 ```gleam
 pub fn user_authentication_works_test() {
   let response = auth.login(valid_username, valid_password)
-  
+
   // Verify successful authentication
   assert testing.component(response) == Ok("Dashboard")
-  
+
   // Verify user session is created
   let assert Ok(user_id) = testing.prop(response, "current_user_id", decode.int)
   assert user_id > 0
-  
+
   // Verify authentication token is present
   let assert Ok(token) = testing.prop(response, "auth_token", decode.string)
   assert string.length(token) > 20
@@ -430,11 +504,11 @@ pub fn user_authentication_works_test() {
 
 pub fn expensive_calculation_is_deferred_test() {
   let response = dashboard.load_page(req, db)
-  
+
   // Verify basic data loads immediately
   let assert Ok(user_count) = testing.prop(response, "user_count", decode.int)
   assert user_count > 0
-  
+
   // Verify expensive calculation is NOT performed initially (the optimization!)
   let analytics_result = testing.prop(response, "analytics", decode.dynamic)
   assert result.is_error(analytics_result)
@@ -445,11 +519,11 @@ pub fn cache_prevents_duplicate_database_calls_test() {
   cache.clear()
   let _first_result = cached_function(input)
   let initial_db_calls = test_db.call_count()
-  
+
   // Make second call with same input
   let second_result = cached_function(input)
   let final_db_calls = test_db.call_count()
-  
+
   // Verify cache hit (no additional DB calls)
   assert final_db_calls == initial_db_calls
   assert second_result.is_ok()
@@ -519,21 +593,32 @@ After writing tests, you MUST:
    - If your test only calls functions without meaningful assertions, DELETE IT
    - If your test just verifies "no crash", DELETE IT
 
-### Active Rule Application (MANDATORY)
+**Active Rule Application (MANDATORY)
 
 When implementing tests:
 
 1. **Keep CLAUDE.md open** - Reference testing rules actively, not from memory
 2. **Quote relevant rules** - When explaining test design, cite specific rule violations prevented
 3. **Justify every test** - Be prepared to defend why each test adds unique value
+4. **Check test names against assertions** - Test name must match what you're actually verifying
+5. **Never test framework responsibilities** - Don't test error handling if it's handled by the framework, not your code
 
-### Enforcement Questions
+**Enforcement Questions
 
 When presenting tests, be prepared to answer:
 - "What specific behavior does test X verify?"
 - "How do these assertions prove the claimed behavior?"
 - "Which tests would you remove and why?"
 - "What rule violations did you prevent?"
+- "Does this test name match what the assertions actually verify?"
+- "Are you testing your code's behavior or framework behavior?"
+
+**COMMON VIOLATIONS TO CHECK FOR:**
+1. Using `case` with `assert False` instead of `let assert` patterns
+2. Tests that only verify "doesn't crash" instead of actual behavior
+3. Test names that don't match what's being asserted
+4. Testing framework error handling instead of your code's logic
+5. Compilation errors in RED phase instead of logic failures
 
 **FAILURE TO FOLLOW THIS PROCESS WILL RESULT IN REJECTED IMPLEMENTATIONS**
 
@@ -550,7 +635,7 @@ pub fn expensive_calculation(data: Data) -> Result(Analytics, Error) {
     False -> 2000
   }
   process.sleep(delay)
-  
+
   // actual calculation
   compute_analytics(data)
 }
@@ -561,7 +646,7 @@ pub fn dashboard_page(req: Request, db: Connection) -> Response {
     True -> False
     False -> True
   }
-  
+
   get_data(db, use_cache)
 }
 ```
@@ -662,7 +747,7 @@ Before writing a new test, ask:
 **TEST VALUE HIERARCHY (High to Low):**
 
 1. **Integration tests** that verify end-to-end user scenarios
-2. **Behavior tests** that verify business logic and edge cases  
+2. **Behavior tests** that verify business logic and edge cases
 3. **Contract tests** that verify API boundaries and data shapes
 4. **Unit tests** for complex algorithms or validation logic
 5. **Exercise tests** that just call functions (DELETE THESE)
