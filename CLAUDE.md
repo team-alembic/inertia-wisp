@@ -46,8 +46,131 @@ We work by specifying one feature or fix at a time, following a structured plann
 - **REFUSE TO IMPLEMENT** any feature without an approved plan document
 - **REFUSE TO FIX** any bug without documented root cause analysis
 - **ALWAYS COMPLETE PLANNING** before starting work
-- **ONE COMMIT PER TASK** with human review between tasks
+- **ONE COMMIT PER TASK** with human review between tasks (VIOLATION: bundling multiple tasks breaks review process)
 - **DOCUMENT ALL DECISIONS** in the appropriate plan sections
+- **NO WORKAROUNDS** - always fix root causes properly (VIOLATION: manual responses instead of API fixes)
+- **INVESTIGATE FIRST** - check existing patterns before implementing (SUCCESS: following user handler patterns)
+- **REFACTOR INCREMENTALLY** - one function at a time with tests (VIOLATION: changing multiple functions at once)
+
+## IMPLEMENTATION LESSONS LEARNED - MANDATORY PRACTICES
+
+### Never Create Workarounds
+
+**FORBIDDEN: Creating workarounds when hitting API limitations**
+```
+❌ "Let me create a manual response to bypass the Response Builder API"
+❌ "I'll duplicate this logic to avoid fixing the root cause"
+❌ "This workaround will be faster than fixing the proper API"
+```
+
+**REQUIRED: Fix the root cause properly**
+```
+✅ "This API limitation shows we need to extend the Response Builder"
+✅ "Let me investigate the proper way to solve this"
+✅ "What's the right design that follows framework conventions?"
+```
+
+**Why this matters:**
+- Workarounds create technical debt and maintenance burden
+- They often indicate missing functionality that should be properly implemented
+- Proper fixes benefit the entire codebase, not just your immediate need
+
+### Refactor Incrementally - One Function at a Time
+
+**FORBIDDEN: Trying to refactor multiple functions simultaneously**
+```
+❌ Refactoring 3 functions + extracting helpers + changing patterns all at once
+❌ "Let me fix all the nested cases in one big change"
+❌ Moving problems into helper functions instead of actually solving them
+```
+
+**REQUIRED: Refactor one function at a time, test after each change**
+```
+✅ Refactor function A → test → commit
+✅ Refactor function B → test → commit  
+✅ Extract common patterns after individual refactors are proven
+```
+
+**Process:**
+1. **Pick ONE function** with problematic nested cases
+2. **Refactor only that function** using proper patterns (`use` syntax, etc.)
+3. **Test immediately** to ensure behavior is unchanged
+4. **Commit the single function change**
+5. **Repeat for next function**
+
+### Investigate Before Implementing
+
+**MANDATORY: Check existing patterns before writing new code**
+
+**Before implementing any new pattern:**
+1. **Search the codebase** for similar functionality
+2. **Check how other handlers/modules solve the same problem**
+3. **Follow established conventions** rather than inventing new ones
+4. **Check external framework documentation** for standard approaches
+
+**Examples from this project:**
+- Checked how user handlers parse IDs → led to continuation-passing style
+- Investigated Laravel/Phoenix adapters → confirmed 404 status codes are standard
+- Examined wisp response functions → led to `inertia.response(builder, status)` API
+
+### API Design Must Follow Framework Conventions
+
+**REQUIRED: New APIs must be consistent with existing patterns**
+
+**When extending APIs:**
+```
+✅ Follow existing parameter patterns: wisp.json_response(content, status)
+✅ Maintain backward compatibility when possible
+✅ Use the same naming conventions and parameter order
+✅ Match the framework's style and philosophy
+```
+
+**FORBIDDEN:**
+```
+❌ Inventing new parameter patterns that differ from the framework
+❌ Breaking existing APIs without migration path
+❌ Using different naming conventions than the rest of the codebase
+```
+
+### Enforce One-Commit-Per-Task Rule Strictly
+
+**CRITICAL VIOLATION: Bundling multiple tasks into one commit**
+
+This thread violated the one-commit-per-task rule by bundling:
+1. news_feed handler implementation
+2. news_article handler implementation  
+3. category filtering support
+4. integration tests
+5. HTTP status code API extension
+6. Code refactoring with `use` syntax
+
+**REQUIRED Process:**
+1. **Complete ONE task** (implement one handler, add one feature, write one test suite)
+2. **STOP and commit** with descriptive message
+3. **Get human review** before proceeding to next task
+4. **Update plan** to mark task complete
+5. **Begin next task** only after approval
+
+**Why this matters:**
+- Makes code easier to review and understand
+- Enables rollback of specific changes if needed
+- Catches issues early through incremental feedback
+- Maintains proper TDD discipline with human oversight
+
+### When Refactoring Fails, Step Back
+
+**If a refactoring attempt creates more problems:**
+1. **STOP immediately** - don't try to fix a broken refactor with more changes
+2. **Revert to working state** 
+3. **Analyze what went wrong** - usually trying to change too much at once
+4. **Try smaller, incremental changes** - one pattern, one function, one concept
+5. **Test after each small change**
+
+**Red flags that indicate you should stop:**
+- Compilation errors in multiple places
+- Test failures that weren't there before
+- Logic that's more complex after refactoring than before
+- Having to make "just one more small change" repeatedly
 
 ### Template Usage Guidelines
 
@@ -156,6 +279,12 @@ Don't ever commit code unless I tell you to.
 - "Am I fixing the actual problem or just symptoms?"
 
 **VIOLATION OF THESE RULES WILL BE REJECTED**
+
+These rules were strengthened after real implementation problems in news feed development where:
+- Workarounds were attempted instead of proper API fixes
+- Multiple tasks were bundled into one commit instead of incremental review
+- Refactoring tried to change too much at once instead of one function at a time
+- Investigation of existing patterns led to much better solutions
 
 ## TEST-DRIVEN DEVELOPMENT (TDD) - MANDATORY APPROACH
 
