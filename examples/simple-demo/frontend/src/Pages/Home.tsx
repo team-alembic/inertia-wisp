@@ -1,7 +1,6 @@
 import React from "react";
 import { Head, Link } from "@inertiajs/react";
 import { HomePageProps } from "../types";
-import "../styles.css";
 
 export default function Home({
   welcome_message,
@@ -78,6 +77,13 @@ export default function Home({
               <code>inertia.eval()</code> API:
             </p>
             <div className="feature-grid">
+              <Link href="/dashboard?delay=2000" className="feature-card">
+                <h3>📊 Dashboard</h3>
+                <p>
+                  Experience DeferredProp with progressive loading and the
+                  Deferred component (2s demo delay)
+                </p>
+              </Link>
               <Link href="/users" className="feature-card">
                 <h3>👥 View All Users</h3>
                 <p>
@@ -123,6 +129,10 @@ export default function Home({
               <li>
                 <strong>LazyProp:</strong> User listing and count (expensive
                 operations)
+              </li>
+              <li>
+                <strong>DeferredProp:</strong> Dashboard analytics and activity
+                feed (progressive loading)
               </li>
             </ul>
             <p>

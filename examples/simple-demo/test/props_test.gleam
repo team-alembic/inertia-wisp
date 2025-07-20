@@ -3,17 +3,14 @@
 //// This module contains tests for the factory functions used to create props.
 //// We test the actual behavior of props in real handler scenarios.
 
-import data/users
 import gleam/dynamic/decode
 import handlers/users as user_handlers
 import inertia_wisp/testing
-import sqlight
+import utils/test_db
 
 /// Test user list prop factory works correctly in index handler
 pub fn user_list_prop_integration_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request()
   let response = user_handlers.users_index(req, db)
@@ -28,7 +25,7 @@ pub fn user_list_prop_integration_test() {
 
 /// Test form data prop factory works correctly in create form handler
 pub fn form_data_prop_integration_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
+  let assert Ok(db) = test_db.setup_empty_test_database()
   let req = testing.inertia_request()
   let response = user_handlers.users_create_form(req, db)
 
@@ -42,9 +39,7 @@ pub fn form_data_prop_integration_test() {
 
 /// Test search query prop factory works correctly with URL parameters
 pub fn search_query_prop_integration_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request_to("/users?search=Demo")
   let response = user_handlers.users_index(req, db)

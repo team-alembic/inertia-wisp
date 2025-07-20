@@ -4,19 +4,27 @@
   "description": "Frontend for simple-demo showcasing new inertia.eval API",
   "main": "src/app.tsx",
   "scripts": {
+    "build:css": "npx @tailwindcss/cli -i ./src/styles.css -o ../static/css/styles.css --minify",
+    "build:js": "esbuild src/app.tsx --bundle --outfile=../static/js/main.js --format=esm --minify --external:./styles.css",
+    "build": "npm run build:css && npm run build:js",
     "dev": "esbuild src/app.tsx --bundle --outfile=../static/js/main.js --format=esm --external:./styles.css && esbuild src/styles.css --bundle --outfile=../static/css/styles.css --watch --servedir=../static --port=3000",
-    "build": "esbuild src/app.tsx --bundle --outfile=../static/js/main.js --format=esm --minify && esbuild src/styles.css --bundle --outfile=../static/css/styles.css --minify",
-    "build:watch": "esbuild src/app.tsx --bundle --outfile=../static/js/main.js --format=esm --watch & esbuild src/styles.css --bundle --outfile=../static/css/styles.css --watch"
+    "watch:css": "npx @tailwindcss/cli -i ./src/styles.css -o ../static/css/styles.css --watch",
+    "watch:js": "esbuild src/app.tsx --bundle --outfile=../static/js/main.js --format=esm --watch --external:./styles.css",
+    "watch": "npm-run-all --parallel watch:css watch:js",
+    "build:watch": "npm run watch"
   },
   "dependencies": {
-    "@inertiajs/react": "^1.0.14",
+    "@inertiajs/react": "^2.0.17",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.7",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
     "esbuild": "^0.19.11",
+    "npm-run-all": "^4.1.5",
+    "tailwindcss": "^4.1.7",
     "typescript": "^5.3.3"
   },
   "keywords": [

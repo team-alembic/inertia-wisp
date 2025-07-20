@@ -8,6 +8,7 @@ import data/users
 import gleam/dict
 import gleam/json
 import gleam/option
+import gleam/result
 import inertia_wisp/internal/types
 
 /// Represents the different types of props that can be sent to user pages
@@ -20,6 +21,11 @@ pub type UserProp {
   PaginationInfo(current_page: Int, total_pages: Int, per_page: Int)
   UserAnalytics(users.UserAnalytics)
   UserReport(users.UserReport)
+  // Advanced prop types
+  SearchFilters(users.SearchFilters)
+  SearchResults(List(users.User))
+  SearchAnalytics(users.SearchAnalytics)
+  ActivityFeed(users.ActivityFeed)
 }
 
 // Factory functions for creating Prop(UserProp) instances
@@ -55,10 +61,7 @@ pub fn user_analytics(
   analytics_fn: fn() -> Result(users.UserAnalytics, dict.Dict(String, String)),
 ) -> types.Prop(UserProp) {
   types.OptionalProp("user_analytics", fn() {
-    case analytics_fn() {
-      Ok(analytics) -> Ok(UserAnalytics(analytics))
-      Error(error_dict) -> Error(error_dict)
-    }
+    result.map(analytics_fn(), UserAnalytics)
   })
 }
 
@@ -68,10 +71,26 @@ pub fn user_report(
   report_fn: fn() -> Result(users.UserReport, dict.Dict(String, String)),
 ) -> types.Prop(UserProp) {
   types.DeferProp("user_report", option.Some("reports"), fn() {
-    case report_fn() {
-      Ok(report) -> Ok(UserReport(report))
-      Error(error_dict) -> Error(error_dict)
-    }
+    result.map(report_fn(), UserReport)
+  })
+}
+
+/// Create search filters prop (DefaultProp)
+pub fn search_filters(filters: users.SearchFilters) -> types.Prop(UserProp) {
+  types.DefaultProp("search_filters", SearchFilters(filters))
+}
+
+/// Create search results prop (DefaultProp)
+pub fn search_results(results: List(users.User)) -> types.Prop(UserProp) {
+  types.DefaultProp("search_results", SearchResults(results))
+}
+
+/// Create search analytics prop (OptionalProp)
+pub fn search_analytics(
+  analytics_fn: fn() -> Result(users.SearchAnalytics, dict.Dict(String, String)),
+) -> types.Prop(UserProp) {
+  types.OptionalProp("analytics", fn() {
+    result.map(analytics_fn(), SearchAnalytics)
   })
 }
 
@@ -133,6 +152,51 @@ fn encode_user_analytics(analytics: users.UserAnalytics) -> json.Json {
   ])
 }
 
+/// Helper function to encode search filters
+fn encode_search_filters(filters: users.SearchFilters) -> json.Json {
+  let sort_by_string = case filters.sort_by {
+    users.SortByName -> "name"
+    users.SortByEmail -> "email"
+    users.SortByDate -> "date"
+  }
+
+  json.object([
+    #("query", json.string(filters.query)),
+    #("category", case filters.category {
+      option.Some(cat) -> json.string(cat)
+      option.None -> json.null()
+    }),
+    #("sort_by", json.string(sort_by_string)),
+  ])
+}
+
+/// Helper function to encode search analytics
+fn encode_search_analytics(analytics: users.SearchAnalytics) -> json.Json {
+  json.object([
+    #("total_filtered", json.int(analytics.total_filtered)),
+    #("matching_percentage", json.float(analytics.matching_percentage)),
+    #("filter_performance_ms", json.int(analytics.filter_performance_ms)),
+  ])
+}
+
+/// Helper function to encode activity feed
+fn encode_activity_feed(feed: users.ActivityFeed) -> json.Json {
+  let encode_activity = fn(activity: users.Activity) {
+    json.object([
+      #("id", json.int(activity.id)),
+      #("user_name", json.string(activity.user_name)),
+      #("action", json.string(activity.action)),
+      #("timestamp", json.string(activity.timestamp)),
+    ])
+  }
+
+  json.object([
+    #("recent_activities", json.array(feed.recent_activities, encode_activity)),
+    #("total_activities", json.int(feed.total_activities)),
+    #("last_updated", json.string(feed.last_updated)),
+  ])
+}
+
 /// Encode a UserProp to JSON only (for Response Builder API)
 pub fn user_prop_to_json(prop: UserProp) -> json.Json {
   case prop {
@@ -146,5 +210,10 @@ pub fn user_prop_to_json(prop: UserProp) -> json.Json {
       encode_pagination(current, total, per_page)
     UserAnalytics(analytics) -> encode_user_analytics(analytics)
     UserReport(report) -> encode_user_report(report)
+    // Advanced prop encoders
+    SearchFilters(filters) -> encode_search_filters(filters)
+    SearchResults(results) -> encode_user_list(results)
+    SearchAnalytics(analytics) -> encode_search_analytics(analytics)
+    ActivityFeed(feed) -> encode_activity_feed(feed)
   }
 }

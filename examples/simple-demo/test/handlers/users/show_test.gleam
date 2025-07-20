@@ -10,12 +10,11 @@ import gleam/string
 import handlers/users as user_handlers
 import inertia_wisp/testing
 import sqlight
+import utils/test_db
 
 /// Test user show page returns correct component and props
 pub fn users_show_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request()
   let response = user_handlers.users_show(req, "1", db)
@@ -36,9 +35,7 @@ pub fn users_show_test() {
 
 /// Test user show route integration
 pub fn users_show_route_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request_to("/users/1")
   let response = user_handlers.users_show(req, "1", db)

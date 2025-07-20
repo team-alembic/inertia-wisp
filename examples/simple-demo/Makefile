@@ -1,7 +1,7 @@
 # Simple Demo Makefile
 # Provides convenient commands for building and running the frontend and backend
 
-.PHONY: help install build build-frontend build-backend run dev clean test
+.PHONY: help install build build-frontend build-backend start watch clean test
 
 # Default target
 help:
@@ -12,8 +12,8 @@ help:
 	@echo "  build          Build both frontend and backend"
 	@echo "  build-frontend Build only the frontend assets"
 	@echo "  build-backend  Build only the backend"
-	@echo "  run            Build and start the server"
-	@echo "  dev            Start development mode with file watching"
+	@echo "  start          Build and start the server"
+	@echo "  watch          Start development mode with file watching"
 	@echo "  test           Run backend tests"
 	@echo "  clean          Clean build artifacts"
 	@echo ""
@@ -38,13 +38,13 @@ build-backend:
 	@echo "Building backend..."
 	gleam build
 
-# Build and run server
-run: build
+# Build and start server
+start: build
 	@echo "Starting server on http://localhost:8001"
 	gleam run
 
 # Development mode with file watching
-dev:
+watch:
 	@echo "Starting development mode..."
 	@echo "Frontend assets will be built with file watching"
 	@echo "Start the backend server with 'gleam run' in another terminal"

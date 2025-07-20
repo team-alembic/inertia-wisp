@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Set up test infrastructure for advanced prop types
+- [-] 1. Set up test infrastructure for advanced prop types
   - Create test modules for OptionalProp, DeferredProp, and MergeProp testing
   - Implement test helper functions for creating mock requests and responses
   - Set up database fixtures for testing search, analytics, and pagination scenarios

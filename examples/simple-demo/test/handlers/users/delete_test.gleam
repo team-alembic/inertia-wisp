@@ -13,13 +13,12 @@ import gleam/string
 import handlers/users as user_handlers
 import inertia_wisp/testing
 import sqlight
+import utils/test_db
 import wisp/testing as wisp_testing
 
 /// Test user deletion success
 pub fn users_delete_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = wisp_testing.request(http.Post, "/users/1/delete", [], <<>>)
   let response = user_handlers.users_delete(req, "1", db)
@@ -33,9 +32,7 @@ pub fn users_delete_test() {
 
 /// Test users delete route integration
 pub fn users_delete_route_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req =
     wisp_testing.request(http.Delete, "/users/1", [], bit_array.from_string(""))

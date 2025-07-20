@@ -9,6 +9,7 @@ import handlers/users/create_form
 import handlers/users/delete
 import handlers/users/edit_form
 import handlers/users/index
+import handlers/users/search
 import handlers/users/show
 import handlers/users/update
 import sqlight.{type Connection}
@@ -47,4 +48,9 @@ pub fn users_update(req: Request, id: String, db: Connection) -> Response {
 /// Handle user deletion (POST)
 pub fn users_delete(req: Request, id: String, db: Connection) -> Response {
   delete.handler(req, id, db)
+}
+
+/// Handle user search with advanced filters
+pub fn users_search(req: Request, db: Connection) -> Response {
+  search.handler(req, db)
 }

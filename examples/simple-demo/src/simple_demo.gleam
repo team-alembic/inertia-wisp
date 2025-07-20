@@ -10,6 +10,7 @@ import gleam/http
 import gleam/result
 import handlers/home
 import handlers/users
+import handlers/users/dashboard
 import mist
 import sqlight
 import wisp
@@ -44,7 +45,9 @@ fn route_request(req: wisp.Request) -> wisp.Response {
 
   case wisp.path_segments(req), req.method {
     [], http.Get -> home.home_page(req)
+    ["dashboard"], http.Get -> dashboard.dashboard_page(req, db)
     ["users"], http.Get -> users.users_index(req, db)
+    ["users", "search"], http.Get -> users.users_search(req, db)
     ["users", "create"], http.Get -> users.users_create_form(req, db)
     ["users"], http.Post -> users.users_create(req, db)
     ["users", id], http.Get -> users.users_show(req, id, db)
@@ -71,15 +74,27 @@ fn get_static_path() -> String {
   "./static"
 }
 
-/// Create and initialize the database with sample data
+/// Create and initialize the database tables
 fn ensure_database_setup(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
   use _ <- result.try(data_users.create_users_table(db))
-  // Only initialize sample data if table is empty
+  // Only initialize sample data if table is empty for demo purposes
   case data_users.get_user_count(db) {
-    Ok(0) -> data_users.init_sample_data(db)
+    Ok(0) -> init_demo_data(db)
     Ok(_) -> Ok(Nil)
     // Data already exists, don't reinitialize
-    Error(_) -> data_users.init_sample_data(db)
+    Error(_) -> init_demo_data(db)
     // Error checking, so initialize
   }
+}
+
+/// Initialize demo data for the application (production-appropriate)
+fn init_demo_data(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
+  let sql =
+    "
+    INSERT INTO users (name, email) VALUES
+    ('Demo User 1', 'demo1@example.com'),
+    ('Demo User 2', 'demo2@example.com'),
+    ('Demo User 3', 'demo3@example.com')
+  "
+  sqlight.exec(sql, db)
 }

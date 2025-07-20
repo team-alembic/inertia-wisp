@@ -14,6 +14,7 @@ import gleam/option
 
 import gleam/string
 import sqlight
+import utils/test_db
 
 /// Test database creation and table setup
 pub fn create_users_table_test() {
@@ -25,11 +26,7 @@ pub fn create_users_table_test() {
 
 /// Test sample data initialization
 pub fn init_sample_data_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let result = users.init_sample_data(db)
-
-  assert result == Ok(Nil)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Should have inserted some sample users
   let assert Ok(all_users) = users.get_all_users(db)
@@ -38,9 +35,7 @@ pub fn init_sample_data_test() {
 
 /// Test getting all users from database
 pub fn get_all_users_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let result = users.get_all_users(db)
   let assert Ok(user_list) = result
@@ -63,9 +58,7 @@ pub fn get_all_users_test() {
 
 /// Test getting user by ID
 pub fn get_user_by_id_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Should find existing user
   let result = users.get_user_by_id(db, 1)
@@ -101,9 +94,7 @@ pub fn create_user_test() {
 
 /// Test updating an existing user
 pub fn update_user_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let request =
     users.UpdateUserRequest(1, "Updated Name", "updated@example.com")
@@ -122,9 +113,7 @@ pub fn update_user_test() {
 
 /// Test deleting a user
 pub fn delete_user_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // User should exist before deletion
   let assert Ok(option.Some(_)) = users.get_user_by_id(db, 1)
@@ -138,9 +127,7 @@ pub fn delete_user_test() {
 
 /// Test searching users by name
 pub fn search_users_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Search for users with specific term
   let result = users.search_users(db, "Demo")
@@ -165,9 +152,7 @@ pub fn search_users_test() {
 
 /// Test getting user count (expensive operation for LazyProp demo)
 pub fn get_user_count_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let result = users.get_user_count(db)
   let assert Ok(count) = result
@@ -210,9 +195,7 @@ pub fn validate_create_user_test() {
 
 /// Test user update validation
 pub fn validate_update_user_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Valid request should pass
   let valid_request =

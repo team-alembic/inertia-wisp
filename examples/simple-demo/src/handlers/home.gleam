@@ -40,6 +40,8 @@ pub fn home_page(req: Request) -> Response {
 fn get_navigation_items() -> List(home_props.NavigationItem) {
   [
     home_props.NavigationItem("Home", "/", True),
+    home_props.NavigationItem("Dashboard", "/dashboard", False),
+    home_props.NavigationItem("Users", "/users", False),
     home_props.NavigationItem("About", "/about", False),
     home_props.NavigationItem("Contact", "/contact", False),
   ]

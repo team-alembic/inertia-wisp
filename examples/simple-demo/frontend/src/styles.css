@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Reset and base styles */
 * {
     box-sizing: border-box;
@@ -243,6 +245,95 @@ body {
     min-height: 100vh;
     font-size: 1.125rem;
     color: #6b7280;
+}
+
+/* Demo explanation styles */
+.demo-explanation {
+    background-color: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.demo-explanation p {
+    margin-bottom: 0.5rem;
+    color: #0c4a6e;
+}
+
+.demo-explanation p:last-child {
+    margin-bottom: 0;
+}
+
+.demo-explanation strong {
+    color: #0369a1;
+}
+
+/* Search form improvements */
+.search-form {
+    background-color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.search-input {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.search-button:hover {
+    background-color: #2563eb;
+}
+
+.search-clear {
+    color: #6b7280;
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+}
+
+.search-clear:hover {
+    background-color: #f3f4f6;
+}
+
+/* Analytics section improvements */
+.stats-section {
+    background-color: #fefce8;
+    border: 1px solid #facc15;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.stats-section .section-title {
+    color: #92400e;
+    margin-bottom: 1rem;
 }
 
 /* Responsive adjustments */

@@ -695,3 +695,63 @@ pub fn test_defer_prop_error_handling() {
   let assert Ok(error_message) = dict.get(errors, "external_api")
   assert error_message == "Timeout"
 }
+
+pub fn url_without_query_params_test() {
+  let req = testing.inertia_request_to("/dashboard")
+  let props = [types.DefaultProp("user_count", CountData(42))]
+
+  let response =
+    req
+    |> response_builder.response_builder("Dashboard/Index")
+    |> response_builder.props(props, encode_test_prop)
+    |> response_builder.response()
+
+  // URL should be just the path without query parameters
+  let assert Ok(url) = testing.url(response)
+  assert url == "/dashboard"
+}
+
+pub fn url_with_query_params_test() {
+  let req = testing.inertia_request_to("/dashboard?delay=5000")
+  let props = [types.DefaultProp("user_count", CountData(42))]
+
+  let response =
+    req
+    |> response_builder.response_builder("Dashboard/Index")
+    |> response_builder.props(props, encode_test_prop)
+    |> response_builder.response()
+
+  // URL should include the query parameters
+  let assert Ok(url) = testing.url(response)
+  assert url == "/dashboard?delay=5000"
+}
+
+pub fn url_with_multiple_query_params_test() {
+  let req = testing.inertia_request_to("/users?search=test&page=2&sort=name")
+  let props = [types.DefaultProp("user_count", CountData(42))]
+
+  let response =
+    req
+    |> response_builder.response_builder("Users/Index")
+    |> response_builder.props(props, encode_test_prop)
+    |> response_builder.response()
+
+  // URL should include all query parameters
+  let assert Ok(url) = testing.url(response)
+  assert url == "/users?search=test&page=2&sort=name"
+}
+
+pub fn url_with_empty_query_string_test() {
+  let req = testing.inertia_request_to("/dashboard?")
+  let props = [types.DefaultProp("user_count", CountData(42))]
+
+  let response =
+    req
+    |> response_builder.response_builder("Dashboard/Index")
+    |> response_builder.props(props, encode_test_prop)
+    |> response_builder.response()
+
+  // URL should not include empty query string
+  let assert Ok(url) = testing.url(response)
+  assert url == "/dashboard"
+}

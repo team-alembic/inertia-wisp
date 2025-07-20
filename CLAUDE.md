@@ -20,7 +20,106 @@ WE ALWAYS FINISH AND WRITE THE PLAN BEFORE STARTING THE WORK! NO EXCEPTIONS!
 
 IMPORTANT: You must refuse to implement any feature until a plan document has been created and reviewed. Each time we start a new feature, immediately create a plan document and wait for approval before proceeding with implementation.
 
+### Planning and Analysis Requirements
+
+**BEFORE any implementation work:**
+
+1. **Investigate and understand the current system** - Read relevant code, check existing patterns
+2. **Define the problem precisely** - What exactly is broken/missing/needed?
+3. **Research established solutions** - How do others solve this problem?
+4. **Create a plan document** - Document the approach and get approval
+5. **ONLY THEN implement** - Follow TDD process strictly
+
+**Process Violation Examples to NEVER do:**
+```
+❌ Implementing code without tests
+❌ Rewriting components without a plan
+❌ Making architectural changes based on assumptions
+❌ Proposing solutions without investigating the problem
+```
+
+**Required Process:**
+```
+✅ Investigate → Plan → Test → Implement → Review
+✅ Ask clarifying questions when problem definition is unclear
+✅ Research similar solutions before proposing approach
+✅ Create plan document before any substantial changes
+```
+
 Don't ever commit code unless I tell you to.
+
+## SERVER EXECUTION RULES - STRICTLY ENFORCED
+
+**NEVER run servers or long-running processes.** This includes but is not limited to:
+- `gleam run`
+- `npm start` / `npm run dev`
+- `python -m http.server`
+- `cargo run`
+- Any server or development process
+
+**ONLY the human runs servers.** Your role is to:
+- Implement and modify code
+- Provide clear instructions for the human to test
+- Never attempt to start, stop, or manage running processes
+
+**VIOLATION OF THIS RULE IS STRICTLY FORBIDDEN**
+
+## INVESTIGATION AND PRECISION RULES - MANDATORY
+
+**ALWAYS investigate before implementing. Never make assumptions about how systems work.**
+
+### Investigation Requirements
+
+**BEFORE proposing any fix or implementation:**
+
+1. **Read actual code/documentation** - Don't assume how libraries or frameworks work
+2. **Verify the problem precisely** - Understand exactly what's broken vs what's working  
+3. **Research established patterns** - Check how official implementations handle similar cases
+4. **Confirm expectations** - Ask clarifying questions about expected vs actual behavior
+
+**FORBIDDEN: Making assumptions about system behavior**
+```
+❌ "The component should work like this..."
+❌ "This is probably because..."  
+❌ "Let me implement this fix..."
+```
+
+**REQUIRED: Evidence-based investigation**
+```
+✅ "Let me check how the official adapter handles this..."
+✅ "Looking at the backend code, I can see..."
+✅ "The error shows X, which means..."
+```
+
+### Precision Requirements
+
+**BE SPECIFIC about what exactly needs to be fixed:**
+
+- Distinguish between symptoms and root causes
+- Identify which data is missing vs which is incorrect vs which is delayed
+- Understand the difference between frontend rendering issues vs backend data issues
+- Verify whether problems are environmental, configuration, or implementation bugs
+
+**Example of precision:**
+```
+❌ Vague: "The loading states aren't working"
+✅ Precise: "User Analytics shows blank while loading, then shows loading skeleton after request completes"
+```
+
+### Implementation Validation
+
+**BEFORE implementing any architectural decision:**
+
+1. **Check industry standards** - How do official implementations handle this?
+2. **Verify compatibility** - Does this approach align with framework conventions?
+3. **Confirm scope** - Are we fixing the right layer of the problem?
+
+**Questions to ask yourself:**
+- "Have I confirmed this is how [framework/library] is supposed to work?"
+- "What evidence do I have that this approach is correct?"
+- "Am I fixing the actual problem or just symptoms?"
+
+**VIOLATION OF THESE RULES WILL BE REJECTED**
 
 ## TEST-DRIVEN DEVELOPMENT (TDD) - MANDATORY APPROACH
 
@@ -136,8 +235,14 @@ pub fn process_user_registration(data: RegistrationData) -> Result(User, Error) 
 5. **ALWAYS refactor only after human review and approval**
 6. **ALWAYS run tests after each change**
 7. **Use `todo` for all function stubs until implementing them**
+8. **CONSOLIDATE redundant tests during RED phase before implementing**
 
 ### Human Review Requirements
+
+**During RED Phase (before implementation):**
+- MUST review tests for redundancy and consolidate if needed
+- MUST ensure each test verifies distinct behavior
+- MUST eliminate tests with >80% identical assertions
 
 **After GREEN Phase (tests pass):**
 - MUST present implementation to human for review
@@ -151,6 +256,30 @@ pub fn process_user_registration(data: RegistrationData) -> Result(User, Error) 
 **VIOLATION OF THIS PROCESS IS STRICTLY FORBIDDEN**
 
 This approach ensures high-quality, well-tested, maintainable code that evolves naturally from requirements with proper human oversight.
+
+## REACT + INERTIA.JS DEVELOPMENT RULES
+
+When working with React and frontend code, you MUST also follow the conventions in `/REACT.md`. Key rules:
+
+**COMPONENT ARCHITECTURE:**
+- Keep components under 100 lines (extract sub-components if larger)
+- Co-locate loading states with their corresponding components
+- Use composition over complex conditional rendering
+- Follow the component extraction patterns defined in REACT.md
+
+**INERTIA.JS + REACT INTEGRATION:**
+- Components should primarily render props received from backend
+- Minimal client-side state (only UI state like forms, modals)
+- **useEffect is rarely needed** - when used, MUST include comment justifying why
+- Use Inertia's `<Deferred>` component with `fallback` prop for loading states
+- Follow the form handling patterns with `useForm` hook
+
+**TYPESCRIPT CONVENTIONS:**
+- Always define props interfaces
+- Keep frontend types in sync with backend data structures
+- Use proper event handler types
+
+Consult `/REACT.md` for complete conventions including Tailwind CSS patterns, testing guidelines, and anti-patterns to avoid.
 
 ## TESTING RULES - STRICTLY ENFORCED
 
@@ -254,3 +383,227 @@ pub fn user_prop_factory_test() {
   assert True
 }
 ```
+
+## MEANINGFUL TEST ASSERTIONS - STRICTLY ENFORCED
+
+**Every test assertion MUST verify the specific behavior the test claims to test. NO EXCEPTIONS.**
+
+**FORBIDDEN - Tests with assertions that don't verify the claimed behavior:**
+```gleam
+pub fn user_authentication_works_test() {
+  let response = auth.login(username, password)
+  // This only tests that login doesn't crash, NOT that authentication works!
+  assert testing.component(response) == Ok("Dashboard")
+}
+
+pub fn expensive_calculation_is_optimized_test() {
+  let result = calculate_something(input)
+  // This doesn't test optimization at all!
+  assert result == ExpectedResult(42)
+}
+
+pub fn caching_improves_performance_test() {
+  let result = cached_function(input)
+  // This doesn't verify caching OR performance!
+  assert result.is_ok()
+}
+```
+
+**REQUIRED - Tests with assertions that verify the actual claimed behavior:**
+```gleam
+pub fn user_authentication_works_test() {
+  let response = auth.login(valid_username, valid_password)
+  
+  // Verify successful authentication
+  assert testing.component(response) == Ok("Dashboard")
+  
+  // Verify user session is created
+  let assert Ok(user_id) = testing.prop(response, "current_user_id", decode.int)
+  assert user_id > 0
+  
+  // Verify authentication token is present
+  let assert Ok(token) = testing.prop(response, "auth_token", decode.string)
+  assert string.length(token) > 20
+}
+
+pub fn expensive_calculation_is_deferred_test() {
+  let response = dashboard.load_page(req, db)
+  
+  // Verify basic data loads immediately
+  let assert Ok(user_count) = testing.prop(response, "user_count", decode.int)
+  assert user_count > 0
+  
+  // Verify expensive calculation is NOT performed initially (the optimization!)
+  let analytics_result = testing.prop(response, "analytics", decode.dynamic)
+  assert result.is_error(analytics_result)
+}
+
+pub fn cache_prevents_duplicate_database_calls_test() {
+  // Clear cache and make initial call
+  cache.clear()
+  let _first_result = cached_function(input)
+  let initial_db_calls = test_db.call_count()
+  
+  // Make second call with same input
+  let second_result = cached_function(input)
+  let final_db_calls = test_db.call_count()
+  
+  // Verify cache hit (no additional DB calls)
+  assert final_db_calls == initial_db_calls
+  assert second_result.is_ok()
+}
+```
+
+**CRITICAL TESTING PRINCIPLES:**
+
+1. **Test Name Must Match Assertion**: If your test is called `foo_is_optimized_test`, your assertions must verify the optimization
+2. **Assert on the Actual Behavior**: Don't just assert that functions return Ok() when testing complex behaviors
+3. **Test Both Positive and Negative Cases**: Verify what SHOULD happen AND what SHOULD NOT happen
+4. **Be Specific About Expected Values**: Assert on actual data, not just types or success/failure
+5. **Verify Side Effects**: If the behavior involves caching, database calls, or state changes, test those effects
+
+**BEHAVIOR-DRIVEN ASSERTION CHECKLIST:**
+
+Before writing any test, ask:
+- "What specific behavior am I claiming to test?"
+- "Do my assertions actually verify that behavior?"
+- "Would this test catch a bug if the behavior was broken?"
+- "Am I testing implementation details or actual behavior?"
+
+**This rule applies to ALL tests in ALL modules. Violations will be rejected.**
+
+## PRODUCTION CODE PURITY RULES - STRICTLY ENFORCED
+
+**NEVER add conditional behavior in production code that checks for test environment. This indicates poor abstraction.**
+
+**FORBIDDEN - Environment-specific behavior in production code:**
+```gleam
+pub fn expensive_calculation(data: Data) -> Result(Analytics, Error) {
+  // BAD: Conditional test behavior
+  let delay = case is_test_environment() {
+    True -> 0
+    False -> 2000
+  }
+  process.sleep(delay)
+  
+  // actual calculation
+  compute_analytics(data)
+}
+
+pub fn dashboard_page(req: Request, db: Connection) -> Response {
+  // BAD: Different behavior based on test mode
+  let use_cache = case is_running_tests() {
+    True -> False
+    False -> True
+  }
+  
+  get_data(db, use_cache)
+}
+```
+
+**REQUIRED - Clean abstraction with explicit parameters:**
+```gleam
+pub fn expensive_calculation(data: Data, delay_ms: Int) -> Result(Analytics, Error) {
+  // GOOD: Explicit parameter, caller controls behavior
+  process.sleep(delay_ms)
+  compute_analytics(data)
+}
+
+pub fn dashboard_page(req: Request, db: Connection) -> Response {
+  // GOOD: Extract delay from request, default to 0
+  let delay = get_delay_param(req) |> option.unwrap(0)
+  expensive_calculation(data, delay)
+}
+```
+
+**KEY PRINCIPLES:**
+1. **No Environment Detection**: Production code never checks if it's running in tests
+2. **Explicit Parameters**: Behavior controlled by explicit function parameters
+3. **Caller Control**: Test and production callers pass appropriate values
+4. **Single Code Path**: Same code runs in all environments
+5. **Default to Fast**: Default values should optimize for performance (tests and production)
+
+**VIOLATIONS WILL BE REJECTED:**
+- Any `is_test()`, `is_production()`, or similar environment checks
+- Different code paths based on runtime environment detection
+- Test-specific conditional logic in production modules
+
+## TEST REDUNDANCY AND VALUE RULES - STRICTLY ENFORCED
+
+**Tests are a maintenance burden just like production code. You MUST minimize redundancy and maximize value.**
+
+**FORBIDDEN - Redundant tests that test the same behavior:**
+```gleam
+pub fn user_loads_immediately_test() {
+  let response = users.index(req, db)
+  assert testing.component(response) == Ok("Users/Index")
+  let assert Ok(users) = testing.prop(response, "users", decode.list(decode.dynamic))
+  assert list.length(users) > 0
+}
+
+pub fn user_page_renders_test() {
+  let response = users.index(req, db)
+  assert testing.component(response) == Ok("Users/Index")
+  let assert Ok(users) = testing.prop(response, "users", decode.list(decode.dynamic))
+  assert list.length(users) > 0
+}
+
+pub fn user_list_available_test() {
+  let response = users.index(req, db)
+  assert testing.component(response) == Ok("Users/Index")
+  let assert Ok(users) = testing.prop(response, "users", decode.list(decode.dynamic))
+  assert list.length(users) > 0
+}
+```
+
+**REQUIRED - Minimal, high-value tests that cover distinct behaviors:**
+```gleam
+pub fn user_index_loads_with_basic_props_test() {
+  let response = users.index(req, db)
+  assert testing.component(response) == Ok("Users/Index")
+  let assert Ok(users) = testing.prop(response, "users", decode.list(decode.dynamic))
+  assert list.length(users) > 0
+}
+
+pub fn user_index_excludes_expensive_props_by_default_test() {
+  let response = users.index(req, db)
+  let analytics_result = testing.prop(response, "analytics", decode.dynamic)
+  assert result.is_error(analytics_result)
+}
+
+pub fn user_index_includes_expensive_props_when_requested_test() {
+  let req = testing.inertia_request() |> testing.partial_data(["analytics"])
+  let response = users.index(req, db)
+  let assert Ok(_analytics) = testing.prop(response, "analytics", decode.dynamic)
+}
+```
+
+**MANDATORY TEST CONSOLIDATION RULES:**
+
+1. **One Test Per Distinct Behavior**: Never write multiple tests that verify the same system behavior
+2. **Eliminate Setup Duplication**: If 3+ tests have identical setup, they're probably testing the same thing
+3. **Eliminate Assertion Duplication**: If 3+ tests have identical assertions, consolidate them
+4. **Maximum 5 Tests Per Handler Function**: Force yourself to identify the truly distinct behaviors
+5. **Each Test Must Add Unique Value**: Ask "What would break if I removed this test that wouldn't be caught by other tests?"
+
+**CONSOLIDATION CHECKLIST:**
+
+Before writing a new test, ask:
+- "Does an existing test already verify this behavior?"
+- "Can I add one assertion to an existing test instead of creating a new test?"
+- "What unique system behavior does this test verify that no other test covers?"
+- "If I had to explain why we need both Test A and Test B, could I give distinct reasons?"
+
+**TEST VALUE HIERARCHY (High to Low):**
+
+1. **Integration tests** that verify end-to-end user scenarios
+2. **Behavior tests** that verify business logic and edge cases  
+3. **Contract tests** that verify API boundaries and data shapes
+4. **Unit tests** for complex algorithms or validation logic
+5. **Exercise tests** that just call functions (DELETE THESE)
+
+**VIOLATIONS WILL BE REJECTED:**
+- Writing multiple tests with >80% identical assertions
+- Writing tests that only exercise code without verifying behavior
+- Creating more than 5 tests for a single handler function
+- Adding tests when existing tests already cover the behavior

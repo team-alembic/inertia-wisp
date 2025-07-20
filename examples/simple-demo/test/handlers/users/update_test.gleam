@@ -9,12 +9,11 @@ import gleam/json
 import handlers/users as user_handlers
 import inertia_wisp/testing
 import sqlight
+import utils/test_db
 
 /// Test successful user update
 pub fn users_update_success_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Create POST request with updated data
   let json_data =
@@ -31,9 +30,7 @@ pub fn users_update_success_test() {
 
 /// Test users update route integration with valid data
 pub fn users_update_route_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let data =
     json.object([
@@ -48,9 +45,7 @@ pub fn users_update_route_test() {
 
 /// Test user update with validation errors
 pub fn users_update_validation_errors_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Create POST request with invalid data
   let json_data =

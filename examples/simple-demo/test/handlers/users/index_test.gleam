@@ -10,13 +10,11 @@ import gleam/result
 import gleam/string
 import handlers/users as user_handlers
 import inertia_wisp/testing
-import sqlight
+import utils/test_db
 
 /// Test users index page returns correct component and props
 pub fn users_index_page_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request()
   let response = user_handlers.users_index(req, db)
@@ -38,9 +36,7 @@ pub fn users_index_page_test() {
 
 /// Test users index with search functionality
 pub fn users_index_with_search_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Create request with search query
   let req = testing.inertia_request_to("/users?search=Demo")
@@ -62,9 +58,7 @@ pub fn users_index_with_search_test() {
 
 /// Test users index route integration
 pub fn users_index_route_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request_to("/users")
   let response = user_handlers.users_index(req, db)
@@ -75,9 +69,7 @@ pub fn users_index_route_test() {
 
 /// Test users index with search query route integration
 pub fn users_index_search_route_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request_to("/users?search=Demo")
   let response = user_handlers.users_index(req, db)
@@ -89,9 +81,7 @@ pub fn users_index_search_route_test() {
 /// Test that regular request EXCLUDES optional analytics prop
 /// This demonstrates that OptionalProp is excluded by default for performance
 pub fn users_index_excludes_analytics_by_default_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request()
   let response = user_handlers.users_index(req, db)
@@ -105,9 +95,7 @@ pub fn users_index_excludes_analytics_by_default_test() {
 /// Test that partial request with "only" parameter INCLUDES optional analytics
 /// This demonstrates OptionalProp inclusion when specifically requested
 pub fn users_index_includes_analytics_when_requested_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Create partial request that specifically asks for analytics using proper header
   let req =
@@ -126,9 +114,7 @@ pub fn users_index_includes_analytics_when_requested_test() {
 /// Test analytics computation returns expected structure
 /// This tests the actual analytics data structure and computation
 pub fn users_analytics_computation_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   // Test analytics computation directly
   let assert Ok(analytics) = users.compute_user_analytics(db)

@@ -32,14 +32,16 @@ pub fn handler(req: Request, db: Connection) -> Response {
         user_props.user_list(users_data),
         user_props.user_count(list.length(users_data)),
         user_props.search_query(search_query),
+        // Optional Prop - only evaluated if requested
         user_props.user_analytics(fn() { compute_user_analytics(db) }),
+        // Deferred Prop - will be evaluated in partial reload after initial response
         user_props.user_report(fn() { generate_user_report(db) }),
       ]
 
       req
       |> inertia.response_builder("Users/Index")
-      |> inertia.props(props, user_props.user_prop_to_json)
       |> inertia.on_error("Error")
+      |> inertia.props(props, user_props.user_prop_to_json)
       |> inertia.response()
     }
     Error(errors) -> {

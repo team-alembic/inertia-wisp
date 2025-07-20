@@ -58,3 +58,50 @@ export interface UsersEditProps {
   form_data?: UserFormData;
   errors?: Record<string, string>;
 }
+
+// Search functionality types
+export interface SearchFilters {
+  query: string;
+  category?: string;
+  sort_by: string;
+}
+
+export interface SearchAnalytics {
+  total_filtered: number;
+  matching_percentage: number;
+  filter_performance_ms: number;
+}
+
+export interface UsersSearchProps {
+  search_filters: SearchFilters;
+  search_results: User[];
+  analytics?: SearchAnalytics; // OptionalProp - only included when requested
+}
+
+// Dashboard types for DeferredProp demo
+export interface UserAnalytics {
+  total_users: number;
+  active_users: number;
+  growth_rate: number;
+  new_users_this_month: number;
+  average_session_duration: number;
+}
+
+export interface Activity {
+  id: number;
+  user_name: string;
+  action: string;
+  timestamp: string;
+}
+
+export interface ActivityFeed {
+  recent_activities: Activity[];
+  total_activities: number;
+  last_updated: string;
+}
+
+export interface DashboardProps {
+  user_count: number; // Always included (AlwaysProp)
+  analytics?: UserAnalytics; // DeferredProp in "default" group
+  activity_feed?: ActivityFeed; // DeferredProp in "activity" group
+}

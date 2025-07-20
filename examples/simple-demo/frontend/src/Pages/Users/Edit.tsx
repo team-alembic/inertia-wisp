@@ -1,7 +1,6 @@
 import React from "react";
 import { Head, Link, useForm, router } from "@inertiajs/react";
 import { UsersEditProps } from "../../types";
-import "../../styles.css";
 
 export default function Edit({ user, form_data, errors }: UsersEditProps) {
   const {

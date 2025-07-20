@@ -8,12 +8,11 @@ import gleam/dynamic/decode
 import handlers/users as user_handlers
 import inertia_wisp/testing
 import sqlight
+import utils/test_db
 
 /// Test user edit form returns correct component and props
 pub fn users_edit_form_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request()
   let response = user_handlers.users_edit_form(req, "1", db)
@@ -37,9 +36,7 @@ pub fn users_edit_form_test() {
 
 /// Test users edit form route integration
 pub fn users_edit_form_route_test() {
-  let assert Ok(db) = sqlight.open(":memory:")
-  let assert Ok(_) = users.create_users_table(db)
-  let assert Ok(_) = users.init_sample_data(db)
+  let assert Ok(db) = test_db.setup_test_database()
 
   let req = testing.inertia_request_to("/users/1/edit")
   let response = user_handlers.users_edit_form(req, "1", db)

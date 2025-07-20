@@ -13,6 +13,37 @@ import gleam/option.{type Option}
 import gleam/string
 import sqlight.{type Connection}
 
+/// Search filters for advanced search functionality
+pub type SearchFilters {
+  SearchFilters(
+    query: String,
+    category: Option(String),
+    date_range: Option(DateRange),
+    sort_by: SortOption,
+  )
+}
+
+/// Date range for filtering
+pub type DateRange {
+  DateRange(start: String, end: String)
+}
+
+/// Sort options for search results
+pub type SortOption {
+  SortByName
+  SortByEmail
+  SortByDate
+}
+
+/// Search analytics for filtered results (OptionalProp)
+pub type SearchAnalytics {
+  SearchAnalytics(
+    total_filtered: Int,
+    matching_percentage: Float,
+    filter_performance_ms: Int,
+  )
+}
+
 /// User analytics data (expensive to compute)
 pub type UserAnalytics {
   UserAnalytics(
@@ -72,18 +103,6 @@ pub fn create_users_table(db: Connection) -> Result(Nil, sqlight.Error) {
       email TEXT NOT NULL UNIQUE,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
-  "
-  sqlight.exec(sql, db)
-}
-
-/// Initialize sample data for testing
-pub fn init_sample_data(db: Connection) -> Result(Nil, sqlight.Error) {
-  let sql =
-    "
-    INSERT INTO users (name, email) VALUES
-    ('Demo User 1', 'demo1@example.com'),
-    ('Demo User 2', 'demo2@example.com'),
-    ('Demo User 3', 'demo3@example.com')
   "
   sqlight.exec(sql, db)
 }
@@ -531,4 +550,102 @@ fn analyze_email_domains(users: List(User)) -> List(#(String, Int)) {
   |> list.sort(fn(a, b) { int.compare(b.1, a.1) })
   |> list.take(5)
   // Top 5 domains
+}
+
+/// Activity feed data structure for deferred loading
+pub type ActivityFeed {
+  ActivityFeed(
+    recent_activities: List(Activity),
+    total_activities: Int,
+    last_updated: String,
+  )
+}
+
+/// Individual activity item
+pub type Activity {
+  Activity(
+    id: Int,
+    user_name: String,
+    action: String,
+    timestamp: String,
+  )
+}
+
+/// Decoder for UserAnalytics
+pub fn decode_user_analytics(
+  json_data: dynamic.Dynamic,
+) -> Result(UserAnalytics, List(decode.DecodeError)) {
+  let decoder = {
+    use total_users <- decode.field("total_users", decode.int)
+    use active_users <- decode.field("active_users", decode.int)
+    use growth_rate <- decode.field("growth_rate", decode.float)
+    use new_users_this_month <- decode.field("new_users_this_month", decode.int)
+    use average_session_duration <- decode.field("average_session_duration", decode.float)
+    decode.success(UserAnalytics(
+      total_users: total_users,
+      active_users: active_users,
+      growth_rate: growth_rate,
+      new_users_this_month: new_users_this_month,
+      average_session_duration: average_session_duration,
+    ))
+  }
+  decode.run(json_data, decoder)
+}
+
+/// Decoder for ActivityFeed
+pub fn decode_activity_feed(
+  json_data: dynamic.Dynamic,
+) -> Result(ActivityFeed, List(decode.DecodeError)) {
+  let activity_decoder = {
+    use id <- decode.field("id", decode.int)
+    use user_name <- decode.field("user_name", decode.string)
+    use action <- decode.field("action", decode.string)
+    use timestamp <- decode.field("timestamp", decode.string)
+    decode.success(Activity(
+      id: id,
+      user_name: user_name,
+      action: action,
+      timestamp: timestamp,
+    ))
+  }
+
+  let decoder = {
+    use recent_activities <- decode.field("recent_activities", decode.list(activity_decoder))
+    use total_activities <- decode.field("total_activities", decode.int)
+    use last_updated <- decode.field("last_updated", decode.string)
+    decode.success(ActivityFeed(
+      recent_activities: recent_activities,
+      total_activities: total_activities,
+      last_updated: last_updated,
+    ))
+  }
+  decode.run(json_data, decoder)
+}
+
+/// Parse search filters from query parameters
+pub fn parse_search_filters(
+  query_params: List(#(String, String)),
+) -> SearchFilters {
+  let query = case list.key_find(query_params, "query") {
+    Ok(value) -> value
+    Error(_) -> ""
+  }
+
+  let category = list.key_find(query_params, "category")
+    |> option.from_result
+
+  let sort_by = case list.key_find(query_params, "sort_by") {
+    Ok("name") -> SortByName
+    Ok("email") -> SortByEmail
+    Ok("date") -> SortByDate
+    Ok(_) -> SortByName
+    Error(_) -> SortByName
+  }
+
+  SearchFilters(
+    query: query,
+    category: category,
+    date_range: option.None,
+    sort_by: sort_by,
+  )
 }

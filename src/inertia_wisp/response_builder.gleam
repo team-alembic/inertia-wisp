@@ -496,7 +496,12 @@ fn is_partial_prop(prop: types.Prop(p), partial_data: List(String)) -> Bool {
 /// Build URL from request path segments
 fn build_url_from_request(req: Request) -> String {
   let path = wisp.path_segments(req) |> string.join("/")
-  "/" <> path
+  let base_url = "/" <> path
+
+  case req.query {
+    option.Some(query) if query != "" -> base_url <> "?" <> query
+    _ -> base_url
+  }
 }
 
 /// Add deferred props to JSON if not empty

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import { UsersIndexProps } from "../../types";
-import "../../styles.css";
 
 export default function Index({
   users,
@@ -51,6 +50,9 @@ export default function Index({
         <nav className="nav-section">
           <Link href="/" className="nav-link">
             ← Back to Home
+          </Link>
+          <Link href="/users/search" className="nav-link">
+            🔍 Advanced Search
           </Link>
           <Link href="/users/create" className="nav-link primary">
             Create New User

@@ -1,7 +1,6 @@
 import React from "react";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { UsersCreateProps } from "../../types";
-import "../../styles.css";
 
 export default function Create({ form_data, errors }: UsersCreateProps) {
   const {

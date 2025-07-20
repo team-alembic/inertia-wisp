@@ -1,7 +1,6 @@
 import React from "react";
 import { Head, Link } from "@inertiajs/react";
 import { UsersShowProps } from "../../types";
-import "../../styles.css";
 
 export default function Show({ user }: UsersShowProps) {
   return (
