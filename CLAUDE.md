@@ -55,6 +55,8 @@
 - Provide clear instructions for the human to test
 - Never attempt to start, stop, or manage running processes
 
+**CRITICAL**: Violating this rule breaks trust. No exceptions.
+
 ### Critical Rules
 
 - **REFUSE TO IMPLEMENT** any feature without an approved plan document
@@ -65,6 +67,9 @@
 - **NO WORKAROUNDS** - always fix root causes properly (VIOLATION: manual responses instead of API fixes)
 - **INVESTIGATE FIRST** - check existing patterns before implementing (SUCCESS: following user handler patterns)
 - **REFACTOR INCREMENTALLY** - one function at a time with tests (VIOLATION: changing multiple functions at once)
+- **FETCH EXTERNAL LINKS** - when user provides links, always fetch them before responding
+- **UPDATE TESTS FIRST** - when changing implementation, update tests before changing code
+- **SIMPLIFY CODE** - prefer simple, clear code over complex patterns (e.g., `let _ = expr` over `use _ <- result.try(expr)`)
 
 Don't ever commit code unless I tell you to.
 
@@ -333,6 +338,8 @@ assert token != ""
 assert string.length(token) > 10
 ```
 
+**CRITICAL**: Never work around the "no assert False" rule with nonsense assertions like `assert 1 == 2`. This violates the spirit of the rule.
+
 ### Gleam-Specific Testing Rules
 
 **Write tests that assert on meaningful behavior, not just exercise code.**
@@ -365,6 +372,31 @@ pub fn some_function_test() {
 ### Meaningful Test Assertions
 
 **Every test assertion MUST verify the specific behavior the test claims to test. NO EXCEPTIONS.**
+
+**FORBIDDEN - Testing only existence/type correctness:**
+```gleam
+pub fn pagination_test() {
+  let response = handler(req, db)
+  // MEANINGLESS - only tests that value exists and decodes
+  assert testing.prop(response, "meta", last_page_decoder) |> result.is_ok
+  assert testing.prop(response, "meta", has_more_decoder) |> result.is_ok
+}
+```
+
+**REQUIRED - Testing actual expected values:**
+```gleam
+pub fn pagination_test() {
+  let response = handler(req, db)
+  // MEANINGFUL - tests actual expected behavior
+  assert testing.prop(response, "meta", last_page_decoder) == Ok(3)
+  assert testing.prop(response, "meta", has_more_decoder) == Ok(True)
+}
+```
+
+**DETERMINISTIC TESTING REQUIREMENT:**
+- Tests must control input data to ensure predictable outputs
+- Never use conditional assertions like `case last_page { 0 -> ..., _ -> ... }`
+- Use controlled test data (e.g., "insert exactly 25 articles") to test exact expected values
 
 **FORBIDDEN - Tests with assertions that don't verify the claimed behavior:**
 ```gleam
@@ -414,6 +446,28 @@ pub fn expensive_calculation_is_deferred_test() {
 ### Test Quality Enforcement
 
 **ALL test implementation must follow this mandatory review process to prevent rule violations.**
+
+**MANDATORY PROCESS: Update Tests Before Implementation Changes**
+
+When changing implementation (especially API configurations), ALWAYS:
+
+1. **Identify affected tests** - find tests that verify the behavior being changed
+2. **Update test expectations** - change test assertions to expect new behavior
+3. **Run tests to confirm they fail** (RED phase)
+4. **Then make implementation changes** (GREEN phase)
+5. **Verify tests now pass**
+
+**Example of correct process:**
+```
+1. Need to change MergeProp from deep: False to deep: True
+2. Find test: assert deep == False
+3. Update test: assert deep == True  
+4. Run test - it fails (RED)
+5. Change implementation: deep: True
+6. Run test - it passes (GREEN)
+```
+
+**VIOLATION**: Changing implementation first, then being surprised by test failures.
 
 **Pre-Test Writing Checklist (MANDATORY)**
 
@@ -586,3 +640,61 @@ These rules were strengthened after real implementation problems in news feed de
 - Investigation of existing patterns led to much better solutions
 
 **VIOLATION OF THESE RULES WILL BE REJECTED**
+
+## 6. CRITICAL LESSONS FROM TASK 2 INFINITE SCROLL IMPLEMENTATION
+
+### Rule Violations That Occurred and Must Be Prevented:
+
+**1. SERVER EXECUTION VIOLATION (ZERO TOLERANCE)**
+- **WHAT HAPPENED**: Executed `gleam run &` in terminal
+- **WHY WRONG**: Only humans run servers, this is fundamental
+- **PREVENTION**: Never use terminal for long-running processes, only provide instructions
+
+**2. MEANINGLESS TEST ASSERTIONS (UNACCEPTABLE)**
+- **WHAT HAPPENED**: `assert testing.prop(...) |> result.is_ok` (testing existence, not values)
+- **WHY WRONG**: Tests should verify actual expected behavior, not just that values exist
+- **PREVENTION**: Always assert on specific expected values, make tests deterministic
+
+**3. IMPLEMENTATION-FIRST INSTEAD OF TDD (BREAKS PROCESS)**
+- **WHAT HAPPENED**: Changed `deep: False` to `deep: True` before updating test
+- **WHY WRONG**: Violates TDD RED-GREEN-REFACTOR cycle
+- **PREVENTION**: Always update test expectations BEFORE changing implementation
+
+**4. IGNORING USER-PROVIDED RESOURCES (INEFFICIENT)**
+- **WHAT HAPPENED**: Didn't fetch external links when user provided them
+- **WHY WRONG**: Leads to assumptions instead of evidence-based solutions
+- **PREVENTION**: Always fetch and read provided links before responding
+
+**5. OVERCOMPLICATING SOLUTIONS (POOR ENGINEERING)**
+- **WHAT HAPPENED**: Custom intersection observer instead of built-in `<WhenVisible>`
+- **WHY WRONG**: Reinventing wheels instead of using framework capabilities
+- **PREVENTION**: Research existing solutions before implementing custom logic
+
+**6. NEEDLESSLY COMPLEX SYNTAX (POOR READABILITY)**
+- **WHAT HAPPENED**: `use _ <- result.try(expr)` when `let _ = expr` suffices
+- **WHY WRONG**: Complex syntax when simple patterns work
+- **PREVENTION**: Prefer simplicity - if ignoring results, just use `let _ = expr`
+
+**7. GETTING SIDETRACKED BY TEST FAILURES (LOSING FOCUS)**
+- **WHAT HAPPENED**: Debugging database setup instead of focusing on TDD RED phase
+- **WHY WRONG**: Lost sight of TDD process and task objectives
+- **PREVENTION**: Stay focused on current task phase, don't chase unrelated issues
+
+### Success Patterns That Should Be Repeated:
+
+**1. USING ECHO DEBUGGING EFFECTIVELY**
+- Added echo statements to understand data flow
+- Helped identify root cause (category filtering bug)
+- Removed debug statements after fixing issue
+
+**2. PROPER COMPONENT REFACTORING**
+- Extracted logical sections into focused components
+- Followed single responsibility principle
+- Made codebase more maintainable for LLMs and humans
+
+**3. INVESTIGATING EXISTING PATTERNS**
+- Looked at how other handlers solve similar problems
+- Found and fixed category filtering bug by understanding query logic
+- Led to better solutions than inventing new patterns
+
+These lessons are critical for future task implementation.
