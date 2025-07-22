@@ -16,8 +16,8 @@ pub fn news_feed_handler_loads_with_basic_props_test() {
   let req = testing.inertia_request()
   let response = news.news_feed(req, db)
 
-  // Should return NewsFeed component
-  assert testing.component(response) == Ok("NewsFeed")
+  // Should return News/Index component
+  assert testing.component(response) == Ok("News/Index")
   assert response.status == 200
 
   // Should include articles prop with read status
@@ -81,8 +81,8 @@ pub fn news_article_handler_returns_correct_component_test() {
   let req = testing.inertia_request()
   let response = news.news_article(req, "1", db)
 
-  // Should return Article component
-  assert testing.component(response) == Ok("Article")
+  // Should return News/Article component
+  assert testing.component(response) == Ok("News/Article")
   assert response.status == 200
 }
 

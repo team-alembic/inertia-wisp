@@ -70,13 +70,20 @@ export default function Home({
 
         {/* User Management Demo */}
         <section className="section">
-          <h2 className="section-title">User Management Demo</h2>
+          <h2 className="section-title">Demo Features</h2>
           <div className="demo-features">
             <p>
-              Explore the complete CRUD functionality built with the new{" "}
+              Explore the complete functionality built with the new{" "}
               <code>inertia.eval()</code> API:
             </p>
             <div className="feature-grid">
+              <Link href="/news" className="feature-card">
+                <h3>📰 News Feed</h3>
+                <p>
+                  Experience MergeProp with infinite scroll and read/unread
+                  article tracking
+                </p>
+              </Link>
               <Link href="/dashboard?delay=2000" className="feature-card">
                 <h3>📊 Dashboard</h3>
                 <p>
@@ -129,6 +136,10 @@ export default function Home({
               <li>
                 <strong>LazyProp:</strong> User listing and count (expensive
                 operations)
+              </li>
+              <li>
+                <strong>MergeProp:</strong> News feed articles (infinite scroll
+                and content merging)
               </li>
               <li>
                 <strong>DeferredProp:</strong> Dashboard analytics and activity

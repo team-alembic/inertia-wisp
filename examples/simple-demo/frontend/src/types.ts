@@ -105,3 +105,52 @@ export interface DashboardProps {
   analytics?: UserAnalytics; // DeferredProp in "default" group
   activity_feed?: ActivityFeed; // DeferredProp in "activity" group
 }
+
+// News/Articles types
+export type ArticleCategory =
+  | "technology"
+  | "business"
+  | "science"
+  | "sports"
+  | "entertainment";
+
+export interface Article {
+  id: number;
+  title: string;
+  summary: string;
+  author: string;
+  published_at: string;
+  category: ArticleCategory;
+  read_time: number;
+  image_url?: string;
+}
+
+export interface ArticleWithReadStatus {
+  article: Article;
+  is_read: boolean;
+  read_at: string;
+}
+
+export interface PaginationMeta {
+  current_page: number;
+  per_page: number;
+  total_count: number;
+  last_page: number;
+}
+
+export interface NewsFeed {
+  articles: ArticleWithReadStatus[];
+  meta: PaginationMeta;
+  has_more: boolean;
+  total_unread: number;
+  current_category: string;
+}
+
+// News page props
+export interface NewsFeedProps {
+  news_feed: NewsFeed;
+}
+
+export interface ArticleProps {
+  article: ArticleWithReadStatus;
+}

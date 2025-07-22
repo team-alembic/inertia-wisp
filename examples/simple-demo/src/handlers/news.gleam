@@ -165,7 +165,7 @@ fn build_feed_response(
   let props = [props.news_feed(feed)]
 
   req
-  |> inertia.response_builder("NewsFeed")
+  |> inertia.response_builder("News/Index")
   |> inertia.props(props, props.news_prop_to_json)
   |> inertia.response(200)
 }
@@ -178,7 +178,7 @@ fn build_article_response(
   let props = [props.article_data(article)]
 
   req
-  |> inertia.response_builder("Article")
+  |> inertia.response_builder("News/Article")
   |> inertia.props(props, props.news_prop_to_json)
   |> inertia.response(200)
 }

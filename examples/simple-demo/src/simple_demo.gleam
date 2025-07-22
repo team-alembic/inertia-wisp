@@ -10,6 +10,7 @@ import gleam/erlang/process
 import gleam/http
 import gleam/result
 import handlers/home
+import handlers/news
 import handlers/users
 import handlers/users/dashboard
 import mist
@@ -47,6 +48,8 @@ fn route_request(req: wisp.Request) -> wisp.Response {
   case wisp.path_segments(req), req.method {
     [], http.Get -> home.home_page(req)
     ["dashboard"], http.Get -> dashboard.dashboard_page(req, db)
+    ["news"], http.Get -> news.news_feed(req, db)
+    ["news", "article", id], http.Get -> news.news_article(req, id, db)
     ["users"], http.Get -> users.users_index(req, db)
     ["users", "search"], http.Get -> users.users_search(req, db)
     ["users", "create"], http.Get -> users.users_create_form(req, db)

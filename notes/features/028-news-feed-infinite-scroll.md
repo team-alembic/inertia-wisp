@@ -206,12 +206,82 @@ pub type NewsProp {
 - Error state handling
 - "Load more" manual trigger fallback
 
-### Backend Modules
+### Backend API Specification
+
+#### `GET /news` - News Feed Endpoint (implemented)
+**Query Parameters:**
+- `page` (int, default: 1) - Page number for pagination
+- `per_page` (int, default: 20, max: 100) - Articles per page
+- `category` (string, optional) - Filter by category ("technology", "business", "science", "sports", "entertainment")
+
+**Response Format:**
+```json
+{
+  "component": "NewsFeed",
+  "props": {
+    "news_feed": {
+      "articles": [
+        {
+          "article": {
+            "id": 1,
+            "title": "Article Title",
+            "summary": "Article summary...",
+            "author": "Author Name",
+            "published_at": "2024-01-15T10:30:00Z",
+            "category": "technology",
+            "read_time": 5,
+            "image_url": "https://example.com/image.jpg"
+          },
+          "is_read": false,
+          "read_at": ""
+        }
+      ],
+      "meta": {
+        "current_page": 1,
+        "per_page": 20,
+        "total_count": 65,
+        "last_page": 4
+      },
+      "has_more": true,
+      "total_unread": 45,
+      "current_category": "technology"
+    }
+  }
+}
+```
+
+**MergeProp Configuration:**
+- Uses `MergeProp` with `match_on: None, deep: False`
+- Enables automatic merging for infinite scroll
+- Frontend can trigger merge with `Inertia.get("/news?page=2", { preserveState: true, only: ["news_feed"] })`
+
+#### `GET /news/article/:id` - Individual Article Endpoint (implemented)
+**Response Format:**
+```json
+{
+  "component": "Article",
+  "props": {
+    "article": {
+      "article": { /* same article structure */ },
+      "is_read": true,
+      "read_at": "2024-01-15T10:30:00Z"
+    }
+  }
+}
+```
+
+**Side Effects:**
+- Automatically marks article as read for current user
+- Updates `article_reads` table with read timestamp
+
+### Backend Modules (implemented)
 
 #### `examples/simple-demo/src/handlers/news.gleam`
-- `news_feed/2` - Main feed handler with pagination
-- `news_article/2` - Individual article handler
-- Query parameter parsing for filters/pagination
+- `news_feed/2` - Main feed handler with MergeProp and pagination
+- `news_article/2` - Individual article handler with read tracking
+- Query parameter parsing with validation (`get_pagination_params`, `get_category_filter`)
+- Continuation-passing style for clean error handling (404 for invalid IDs)
+- HTTP status codes: 200 (success), 404 (not found), 500 (server error)
 
 #### `examples/simple-demo/src/news/props.gleam`
 - `news_feed/1` - MergeProp factory for infinite scroll merging
@@ -223,15 +293,34 @@ pub type NewsProp {
 - `news_prop_to_json/1` - JSON encoding for all prop types
 
 #### `examples/simple-demo/src/data/articles.gleam` (implemented)
-- `create_articles_table/1` - Article schema creation
-- `create_article_reads_table/1` - Per-user read tracking schema
-- `get_articles_paginated/5` - Main pagination query with user read status
-- `mark_article_read/3` - Per-user read tracking
-- `find_article_by_id/3` - Individual article fetch with user read status
-- `get_unread_count_for_user/2` - Count unread articles for specific user
-- `get_user_read_status/3` - Check if user has read specific article
-- `get_total_article_count/2` - Total article counting with category filter
-- `init_sample_data/1` - 65 sample articles for testing pagination
+- Multi-user read tracking via `article_reads` junction table
+- 65 sample articles across all categories for testing
+- Efficient pagination queries with user-specific read status
+- Category filtering with proper SQL joins
+- All database operations return proper `Result` types for error handling
+
+### Frontend Integration Requirements
+
+#### Infinite Scroll Implementation
+- Use Inertia's `preserveState: true` option to maintain scroll position
+- Include `only: ["news_feed"]` to fetch only news feed data
+- Backend automatically merges new articles with existing feed via MergeProp
+- Monitor `has_more` field to determine when to stop loading
+
+#### Category Filtering Implementation  
+- Reset pagination when changing categories (`page=1`)
+- Use `preserveState: false` to replace entire feed (no merge)
+- Update URL parameters to maintain filter state on refresh
+
+#### Read Status Tracking
+- Visual distinction between read/unread articles
+- Automatic read marking when viewing individual articles
+- Real-time unread count updates (via `total_unread` field)
+
+#### Error Handling
+- **Backend-driven error handling**: 404/500 errors redirect to Error component with `errors` prop
+- **Frontend network errors**: Handle Inertia.js request failures and network connectivity issues  
+- **React ErrorBoundary**: Catch implementation defects in React components
 
 ## Testing Plan
 
