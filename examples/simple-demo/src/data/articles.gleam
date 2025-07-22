@@ -249,6 +249,7 @@ pub fn get_articles_paginated(
 
   let #(where_clause, category_params) = case category {
     "all" -> #("", [])
+    "" -> #("", [])
     _ -> #("WHERE a.category = ?", [sqlight.text(category)])
   }
 
@@ -278,6 +279,7 @@ pub fn get_total_article_count(
 
   let #(where_clause, params) = case category {
     "all" -> #("", [])
+    "" -> #("", [])
     _ -> #(" WHERE category = ?", [sqlight.text(category)])
   }
 

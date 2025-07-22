@@ -28,17 +28,23 @@ pub fn news_feed(req: Request, db: Connection) -> Response {
   // Get pagination parameters
   let #(page, per_page) = get_pagination_params(req)
 
+
+
   // Get category filter
   let category = get_category_filter(req)
+
 
   // Load articles with pagination and user read status
   case articles.get_articles_paginated(db, user_id, page, per_page, category) {
     Ok(articles_list) -> {
       // Get total count for pagination
+
       let total_count = case articles.get_total_article_count(db, category) {
         Ok(count) -> count
         Error(_) -> 0
       }
+
+
 
       // Get unread count
       let total_unread = case articles.get_unread_count_for_user(db, user_id) {

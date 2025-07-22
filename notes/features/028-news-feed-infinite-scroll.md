@@ -143,7 +143,6 @@ pub type NewsProp {
   PaginationMeta(PaginationMeta)
   CategoryFilter(String)
   UnreadCount(Int)
-  LoadingState(Bool)
 }
 ```
 
@@ -188,7 +187,7 @@ pub type NewsProp {
 - Main container component
 - Manages infinite scroll logic
 - Handles category filtering
-- Coordinates loading states
+- Coordinates client-side state
 
 #### `ArticleCard.tsx`
 - Individual article preview
@@ -369,7 +368,7 @@ pub type NewsProp {
 - [ ] Create ArticleCard component
 - [ ] Create NewsFeed container component
 - [ ] Implement infinite scroll logic
-- [ ] Add loading states and error handling
+- [ ] Add error handling
 
 ### Phase 4: Advanced Features
 - [ ] Add category filtering UI

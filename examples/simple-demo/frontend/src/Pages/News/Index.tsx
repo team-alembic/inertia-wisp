@@ -1,10 +1,76 @@
-import React from "react";
-import { Head, Link } from "@inertiajs/react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Head, Link, router } from "@inertiajs/react";
 import { NewsFeedProps } from "../../types";
 import ArticleCard from "../../components/ArticleCard";
 
 export default function Index({ news_feed }: NewsFeedProps) {
-  const { articles, meta, has_more, total_unread, current_category } = news_feed;
+  const { articles, meta, has_more, total_unread, current_category } =
+    news_feed;
+
+  // Container state for infinite scroll
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
+
+  // Handle infinite scroll loading
+  const loadMoreArticles = useCallback(() => {
+    if (loadingRef.current || !has_more || isLoadingMore) {
+      return;
+    }
+
+    loadingRef.current = true;
+    setIsLoadingMore(true);
+    setError(null);
+
+    const nextPage = meta.current_page + 1;
+    const url = current_category
+      ? `/news?page=${nextPage}&category=${current_category}`
+      : `/news?page=${nextPage}`;
+
+    router.get(
+      url,
+      {},
+      {
+        preserveState: true,
+        only: ["news_feed"],
+        onSuccess: () => {
+          loadingRef.current = false;
+          setIsLoadingMore(false);
+        },
+        onError: (errors) => {
+          loadingRef.current = false;
+          setIsLoadingMore(false);
+          setError("Failed to load more articles. Please try again.");
+          console.error("Error loading more articles:", errors);
+        },
+      },
+    );
+  }, [has_more, meta.current_page, current_category, isLoadingMore]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          loadMoreArticles();
+        }
+      },
+      {
+        rootMargin: "100px", // Start loading 100px before reaching the bottom
+      },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMoreArticles]);
 
   const handleArticleClick = (articleId: number) => {
     // Optional: Add analytics tracking here
@@ -48,7 +114,9 @@ export default function Index({ news_feed }: NewsFeedProps) {
             </div>
             <div className="stat-card">
               <h3>Current Page</h3>
-              <p className="stat-number">{meta.current_page} of {meta.last_page}</p>
+              <p className="stat-number">
+                {meta.current_page} of {meta.last_page}
+              </p>
               <small>Showing {articles.length} articles</small>
             </div>
           </div>
@@ -59,7 +127,8 @@ export default function Index({ news_feed }: NewsFeedProps) {
           <section className="section">
             <div className="filter-info">
               <p>
-                Showing articles in category: <strong>{current_category}</strong>
+                Showing articles in category:{" "}
+                <strong>{current_category}</strong>
                 <Link href="/news" className="clear-filter">
                   Clear filter
                 </Link>
@@ -84,31 +153,56 @@ export default function Index({ news_feed }: NewsFeedProps) {
               )}
             </div>
           ) : (
-            <div className="articles-list">
-              {articles.map((article) => (
-                <ArticleCard
-                  key={article.article.id}
-                  article={article}
-                  onClick={handleArticleClick}
-                />
-              ))}
-            </div>
+            <>
+              <div className="articles-list">
+                {articles.map((article) => (
+                  <ArticleCard
+                    key={article.article.id}
+                    article={article}
+                    onClick={handleArticleClick}
+                  />
+                ))}
+              </div>
+
+              {/* Infinite Scroll Sentinel */}
+              {has_more && (
+                <div ref={sentinelRef} className="scroll-sentinel">
+                  {isLoadingMore && (
+                    <div className="infinite-scroll-loader">
+                      <div className="loading-spinner"></div>
+                      <p>Loading more articles...</p>
+                    </div>
+                  )}
+                  {error && (
+                    <div className="infinite-scroll-error">
+                      <p>{error}</p>
+                      <button
+                        onClick={loadMoreArticles}
+                        className="action-button secondary"
+                        disabled={isLoadingMore}
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </section>
 
-        {/* Pagination Info */}
+        {/* Status Info */}
         {articles.length > 0 && (
           <section className="section pagination-section">
             <div className="pagination-info">
               <p>
                 Showing {articles.length} of {meta.total_count} articles
-                {has_more && " • More articles available"}
+                {has_more && " • Scroll down for more"}
               </p>
-              {has_more && (
+              {!has_more && meta.total_count > articles.length && (
                 <p className="pagination-note">
-                  <strong>Note:</strong> Infinite scroll will be implemented in the next task.
-                  For now, you can manually navigate to page {meta.current_page + 1} by adding
-                  <code>?page={meta.current_page + 1}</code> to the URL.
+                  <strong>All articles loaded!</strong> You've reached the end
+                  of the feed.
                 </p>
               )}
             </div>
@@ -117,29 +211,38 @@ export default function Index({ news_feed }: NewsFeedProps) {
 
         {/* API Demo Info */}
         <section className="section api-demo-section">
-          <h2 className="section-title">MergeProp Demonstration</h2>
+          <h2 className="section-title">Infinite Scroll Container</h2>
           <div className="api-demo-content">
             <p>
-              This page demonstrates <strong>MergeProp</strong> usage for infinite scroll:
+              This page demonstrates <strong>infinite scroll container</strong>{" "}
+              functionality:
             </p>
             <ul>
               <li>
-                <strong>Articles List:</strong> Uses MergeProp to merge new articles with existing ones
+                <strong>MergeProp Integration:</strong> New articles
+                automatically merge with existing feed
               </li>
               <li>
-                <strong>Pagination Meta:</strong> Updates with each new page load
+                <strong>Scroll Detection:</strong> Loads more content when
+                approaching bottom of page
               </li>
               <li>
-                <strong>Read Status:</strong> Per-user tracking of read/unread articles
+                <strong>Error Handling:</strong> Graceful handling of network
+                errors with retry
+              </li>
+              <li>
+                <strong>Loading States:</strong> Visual feedback during content
+                loading
               </li>
             </ul>
             <p>
-              <strong>Current Implementation:</strong> Basic page display with pagination support.
-              Infinite scroll functionality will be added in the next implementation task.
+              <strong>How it works:</strong> Scroll down through the articles
+              and watch as new content loads automatically. The container
+              manages scroll position, loading states, and error handling.
             </p>
             <p>
-              Try clicking on article titles to mark them as read, then return to see
-              the visual changes in the read/unread status.
+              Try scrolling to see infinite scroll in action, or click article
+              titles to mark them as read.
             </p>
           </div>
         </section>
