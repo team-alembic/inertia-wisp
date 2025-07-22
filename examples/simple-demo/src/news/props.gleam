@@ -18,6 +18,7 @@ pub type NewsProp {
   ArticleData(articles.ArticleWithReadStatus)
   PaginationMeta(articles.PaginationMeta)
   CategoryFilter(String)
+  AvailableCategories(List(articles.ArticleCategory))
   UnreadCount(Int)
   LoadingState(Bool)
 }
@@ -56,6 +57,13 @@ pub fn article_data(
 /// Create a category filter prop (DefaultProp)
 pub fn category_filter(category: String) -> types.Prop(NewsProp) {
   types.DefaultProp("category", CategoryFilter(category))
+}
+
+/// Create available categories prop (DefaultProp)
+pub fn available_categories(
+  categories: List(articles.ArticleCategory),
+) -> types.Prop(NewsProp) {
+  types.DefaultProp("available_categories", AvailableCategories(categories))
 }
 
 /// Create unread count prop (DeferProp for expensive calculation)
@@ -139,6 +147,7 @@ pub fn news_prop_to_json(prop: NewsProp) -> json.Json {
     ArticleData(article) -> encode_article_with_read_status(article)
     PaginationMeta(meta) -> encode_pagination_meta(meta)
     CategoryFilter(category) -> json.string(category)
+    AvailableCategories(categories) -> json.array(categories, encode_article_category)
     UnreadCount(count) -> json.int(count)
     LoadingState(is_loading) -> json.bool(is_loading)
   }

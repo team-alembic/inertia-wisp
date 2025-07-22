@@ -5,13 +5,17 @@ import NewsHeader from "../../components/NewsHeader";
 import NewsNavigation from "../../components/NewsNavigation";
 import NewsStats from "../../components/NewsStats";
 import CategoryFilterInfo from "../../components/CategoryFilterInfo";
+import CategoryFilter from "../../components/CategoryFilter";
 import ArticlesList from "../../components/ArticlesList";
 import InfiniteScrollLoader from "../../components/InfiniteScrollLoader";
 import NewsStatus from "../../components/NewsStatus";
 import NewsDemo from "../../components/NewsDemo";
 import ErrorTestingSection from "../../components/error/ErrorTestingSection";
 
-export default function Index({ news_feed }: NewsFeedProps) {
+export default function Index({
+  news_feed,
+  available_categories,
+}: NewsFeedProps) {
   const { articles, meta, has_more, total_unread, current_category } =
     news_feed;
 
@@ -38,6 +42,11 @@ export default function Index({ news_feed }: NewsFeedProps) {
           currentPage={meta.current_page}
           lastPage={meta.last_page}
           articlesShown={articles.length}
+        />
+
+        <CategoryFilter
+          currentCategory={current_category}
+          availableCategories={available_categories}
         />
 
         <CategoryFilterInfo currentCategory={current_category} />

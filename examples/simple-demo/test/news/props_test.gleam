@@ -141,6 +141,43 @@ pub fn news_prop_to_json_news_feed_test() {
   assert string.contains(json_string, "\"total_count\":65")
 }
 
+pub fn available_categories_factory_test() {
+  let categories = [articles.Technology, articles.Business, articles.Science]
+  let prop = props.available_categories(categories)
+
+  // Verify it creates a DefaultProp with correct key and data
+  let assert types.DefaultProp(key, props.AvailableCategories(returned_categories)) = prop
+  assert key == "available_categories"
+  assert list.length(returned_categories) == 3
+  assert list.contains(returned_categories, articles.Technology)
+  assert list.contains(returned_categories, articles.Business)
+  assert list.contains(returned_categories, articles.Science)
+}
+
+pub fn news_prop_to_json_available_categories_test() {
+  let categories = [articles.Technology, articles.Business, articles.Science]
+  let json_result = props.news_prop_to_json(props.AvailableCategories(categories))
+  let json_string = json.to_string(json_result)
+
+  // Verify JSON contains all categories as array
+  assert string.contains(json_string, "[")
+  assert string.contains(json_string, "\"technology\"")
+  assert string.contains(json_string, "\"business\"")
+  assert string.contains(json_string, "\"science\"")
+}
+
+pub fn get_all_categories_returns_all_categories_test() {
+  let categories = articles.get_all_categories()
+
+  // Verify all 5 categories are returned
+  assert list.length(categories) == 5
+  assert list.contains(categories, articles.Technology)
+  assert list.contains(categories, articles.Business)
+  assert list.contains(categories, articles.Science)
+  assert list.contains(categories, articles.Sports)
+  assert list.contains(categories, articles.Entertainment)
+}
+
 pub fn news_prop_to_json_pagination_test() {
   let json_result =
     props.news_prop_to_json(props.PaginationMeta(test_pagination_meta))

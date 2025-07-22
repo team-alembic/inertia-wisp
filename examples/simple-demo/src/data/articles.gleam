@@ -399,3 +399,8 @@ pub fn get_user_read_status(
     _ -> Ok(False)
   }
 }
+
+/// Get all available article categories
+pub fn get_all_categories() -> List(ArticleCategory) {
+  [Technology, Business, Science, Sports, Entertainment]
+}

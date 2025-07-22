@@ -164,7 +164,11 @@ fn build_feed_response(
       current_category: category,
     )
 
-  let props = [props.news_feed(feed)]
+  let available_categories = articles.get_all_categories()
+  let props = [
+    props.news_feed(feed),
+    props.available_categories(available_categories),
+  ]
 
   req
   |> inertia.response_builder("News/Index")

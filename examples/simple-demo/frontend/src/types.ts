@@ -149,6 +149,7 @@ export interface NewsFeed {
 // News page props
 export interface NewsFeedProps {
   news_feed: NewsFeed;
+  available_categories: ArticleCategory[];
 }
 
 export interface ArticleProps {

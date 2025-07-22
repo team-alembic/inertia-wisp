@@ -37,6 +37,25 @@ pub fn news_feed_handler_loads_with_basic_props_test() {
   assert testing.prop(response, "news_feed", current_category_decoder) == Ok("")
 }
 
+/// Test news feed handler includes available categories
+pub fn news_feed_handler_includes_available_categories_test() {
+  let assert Ok(db) = setup_test_news_database()
+  let req = testing.inertia_request()
+  let response = news.news_feed(req, db)
+
+  // Should include available_categories prop with all 5 categories
+  let categories_decoder = decode.list(decode.string)
+  let assert Ok(categories) =
+    testing.prop(response, "available_categories", categories_decoder)
+
+  assert list.length(categories) == 5
+  assert list.contains(categories, "technology")
+  assert list.contains(categories, "business")
+  assert list.contains(categories, "science")
+  assert list.contains(categories, "sports")
+  assert list.contains(categories, "entertainment")
+}
+
 /// Test news feed handler filters articles by category
 pub fn news_feed_handler_filters_articles_by_category_test() {
   let assert Ok(db) = setup_test_news_database()

@@ -162,18 +162,34 @@ pub type NewsProp {
 5. Frontend updates scroll listener for next page
 
 #### Category Filtering
-1. User selects category filter
-2. Frontend triggers new request with category parameter
+1. User clicks category in CategoryFilter component
+2. Frontend triggers new request with category parameter and page=1
 3. Backend resets pagination and loads filtered articles
-4. Frontend replaces feed (no merge) and resets scroll
+4. Frontend replaces feed (no merge) and resets scroll position
+5. CategoryFilter shows active state, CategoryFilterInfo displays current filter
+
+#### Back to Top Navigation
+1. User scrolls down beyond 500px threshold
+2. BackToTop button appears with fade-in animation
+3. User clicks/taps button or uses keyboard (Enter/Space)
+4. Page smoothly scrolls to top with CSS scroll-behavior
+5. Button fades out when near top of page
+
+#### Mobile Touch Experience
+1. Touch-friendly tap targets (minimum 44px)
+2. Reduced articles per page on mobile (15 instead of 20)
+3. Optimized image loading for mobile connections
+4. Swipe-friendly article cards with proper touch feedback
 
 ### Pages
 
 #### `/news` - Main News Feed
 - Primary infinite scroll interface
-- Category filtering sidebar
-- Search functionality
-- "Back to top" button
+- Interactive category filtering component
+- Category filter status display
+- Back to top floating button (appears after scrolling)
+- Responsive layout for mobile/tablet/desktop
+- Touch-optimized interactions for mobile
 
 #### `/news/article/:id` - Individual Article
 - Full article content
@@ -183,11 +199,12 @@ pub type NewsProp {
 
 ### Components
 
-#### `NewsFeed.tsx`
-- Main container component
-- Manages infinite scroll logic
-- Handles category filtering
-- Coordinates client-side state
+#### `NewsFeed.tsx` (News/Index.tsx - implemented)
+- Main container component with all features integrated
+- Manages infinite scroll logic via InfiniteScrollLoader
+- Handles category filtering coordination
+- Integrates all sub-components (ArticlesList, CategoryFilter, etc.)
+- Error boundary integration for graceful error handling
 
 #### `ArticleCard.tsx`
 - Individual article preview
@@ -196,9 +213,23 @@ pub type NewsProp {
 - Click to full article
 
 #### `CategoryFilter.tsx`
-- Category selection interface
-- Active filter indication
+- Interactive category selection interface (buttons/dropdown)
+- Active filter indication with visual highlight
 - Clear filters option
+- All categories display with article counts
+- Responsive design for mobile/desktop
+
+#### `CategoryFilterInfo.tsx` (implemented)
+- Shows current active filter status
+- Clear filter link
+- Minimal informational display
+
+#### `BackToTop.tsx`
+- Floating action button for long scroll sessions
+- Appears after scrolling threshold (500px)
+- Smooth scroll animation to top
+- Accessible with keyboard navigation
+- Auto-hide when near top of page
 
 #### `InfiniteScrollLoader.tsx`
 - Loading indicator for new content
@@ -300,26 +331,46 @@ pub type NewsProp {
 
 ### Frontend Integration Requirements
 
-#### Infinite Scroll Implementation
+#### Infinite Scroll Implementation (implemented)
 - Use Inertia's `preserveState: true` option to maintain scroll position
 - Include `only: ["news_feed"]` to fetch only news feed data
 - Backend automatically merges new articles with existing feed via MergeProp
 - Monitor `has_more` field to determine when to stop loading
+- Use `<WhenVisible>` component for automatic scroll detection
 
-#### Category Filtering Implementation  
-- Reset pagination when changing categories (`page=1`)
-- Use `preserveState: false` to replace entire feed (no merge)
-- Update URL parameters to maintain filter state on refresh
+#### Category Filtering Implementation
+- **Interactive UI**: CategoryFilter component with clickable category buttons/pills
+- **Visual feedback**: Active category highlighted, inactive categories dimmed
+- **All categories option**: Clear filter to show all articles
+- **URL integration**: Reset pagination when changing categories (`page=1`)
+- **State management**: Use `preserveState: false` to replace entire feed (no merge)
+- **Responsive design**: Category buttons stack vertically on mobile
 
-#### Read Status Tracking
-- Visual distinction between read/unread articles
+#### Back to Top Implementation
+- **Scroll detection**: Show button after user scrolls 500px down from top
+- **Smooth animation**: CSS scroll-behavior: smooth for elegant UX
+- **Accessibility**: Keyboard accessible (Enter/Space keys), proper ARIA labels
+- **Visual design**: Floating action button, bottom-right positioning
+- **Auto-hide**: Fade out when user scrolls back near top (< 200px)
+
+#### Mobile Experience Optimization
+- **Touch targets**: Minimum 44px tap areas for category filters and buttons
+- **Responsive images**: Optimize loading for mobile connections
+- **Reduced pagination**: Load 15 articles per page on mobile vs 20 on desktop
+- **Touch feedback**: Visual feedback for taps (active states, ripple effects)
+- **Viewport handling**: Proper meta viewport tag and responsive breakpoints
+
+#### Read Status Tracking (implemented)
+- Visual distinction between read/unread articles in ArticleCard
 - Automatic read marking when viewing individual articles
 - Real-time unread count updates (via `total_unread` field)
+- Per-user read tracking with read timestamps
 
-#### Error Handling
-- **Backend-driven error handling**: 404/500 errors redirect to Error component with `errors` prop
-- **Frontend network errors**: Handle Inertia.js request failures and network connectivity issues  
-- **React ErrorBoundary**: Catch implementation defects in React components
+#### Error Handling (implemented)
+- **React ErrorBoundary**: Comprehensive error catching via wholistic error handling
+- **Backend errors**: 404/500 errors handled gracefully with user-friendly messages
+- **Network errors**: Inertia.js request failures with retry options
+- **Graceful degradation**: Error states don't break overall page functionality
 
 ## Testing Plan
 
@@ -371,13 +422,48 @@ pub type NewsProp {
 - [ ] Add error handling
 
 ### Phase 4: Advanced Features
-- [ ] Add category filtering UI
-- [ ] Implement read/unread tracking
-- [ ] Add "back to top" functionality
-- [ ] Optimize for mobile experience
+- [ ] **Interactive Category Filtering UI**
+  - [ ] Create CategoryFilter component with clickable category buttons
+  - [ ] Add visual active/inactive states for categories
+  - [ ] Integrate with existing CategoryFilterInfo component
+  - [ ] Handle category selection and URL updates
+  - [ ] Test category filtering with pagination reset
+- [ ] **Read/Unread Visual Enhancement** ✅ COMPLETE
+  - [x] ArticleCard shows read/unread states (implemented)
+  - [x] Read indicators and timestamps (implemented) 
+  - [x] Per-user read tracking backend (implemented)
+- [ ] **Back to Top Functionality**
+  - [ ] Create BackToTop component with scroll detection
+  - [ ] Implement smooth scroll animation
+  - [ ] Add accessibility features (keyboard nav, ARIA labels)
+  - [ ] Style floating action button with proper positioning
+  - [ ] Test show/hide behavior based on scroll position
+- [ ] **Mobile Experience Optimization**
+  - [ ] Implement responsive category filter layout
+  - [ ] Optimize touch targets and tap feedback
+  - [ ] Test and adjust pagination for mobile (15 vs 20 articles)
+  - [ ] Verify image loading performance on mobile
+  - [ ] Add proper viewport meta tags and responsive breakpoints
 
 ### Phase 5: Performance & Polish
-- [ ] Implement image lazy loading
-- [ ] Add keyboard navigation support
-- [ ] Performance optimization and testing
-- [ ] Final UX polish and accessibility
+- [ ] **Advanced Image Loading**
+  - [ ] Implement progressive image loading with blur-up effect
+  - [ ] Add responsive image srcsets for different screen sizes
+  - [ ] Optimize image formats (WebP with fallbacks)
+  - [ ] Add loading skeleton animations
+- [ ] **Enhanced Keyboard Navigation**
+  - [ ] Arrow key navigation between articles
+  - [ ] Tab order optimization for category filters
+  - [ ] Keyboard shortcuts for common actions (j/k for navigation)
+  - [ ] Focus management for infinite scroll
+- [ ] **Performance Optimization**
+  - [ ] Implement virtual scrolling for large lists (10,000+ articles)
+  - [ ] Add performance monitoring and metrics collection
+  - [ ] Optimize bundle size and code splitting
+  - [ ] Memory leak testing for long scroll sessions
+- [ ] **UX Polish & Accessibility**
+  - [ ] Add loading animations and micro-interactions
+  - [ ] Implement proper focus indicators and screen reader support
+  - [ ] Add skip links and landmark navigation
+  - [ ] Cross-browser testing and polyfills
+  - [ ] A11y audit with automated and manual testing
