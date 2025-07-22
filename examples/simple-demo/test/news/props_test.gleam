@@ -47,7 +47,7 @@ pub fn news_feed_factory_test() {
   // Verify it creates a MergeProp wrapping a DefaultProp
   let assert types.MergeProp(inner_prop, match_on, deep) = prop
   assert match_on == option.None
-  assert deep == False
+  assert deep == True
   let assert types.DefaultProp(key, props.NewsFeed(feed)) = inner_prop
   assert key == "news_feed"
   assert feed.meta.current_page == 1

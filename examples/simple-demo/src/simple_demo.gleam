@@ -8,7 +8,7 @@ import data/articles as data_articles
 import data/users as data_users
 import gleam/erlang/process
 import gleam/http
-import gleam/result
+
 import handlers/home
 import handlers/news
 import handlers/users
@@ -80,21 +80,27 @@ fn get_static_path() -> String {
 
 /// Create and initialize the database tables
 fn ensure_database_setup(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
-  use _ <- result.try(data_users.create_users_table(db))
-  use _ <- result.try(data_articles.create_articles_table(db))
-  use _ <- result.try(data_articles.create_article_reads_table(db))
-  // Only initialize sample data if table is empty for demo purposes
-  case data_users.get_user_count(db) {
-    Ok(0) -> init_demo_data(db)
+  let _ = data_users.create_users_table(db)
+  let _ = data_articles.create_articles_table(db)
+  let _ = data_articles.create_article_reads_table(db)
+
+  // Initialize users if needed
+  let _ = case data_users.get_user_count(db) {
+    Ok(0) -> init_demo_users(db)
     Ok(_) -> Ok(Nil)
-    // Data already exists, don't reinitialize
-    Error(_) -> init_demo_data(db)
-    // Error checking, so initialize
+    Error(_) -> init_demo_users(db)
+  }
+
+  // Initialize articles if needed
+  case data_articles.get_total_article_count(db, "all") {
+    Ok(0) -> data_articles.init_sample_data(db)
+    Ok(_) -> Ok(Nil)
+    Error(_) -> data_articles.init_sample_data(db)
   }
 }
 
-/// Initialize demo data for the application (production-appropriate)
-fn init_demo_data(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
+/// Initialize demo users for the application (production-appropriate)
+fn init_demo_users(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
   let sql =
     "
     INSERT INTO users (name, email) VALUES
@@ -102,6 +108,5 @@ fn init_demo_data(db: sqlight.Connection) -> Result(Nil, sqlight.Error) {
     ('Demo User 2', 'demo2@example.com'),
     ('Demo User 3', 'demo3@example.com')
   "
-  use _ <- result.try(sqlight.exec(sql, db))
-  data_articles.init_sample_data(db)
+  sqlight.exec(sql, db)
 }

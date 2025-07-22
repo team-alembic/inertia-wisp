@@ -29,7 +29,7 @@ pub fn news_feed(feed: articles.NewsFeed) -> types.Prop(NewsProp) {
   types.MergeProp(
     prop: types.DefaultProp("news_feed", NewsFeed(feed)),
     match_on: option.None,
-    deep: False,
+    deep: True,
   )
 }
 
