@@ -1,6 +1,7 @@
 import React from "react";
 import { Head, Link } from "@inertiajs/react";
 import { HomePageProps } from "../types";
+import ErrorTestingSection from "../components/error/ErrorTestingSection";
 
 export default function Home({
   welcome_message,
@@ -153,6 +154,8 @@ export default function Home({
             </p>
           </div>
         </section>
+
+        <ErrorTestingSection />
       </div>
     </>
   );

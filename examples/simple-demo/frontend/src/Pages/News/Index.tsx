@@ -9,6 +9,7 @@ import ArticlesList from "../../components/ArticlesList";
 import InfiniteScrollLoader from "../../components/InfiniteScrollLoader";
 import NewsStatus from "../../components/NewsStatus";
 import NewsDemo from "../../components/NewsDemo";
+import ErrorTestingSection from "../../components/error/ErrorTestingSection";
 
 export default function Index({ news_feed }: NewsFeedProps) {
   const { articles, meta, has_more, total_unread, current_category } =
@@ -59,7 +60,10 @@ export default function Index({ news_feed }: NewsFeedProps) {
           hasMore={has_more}
         />
 
+        {/* Demo Information */}
         <NewsDemo />
+
+        <ErrorTestingSection />
       </div>
     </>
   );
