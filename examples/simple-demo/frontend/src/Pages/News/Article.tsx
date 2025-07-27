@@ -1,5 +1,5 @@
 import React from "react";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { ArticleProps } from "../../types";
 
 export default function Article({ article }: ArticleProps) {
@@ -27,7 +27,33 @@ export default function Article({ article }: ArticleProps) {
       sports: "bg-red-100 text-red-800",
       entertainment: "bg-yellow-100 text-yellow-800",
     };
-    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
+    return (
+      colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800"
+    );
+  };
+
+  const handleBackToFeed = () => {
+    // Retrieve stored navigation context from sessionStorage
+    const storedContext = sessionStorage.getItem("newsContext");
+
+    if (storedContext) {
+      const context = JSON.parse(storedContext);
+      // Build URL with page, category, and scroll target
+      const params = new URLSearchParams();
+      params.set("page", context.page);
+      if (context.category) {
+        params.set("category", context.category);
+      }
+      params.set("scrollToArticle", articleData.id.toString());
+
+      router.visit(`/news?${params.toString()}`);
+
+      // Clean up stored context
+      sessionStorage.removeItem("newsContext");
+    } else {
+      // Fallback to simple navigation if no context
+      router.visit(`/news?scrollToArticle=${articleData.id}`);
+    }
   };
 
   return (
@@ -37,9 +63,9 @@ export default function Article({ article }: ArticleProps) {
       <div className="container">
         {/* Navigation */}
         <nav className="nav-section">
-          <Link href="/news" className="nav-link">
+          <button onClick={handleBackToFeed} className="nav-link">
             ← Back to News Feed
-          </Link>
+          </button>
           <Link href="/" className="nav-link">
             🏠 Home
           </Link>
@@ -48,7 +74,9 @@ export default function Article({ article }: ArticleProps) {
         {/* Article Header */}
         <header className="article-header">
           <div className="article-meta-top">
-            <span className={`category-badge ${getCategoryColor(articleData.category)}`}>
+            <span
+              className={`category-badge ${getCategoryColor(articleData.category)}`}
+            >
               {articleData.category}
             </span>
             <span className="read-time-full">
@@ -90,22 +118,24 @@ export default function Article({ article }: ArticleProps) {
 
           <div className="article-content-full">
             <p>
-              This is where the full article content would be displayed.
-              In a real application, this would contain the complete article text,
-              formatted with proper paragraphs, headings, and other rich content.
+              This is where the full article content would be displayed. In a
+              real application, this would contain the complete article text,
+              formatted with proper paragraphs, headings, and other rich
+              content.
             </p>
 
             <p>
               The article "{articleData.title}" by {articleData.author} would
-              contain detailed information about the topic. This demo shows
-              how the article page integrates with the news feed and handles
-              read status tracking.
+              contain detailed information about the topic. This demo shows how
+              the article page integrates with the news feed and handles read
+              status tracking.
             </p>
 
             <p>
-              <strong>Demo Note:</strong> This is a placeholder for article content.
-              In a production system, this would be populated from a content
-              management system or database field containing the full article body.
+              <strong>Demo Note:</strong> This is a placeholder for article
+              content. In a production system, this would be populated from a
+              content management system or database field containing the full
+              article body.
             </p>
           </div>
         </article>
@@ -113,9 +143,12 @@ export default function Article({ article }: ArticleProps) {
         {/* Article Footer */}
         <footer className="article-footer-full">
           <div className="article-actions">
-            <Link href="/news" className="action-button primary">
+            <button
+              onClick={handleBackToFeed}
+              className="action-button primary"
+            >
               ← Back to News Feed
-            </Link>
+            </button>
             <button
               onClick={() => window.print()}
               className="action-button secondary"
@@ -125,9 +158,16 @@ export default function Article({ article }: ArticleProps) {
           </div>
 
           <div className="article-stats">
-            <p>Category: <strong>{articleData.category}</strong></p>
-            <p>Reading time: <strong>{formatReadTime(articleData.read_time)}</strong></p>
-            <p>Article ID: <strong>{articleData.id}</strong></p>
+            <p>
+              Category: <strong>{articleData.category}</strong>
+            </p>
+            <p>
+              Reading time:{" "}
+              <strong>{formatReadTime(articleData.read_time)}</strong>
+            </p>
+            <p>
+              Article ID: <strong>{articleData.id}</strong>
+            </p>
           </div>
         </footer>
 
@@ -140,13 +180,16 @@ export default function Article({ article }: ArticleProps) {
             </p>
             <ul>
               <li>
-                <strong>Read Status:</strong> Article is automatically marked as read when viewed
+                <strong>Read Status:</strong> Article is automatically marked as
+                read when viewed
               </li>
               <li>
-                <strong>Per-User Tracking:</strong> Each user has independent read/unread status
+                <strong>Per-User Tracking:</strong> Each user has independent
+                read/unread status
               </li>
               <li>
-                <strong>Timestamp Recording:</strong> Read time is recorded for analytics
+                <strong>Timestamp Recording:</strong> Read time is recorded for
+                analytics
               </li>
             </ul>
             <p>
@@ -154,7 +197,8 @@ export default function Article({ article }: ArticleProps) {
               {is_read ? (
                 <span className="status-read">
                   ✓ This article is marked as read
-                  {read_at && ` (read on ${new Date(read_at).toLocaleDateString()})`}
+                  {read_at &&
+                    ` (read on ${new Date(read_at).toLocaleDateString()})`}
                 </span>
               ) : (
                 <span className="status-unread">
@@ -163,8 +207,8 @@ export default function Article({ article }: ArticleProps) {
               )}
             </p>
             <p>
-              Return to the news feed to see how this article now appears
-              with a "read" visual indicator.
+              Return to the news feed to see how this article now appears with a
+              "read" visual indicator.
             </p>
           </div>
         </section>

@@ -6,12 +6,14 @@ interface ArticlesListProps {
   articles: ArticleWithReadStatus[];
   onArticleClick: (articleId: number) => void;
   currentCategory?: string;
+  scrollToArticleId?: string | null;
 }
 
 export default function ArticlesList({
   articles,
   onArticleClick,
   currentCategory,
+  scrollToArticleId,
 }: ArticlesListProps) {
   if (articles.length === 0) {
     return (
@@ -38,11 +40,9 @@ export default function ArticlesList({
       </h2>
       <div className="articles-list">
         {articles.map((article) => (
-          <ArticleCard
-            key={article.article.id}
-            article={article}
-            onClick={onArticleClick}
-          />
+          <div key={article.article.id} data-article-id={article.article.id}>
+            <ArticleCard article={article} onClick={onArticleClick} />
+          </div>
         ))}
       </div>
     </section>

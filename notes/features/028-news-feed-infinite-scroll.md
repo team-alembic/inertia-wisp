@@ -224,12 +224,13 @@ pub type NewsProp {
 - Clear filter link
 - Minimal informational display
 
-#### `BackToTop.tsx`
-- Floating action button for long scroll sessions
-- Appears after scrolling threshold (500px)
-- Smooth scroll animation to top
-- Accessible with keyboard navigation
-- Auto-hide when near top of page
+#### `BackToTop.tsx` (implemented)
+- Floating action button for long scroll sessions using Tailwind CSS
+- Appears after scrolling threshold (500px) with fade-in animation
+- Smooth scroll animation to top using window.scrollTo API
+- Accessible with keyboard navigation (Enter/Space keys)
+- Auto-hide when not scrolled past threshold
+- Hover effects and proper ARIA labels
 
 #### `InfiniteScrollLoader.tsx`
 - Loading indicator for new content
@@ -415,55 +416,30 @@ pub type NewsProp {
 - [x] Add category filtering support
 - [x] Write integration tests for handlers
 
-### Phase 3: Frontend Components
-- [ ] Create ArticleCard component
-- [ ] Create NewsFeed container component
-- [ ] Implement infinite scroll logic
-- [ ] Add error handling
+### Phase 3: Frontend Components ✅ COMPLETE
+- [x] Create ArticleCard component
+- [x] Create NewsFeed container component (News/Index.tsx)
+- [x] Implement infinite scroll logic (InfiniteScrollLoader with WhenVisible)
+- [x] Add error handling (wholistic error handling integration)
 
 ### Phase 4: Advanced Features
-- [ ] **Interactive Category Filtering UI**
-  - [ ] Create CategoryFilter component with clickable category buttons
-  - [ ] Add visual active/inactive states for categories
-  - [ ] Integrate with existing CategoryFilterInfo component
-  - [ ] Handle category selection and URL updates
-  - [ ] Test category filtering with pagination reset
-- [ ] **Read/Unread Visual Enhancement** ✅ COMPLETE
+- [x] **Interactive Category Filtering UI** ✅ COMPLETE
+  - [x] Create CategoryFilter component with clickable category buttons
+  - [x] Add visual active/inactive states for categories
+  - [x] Integrate with existing CategoryFilterInfo component
+  - [x] Handle category selection and URL updates
+  - [x] Test category filtering with pagination reset
+  - [x] Add backend support for available_categories prop
+  - [x] Remove hardcoded categories from frontend
+  - [x] Fix duplicate category display issue
+- [x] **Read/Unread Visual Enhancement** ✅ COMPLETE
   - [x] ArticleCard shows read/unread states (implemented)
-  - [x] Read indicators and timestamps (implemented) 
+  - [x] Read indicators and timestamps (implemented)
   - [x] Per-user read tracking backend (implemented)
-- [ ] **Back to Top Functionality**
-  - [ ] Create BackToTop component with scroll detection
-  - [ ] Implement smooth scroll animation
-  - [ ] Add accessibility features (keyboard nav, ARIA labels)
-  - [ ] Style floating action button with proper positioning
-  - [ ] Test show/hide behavior based on scroll position
-- [ ] **Mobile Experience Optimization**
-  - [ ] Implement responsive category filter layout
-  - [ ] Optimize touch targets and tap feedback
-  - [ ] Test and adjust pagination for mobile (15 vs 20 articles)
-  - [ ] Verify image loading performance on mobile
-  - [ ] Add proper viewport meta tags and responsive breakpoints
-
-### Phase 5: Performance & Polish
-- [ ] **Advanced Image Loading**
-  - [ ] Implement progressive image loading with blur-up effect
-  - [ ] Add responsive image srcsets for different screen sizes
-  - [ ] Optimize image formats (WebP with fallbacks)
-  - [ ] Add loading skeleton animations
-- [ ] **Enhanced Keyboard Navigation**
-  - [ ] Arrow key navigation between articles
-  - [ ] Tab order optimization for category filters
-  - [ ] Keyboard shortcuts for common actions (j/k for navigation)
-  - [ ] Focus management for infinite scroll
-- [ ] **Performance Optimization**
-  - [ ] Implement virtual scrolling for large lists (10,000+ articles)
-  - [ ] Add performance monitoring and metrics collection
-  - [ ] Optimize bundle size and code splitting
-  - [ ] Memory leak testing for long scroll sessions
-- [ ] **UX Polish & Accessibility**
-  - [ ] Add loading animations and micro-interactions
-  - [ ] Implement proper focus indicators and screen reader support
-  - [ ] Add skip links and landmark navigation
-  - [ ] Cross-browser testing and polyfills
-  - [ ] A11y audit with automated and manual testing
+- [x] **Back to Top Functionality** ✅ COMPLETE
+  - [x] Create BackToTop component with scroll detection
+  - [x] Implement smooth scroll animation
+  - [x] Add accessibility features (keyboard nav, ARIA labels)
+  - [x] Style floating action button with Tailwind CSS classes
+  - [x] Test show/hide behavior based on scroll position
+  - [x] Add hover effects and smooth transitions

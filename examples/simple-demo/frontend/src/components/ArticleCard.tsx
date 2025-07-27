@@ -36,7 +36,9 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
       sports: "bg-red-100 text-red-800",
       entertainment: "bg-yellow-100 text-yellow-800",
     };
-    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
+    return (
+      colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800"
+    );
   };
 
   return (
@@ -60,7 +62,9 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
       <div className="article-content">
         {/* Category Badge */}
         <div className="article-meta">
-          <span className={`category-badge ${getCategoryColor(articleData.category)}`}>
+          <span
+            className={`category-badge ${getCategoryColor(articleData.category)}`}
+          >
             {articleData.category}
           </span>
           <span className="read-time">
@@ -70,15 +74,31 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
 
         {/* Title */}
         <h3 className="article-title">
-          <Link href={`/news/article/${articleData.id}`}>
+          <Link
+            href={`/news/article/${articleData.id}`}
+            onClick={() => {
+              // Store current page context for back navigation
+              const currentPage =
+                new URLSearchParams(window.location.search).get("page") || "1";
+              const currentCategory =
+                new URLSearchParams(window.location.search).get("category") ||
+                "";
+              sessionStorage.setItem(
+                "newsContext",
+                JSON.stringify({
+                  page: currentPage,
+                  category: currentCategory,
+                  articleId: articleData.id,
+                }),
+              );
+            }}
+          >
             {articleData.title}
           </Link>
         </h3>
 
         {/* Summary */}
-        <p className="article-summary">
-          {articleData.summary}
-        </p>
+        <p className="article-summary">{articleData.summary}</p>
 
         {/* Author and Date */}
         <div className="article-footer">
@@ -86,11 +106,7 @@ export default function ArticleCard({ article, onClick }: ArticleCardProps) {
           <span className="article-date">
             {formatPublishedDate(articleData.published_at)}
           </span>
-          {is_read && read_at && (
-            <span className="read-indicator">
-              ✓ Read
-            </span>
-          )}
+          {is_read && read_at && <span className="read-indicator">✓ Read</span>}
         </div>
       </div>
     </article>
