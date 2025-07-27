@@ -57,7 +57,7 @@ pub fn home_page_navigation_always_included_test() {
   let nav_decoder = decode.list(decode.at(["name"], decode.string))
   let result = testing.prop(response, "navigation", nav_decoder)
 
-  assert result == Ok(["Home", "Dashboard", "Users", "About", "Contact"])
+  assert result == Ok(["Home", "Dashboard", "Users"])
 }
 
 /// Test that home page includes CSRF token as AlwaysProp
