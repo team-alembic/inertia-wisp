@@ -6,7 +6,7 @@
 //// proper form processing with validation errors in Inertia.js.
 
 import gleam/dict.{type Dict}
-
+import gleam/dynamic/decode
 import gleam/json
 import gleam/list
 import gleam/option.{type Option}
@@ -50,6 +50,10 @@ pub opaque type InertiaResponseBuilder {
     status: Option(Int),
   )
 }
+
+//
+// Public API Functions
+//
 
 /// Start building an Inertia response
 pub fn response_builder(
@@ -141,12 +145,21 @@ pub fn errors(
   InertiaResponseBuilder(..builder, errors: errors)
 }
 
-/// Set redirect URL for error responses
+/// Set redirect URL and return redirect response immediately
 pub fn redirect(
   builder: InertiaResponseBuilder,
   url: String,
-) -> InertiaResponseBuilder {
-  InertiaResponseBuilder(..builder, redirect_url: option.Some(url))
+) -> Response {
+  // Create HTTP redirect response with 303 status (Inertia.js standard)
+  let redirect_response =
+    wisp.response(303)
+    |> wisp.set_header("location", url)
+
+  // Store errors in cookie if any exist
+  case dict.is_empty(builder.errors) {
+    False -> store_errors_in_cookie(redirect_response, builder.request, builder.errors)
+    True -> redirect_response
+  }
 }
 
 /// Set error component for prop resolution errors
@@ -181,6 +194,108 @@ pub fn version(
 }
 
 /// Helper function to resolve Result-based prop resolvers
+/// Extract component name from builder
+fn get_component_name(builder: InertiaResponseBuilder) -> String {
+  case builder.component {
+    option.Some(name) -> name
+    option.None -> ""
+  }
+}
+
+/// Extract version from builder
+fn get_version(builder: InertiaResponseBuilder) -> String {
+  case builder.version {
+    option.Some(v) -> v
+    option.None -> "1"
+  }
+}
+
+/// Resolve which errors to use and whether they came from cookie
+fn resolve_errors_for_response(builder: InertiaResponseBuilder) -> #(Dict(String, String), Bool) {
+  case dict.is_empty(builder.errors) {
+    False -> #(builder.errors, False)  // Use request errors
+    True -> #(retrieve_errors_from_cookie(builder.request), True)  // Auto-retrieve cookie errors
+  }
+}
+
+/// Build props with errors included
+fn build_props_with_errors(builder: InertiaResponseBuilder, errors: Dict(String, String)) -> Dict(String, json.Json) {
+  case dict.is_empty(errors) {
+    False -> {
+      let errors_json = build_errors_json(builder.request, errors)
+      dict.insert(builder.props, "errors", errors_json)
+    }
+    True -> builder.props
+  }
+}
+
+/// Build the complete response JSON structure
+fn build_response_json(
+  component_name: String,
+  props: Dict(String, json.Json),
+  url: String,
+  version: String,
+  builder: InertiaResponseBuilder,
+) -> List(#(String, json.Json)) {
+  let base_json = [
+    #("component", json.string(component_name)),
+    #("props", json.object(dict.to_list(props))),
+    #("url", json.string(url)),
+    #("version", json.string(version)),
+    #("encryptHistory", json.bool(builder.encrypt_history)),
+    #("clearHistory", json.bool(builder.clear_history)),
+  ]
+
+  base_json
+  |> maybe_add_deferred_props(builder.deferred_props)
+  |> maybe_add_merge_props(builder.merge_props)
+  |> maybe_add_deep_merge_props(builder.deep_merge_props)
+  |> maybe_add_match_props_on(builder.match_props_on)
+}
+
+/// Choose between JSON and HTML response format
+fn choose_response_format(
+  request: wisp.Request,
+  final_json: List(#(String, json.Json)),
+  component_name: String,
+  status: Int,
+) -> wisp.Response {
+  case middleware.is_inertia_request(request) {
+    True -> build_json_response(final_json, status)
+    False -> build_html_response(final_json, component_name, status)
+  }
+}
+
+/// Handle cookie cleanup after response is built
+fn handle_cookie_cleanup(
+  response: wisp.Response,
+  request: wisp.Request,
+  retrieved_from_cookie: Bool,
+  status: Int,
+) -> wisp.Response {
+  case retrieved_from_cookie && !is_redirect_or_conflict_status(status) {
+    True -> clear_errors_cookie(response, request)
+    False -> response
+  }
+}
+
+/// Check if status code is a redirect (301-308) or conflict (409)
+fn is_redirect_or_conflict_status(status: Int) -> Bool {
+  status >= 301 && status <= 308 || status == 409
+}
+
+/// Clear the inertia_errors cookie by setting it to expire immediately
+fn clear_errors_cookie(response: wisp.Response, request: wisp.Request) -> wisp.Response {
+  wisp.set_cookie(
+    response,
+    request,
+    "inertia_errors",
+    "",
+    wisp.Signed,
+    0, // Expire immediately
+  )
+}
+
 fn resolve_prop_result(
   name: String,
   resolver: fn() -> Result(p, Dict(String, String)),
@@ -197,53 +312,22 @@ fn resolve_prop_result(
   }
 }
 
+//
+// Core Response Building
+//
+
 /// Build the final Inertia response with optional status code
 pub fn response(builder: InertiaResponseBuilder, status: Int) -> Response {
-  let component_name = case builder.component {
-    option.Some(name) -> name
-    option.None -> ""
-  }
-
+  let component_name = get_component_name(builder)
   let url = build_url_from_request(builder.request)
+  let version = get_version(builder)
 
-  let version = case builder.version {
-    option.Some(v) -> v
-    option.None -> "1"
-  }
+  let #(errors_to_use, retrieved_from_cookie) = resolve_errors_for_response(builder)
+  let props_with_errors = build_props_with_errors(builder, errors_to_use)
+  let final_json = build_response_json(component_name, props_with_errors, url, version, builder)
 
-  let props_with_errors = case dict.is_empty(builder.errors) {
-    False -> {
-      let errors_json =
-        builder.errors
-        |> dict.to_list()
-        |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
-        |> json.object()
-      dict.insert(builder.props, "errors", errors_json)
-    }
-    True -> builder.props
-  }
-
-  let base_json = [
-    #("component", json.string(component_name)),
-    #("props", json.object(dict.to_list(props_with_errors))),
-    #("url", json.string(url)),
-    #("version", json.string(version)),
-    #("encryptHistory", json.bool(builder.encrypt_history)),
-    #("clearHistory", json.bool(builder.clear_history)),
-  ]
-
-  // Add optional fields if they have content
-  let final_json =
-    base_json
-    |> maybe_add_deferred_props(builder.deferred_props)
-    |> maybe_add_merge_props(builder.merge_props)
-    |> maybe_add_deep_merge_props(builder.deep_merge_props)
-    |> maybe_add_match_props_on(builder.match_props_on)
-
-  case middleware.is_inertia_request(builder.request) {
-    True -> build_json_response(final_json, status)
-    False -> build_html_response(final_json, component_name, status)
-  }
+  let final_response = choose_response_format(builder.request, final_json, component_name, status)
+  handle_cookie_cleanup(final_response, builder.request, retrieved_from_cookie, status)
 }
 
 /// Build JSON response for Inertia requests
@@ -281,6 +365,10 @@ fn build_html_response(
 
   wisp.html_response(string_tree.from_string(html_content), status)
 }
+
+//
+// Props Processing
+//
 
 /// Process props and separate them into evaluated props, deferred props, and merge metadata
 fn process_props(
@@ -507,7 +595,11 @@ fn build_url_from_request(req: Request) -> String {
   }
 }
 
-/// Add deferred props to JSON if not empty
+//
+// JSON Metadata Helpers
+//
+
+/// Add deferred props metadata to JSON if not empty
 fn maybe_add_deferred_props(
   json_list: List(#(String, json.Json)),
   deferred_props: Dict(String, List(String)),
@@ -579,5 +671,66 @@ fn maybe_add_match_props_on(
       #("matchPropsOn", json.array(list.reverse(match_props_on), json.string)),
       ..json_list
     ]
+  }
+}
+
+//
+// Error and Cookie Handling
+//
+
+/// Build errors JSON with optional error bag nesting
+fn build_errors_json(request: wisp.Request, errors: Dict(String, String)) -> json.Json {
+  let base_errors_json =
+    errors
+    |> dict.to_list()
+    |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
+    |> json.object()
+
+  // Check for X-Inertia-Error-Bag header
+  case list.key_find(request.headers, "x-inertia-error-bag") {
+    Ok(bag_name) -> {
+      // Nest errors under the bag name
+      json.object([#(bag_name, base_errors_json)])
+    }
+    Error(_) -> {
+      // Return errors directly
+      base_errors_json
+    }
+  }
+}
+
+/// Store validation errors in a cookie for later retrieval
+fn store_errors_in_cookie(
+  response: wisp.Response,
+  request: wisp.Request,
+  errors: Dict(String, String),
+) -> wisp.Response {
+  let errors_json =
+    errors
+    |> dict.to_list()
+    |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
+    |> json.object()
+    |> json.to_string()
+
+  wisp.set_cookie(
+    response,
+    request,
+    "inertia_errors",
+    errors_json,
+    wisp.Signed,
+    600, // 10 minutes
+  )
+}
+
+/// Retrieve and clear validation errors from cookie
+fn retrieve_errors_from_cookie(request: wisp.Request) -> Dict(String, String) {
+  case wisp.get_cookie(request, "inertia_errors", wisp.Signed) {
+    Ok(errors_json) -> {
+      case json.parse(from: errors_json, using: decode.dict(decode.string, decode.string)) {
+        Ok(errors) -> errors
+        Error(_) -> dict.new()
+      }
+    }
+    Error(_) -> dict.new()
   }
 }

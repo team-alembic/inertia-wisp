@@ -1,14 +1,19 @@
 import gleam/dict
+
 import gleam/dynamic/decode
+import gleam/http/request
 import gleam/http/response
 import gleam/json
+import gleam/list
 import gleam/option
 import gleam/result
+import gleam/string
 import gleeunit
 import gleeunit/should
 import inertia_wisp/internal/types
 import inertia_wisp/response_builder
 import inertia_wisp/testing
+
 
 pub fn main() {
   gleeunit.main()
@@ -115,11 +120,10 @@ pub fn redirect_sets_redirect_url_test() {
     req
     |> response_builder.response_builder("Users/Create")
     |> response_builder.redirect("/users/create")
-    |> response_builder.response(200)
 
-  // Should be a JSON response (redirect doesn't change response type)
-  let assert Ok("application/json; charset=utf-8") =
-    response.get_header(response, "content-type")
+  // Should be an HTTP redirect response with 303 status
+  assert response.status == 303
+  let assert Ok("/users/create") = response.get_header(response, "location")
 }
 
 // Metadata tests
@@ -188,12 +192,13 @@ pub fn response_builds_error_only_response_test() {
     |> response_builder.response_builder("FormPage")
     |> response_builder.errors(errors)
     |> response_builder.redirect("/form")
-    |> response_builder.response(200)
 
-  // Should build a valid response with errors
-  response
-  |> response.get_header("content-type")
-  |> should.equal(Ok("application/json; charset=utf-8"))
+  // Should be a redirect response with errors stored in cookie
+  assert response.status == 303
+  let assert Ok("/form") = response.get_header(response, "location")
+
+  // Should have set-cookie header with errors
+  let assert Ok(_cookie) = response.get_header(response, "set-cookie")
 }
 
 pub fn response_includes_props_in_json_test() {
@@ -220,7 +225,6 @@ pub fn response_includes_errors_in_json_test() {
     req
     |> response_builder.response_builder("Users/Create")
     |> response_builder.errors(errors)
-    |> response_builder.redirect("/users/create")
     |> response_builder.response(200)
 
   // Should include errors in JSON response
@@ -754,4 +758,89 @@ pub fn url_with_empty_query_string_test() {
   // URL should not include empty query string
   let assert Ok(url) = testing.url(response)
   assert url == "/dashboard"
+}
+
+// Session errors integration tests
+
+pub fn redirect_with_errors_then_form_display_test() {
+  let req = testing.inertia_request()
+  let validation_errors = dict.from_list([
+    #("first_name", "is required"),
+    #("email", "is invalid"),
+  ])
+
+  // Step 1: Redirect with errors stores them in cookie
+  let redirect_response =
+    req
+    |> response_builder.response_builder("Users/Create")
+    |> response_builder.errors(validation_errors)
+    |> response_builder.redirect("/users/new")
+
+  // Should be a redirect response with cookie containing errors
+  assert redirect_response.status == 303
+  let assert Ok("/users/new") = response.get_header(redirect_response, "location")
+  let assert Ok(cookie_header) = response.get_header(redirect_response, "set-cookie")
+  assert string.contains(cookie_header, "inertia_errors=")
+
+  // Step 2: Next request should automatically retrieve errors from cookie
+  // Create new request with the cookie (simulating browser sending cookie back)
+  let cookie_value = string.replace(cookie_header, "inertia_errors=", "")
+    |> string.split(";")
+    |> list.first()
+    |> result.unwrap("")
+
+  let form_request = testing.inertia_request()
+    |> request.set_header("cookie", "inertia_errors=" <> cookie_value)
+
+  let form_response =
+    form_request
+    |> response_builder.response_builder("Users/Create")
+    |> response_builder.response(200)
+
+  // Should automatically include errors from cookie in JSON response
+  let assert Ok("application/json; charset=utf-8") =
+    response.get_header(form_response, "content-type")
+  let assert Ok("is required") =
+    testing.prop(form_response, "errors", decode.at(["first_name"], decode.string))
+  let assert Ok("is invalid") =
+    testing.prop(form_response, "errors", decode.at(["email"], decode.string))
+}
+
+pub fn session_errors_with_error_bag_test() {
+  // Test that X-Inertia-Error-Bag header causes proper error nesting
+  let req =
+    testing.inertia_request()
+    |> request.set_header("x-inertia-error-bag", "createUser")
+
+  let validation_errors = dict.from_list([
+    #("name", "is required"),
+  ])
+
+  // Form display should nest errors under bag name
+  let response =
+    req
+    |> response_builder.response_builder("Users/Create")
+    |> response_builder.errors(validation_errors)
+    |> response_builder.response(200)
+
+  // Errors should be nested under createUser bag
+  let assert Ok("is required") =
+    testing.prop(response, "errors", decode.at(["createUser", "name"], decode.string))
+}
+
+pub fn cookie_cleared_after_consuming_errors_test() {
+  // Create a request with a cookie containing errors (simulating previous redirect)
+  let req = testing.inertia_request()
+    |> request.set_header("cookie", "inertia_errors=SFM1MTI.eyJmaWVsZCI6ImVycm9yIn0.signature")
+
+  // Build a regular 200 response (non-redirect) - should consume and clear cookie
+  let response =
+    req
+    |> response_builder.response_builder("Users/Create")
+    |> response_builder.response(200)
+
+  // Should have set-cookie header that clears the cookie (Max-Age=0)
+  let assert Ok(cookie_header) = response.get_header(response, "set-cookie")
+  assert string.contains(cookie_header, "inertia_errors=")
+  assert string.contains(cookie_header, "Max-Age=0")
 }

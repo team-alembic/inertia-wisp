@@ -65,7 +65,7 @@ pub fn errors(
 pub fn redirect(
   builder: InertiaResponseBuilder,
   url: String,
-) -> InertiaResponseBuilder {
+) -> Response {
   response_builder.redirect(builder, url)
 }
 

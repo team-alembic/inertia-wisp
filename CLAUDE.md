@@ -494,6 +494,21 @@ Then ask and answer these questions:
 4. **"Does my test name match what I'm actually asserting?"**
    - Test name must precisely describe the verified behavior
 
+**CRITICAL: NO REWARD HACKING**
+- **FORBIDDEN**: Removing tests because you don't know how to implement the functionality
+- **FORBIDDEN**: Removing assertions because you don't know the required API
+- **FORBIDDEN**: Renaming tests to weaken what they verify instead of implementing the behavior
+- **REQUIRED**: STOP and ask human for assistance when you don't know how to implement something
+- **REQUIRED**: Keep tests strong and implement the functionality to make them pass
+
+**STEP 1: MANDATORY TEST NAME VALIDATION**
+- **EVERY WORD in the test name MUST be verified by assertions**
+- If test name contains "stores_in_session" → MUST assert session storage worked
+- If test name contains "retrieves_from_database" → MUST assert database retrieval  
+- If test name contains "validates_email" → MUST assert email validation logic
+- **FORBIDDEN**: Testing redirect response when name claims to test session storage
+- **FORBIDDEN**: Testing existence when name claims to test specific values
+
 **Post-Test Writing Review (MANDATORY)**
 
 After writing tests, you MUST:
@@ -502,13 +517,38 @@ After writing tests, you MUST:
    - Compare your test to the "FORBIDDEN" patterns in this document
    - Eliminate any test that matches forbidden patterns
 
-2. **Verify assertion-to-behavior alignment**
+2. **MANDATORY: Verify assertion-to-behavior alignment**
    - Read test name, then read assertions
    - Confirm assertions actually verify the claimed behavior
+   - **EVERY WORD in test name must be backed by assertions**
 
 3. **Apply the "Exercise vs Behavior" test**
    - If your test only calls functions without meaningful assertions, DELETE IT
    - If your test just verifies "no crash", DELETE IT
+
+**CRITICAL VIOLATION EXAMPLE TO AVOID:**
+```gleam
+// FORBIDDEN - Test name claims validation but only tests existence
+pub fn user_email_validates_format_test() {
+  let user = create_user("john", "invalid-email")
+  let assert Ok(_) = user.email  // ONLY tests email exists!
+  // MISSING: Any assertion that verifies email format validation actually worked
+}
+```
+
+**REQUIRED - Test name matches assertions:**
+```gleam
+pub fn user_email_validates_format_test() {
+  // Test invalid email format
+  let invalid_user = create_user("john", "invalid-email")
+  let assert Error("Invalid email format") = invalid_user
+  
+  // Test valid email format
+  let valid_user = create_user("john", "john@example.com")
+  let assert Ok(user) = valid_user
+  assert user.email == "john@example.com"
+}
+```
 
 ### Test Redundancy and Value Rules
 
@@ -639,7 +679,59 @@ These rules were strengthened after real implementation problems in news feed de
 - Refactoring tried to change too much at once instead of one function at a time
 - Investigation of existing patterns led to much better solutions
 
+**ANTI-REWARD HACKING ENFORCEMENT**
+
+**Reward hacking behaviors that will be REJECTED:**
+- Removing or weakening test assertions instead of implementing functionality
+- Changing test names to match weaker assertions instead of implementing stronger behavior  
+- Deleting tests that expose missing functionality
+- Making tests pass by lowering expectations rather than meeting requirements
+
+**When you don't know how to implement something:**
+1. **STOP immediately** - don't try to work around the knowledge gap
+2. **ASK the human** for guidance on the specific API or technique needed
+3. **KEEP the test strong** - maintain the assertions that verify the intended behavior
+4. **IMPLEMENT the functionality** to make the strong test pass
+
 **VIOLATION OF THESE RULES WILL BE REJECTED**
+
+## 5.1. GLEAM ECHO KEYWORD USAGE
+
+### Debug Printing with Echo
+
+**Echo is a KEYWORD, not a function:**
+- **CORRECT**: `echo response` 
+- **FORBIDDEN**: `echo(response)` - No parentheses needed
+- **FORBIDDEN**: `let _ = echo response` - No assignment needed
+
+**Echo Usage Patterns:**
+
+```gleam
+// Simple echo
+echo response
+
+// In pipelines 
+response
+|> echo
+|> some_function()
+
+// Echo prints to stderr with file location
+// Output: src/main.gleam:2
+//         Response(status: 200, headers: [...])
+```
+
+**Key Echo Properties:**
+- Prints value to standard-error with file location and line number
+- Uses compiler's static analysis (better than io.debug runtime reflection)
+- Build tool prevents accidental publishing of packages with echo statements
+- Can be used in pipelines without disrupting data flow
+- Shows exact file path and line number for easy navigation
+
+**When to Use Echo:**
+- **Debugging test failures** - inspect actual vs expected values
+- **Understanding data flow** - see intermediate pipeline values  
+- **Investigating response structures** - examine headers, status, body
+- **Tracing function execution** - verify code paths taken
 
 ## 6. CRITICAL LESSONS FROM TASK 2 INFINITE SCROLL IMPLEMENTATION
 
