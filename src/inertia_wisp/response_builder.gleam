@@ -214,7 +214,12 @@ fn get_version(builder: InertiaResponseBuilder) -> String {
 fn resolve_errors_for_response(builder: InertiaResponseBuilder) -> #(Dict(String, String), Bool) {
   case dict.is_empty(builder.errors) {
     False -> #(builder.errors, False)  // Use request errors
-    True -> #(retrieve_errors_from_cookie(builder.request), True)  // Auto-retrieve cookie errors
+    True -> {
+      case retrieve_errors_from_cookie(builder.request) {
+        option.Some(errors) -> #(errors, True)  // Cookie was present
+        option.None -> #(dict.new(), False)     // No cookie present
+      }
+    }
   }
 }
 
@@ -723,14 +728,15 @@ fn store_errors_in_cookie(
 }
 
 /// Retrieve and clear validation errors from cookie
-fn retrieve_errors_from_cookie(request: wisp.Request) -> Dict(String, String) {
+/// Returns Some(errors_dict) if cookie was present, None if no cookie
+fn retrieve_errors_from_cookie(request: wisp.Request) -> option.Option(Dict(String, String)) {
   case wisp.get_cookie(request, "inertia_errors", wisp.Signed) {
     Ok(errors_json) -> {
       case json.parse(from: errors_json, using: decode.dict(decode.string, decode.string)) {
-        Ok(errors) -> errors
-        Error(_) -> dict.new()
+        Ok(errors) -> option.Some(errors)
+        Error(_) -> option.Some(dict.new())  // Cookie was present but malformed
       }
     }
-    Error(_) -> dict.new()
+    Error(_) -> option.None  // No cookie present
   }
 }

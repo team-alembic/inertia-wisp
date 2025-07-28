@@ -24,13 +24,18 @@ pub fn main() {
   process.sleep_forever()
 }
 
-/// Start the web server
+/// Start the web server with HTTPS
 fn start_server() {
+  let assert Ok(priv_directory) = wisp.priv_directory("simple_demo")
+  let cert_file = priv_directory <> "/certs/localhost.crt"
+  let key_file = priv_directory <> "/certs/localhost.key"
+
   let assert Ok(_) =
     handle_request
     |> wisp_mist.handler(get_secret_key())
     |> mist.new
     |> mist.port(get_server_port())
+    |> mist.with_tls(cert_file, key_file)
     |> mist.start
 }
 
@@ -68,9 +73,9 @@ fn get_secret_key() -> String {
   "secret_key_change_me_in_production"
 }
 
-/// Get the server port
+/// Get the server port (HTTPS)
 fn get_server_port() -> Int {
-  8001
+  8443
 }
 
 /// Get the static files path

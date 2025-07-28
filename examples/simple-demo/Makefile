@@ -40,7 +40,8 @@ build-backend:
 
 # Build and start server
 start: build
-	@echo "Starting server on http://localhost:8001"
+	@echo "Starting server on https://localhost:8443"
+	@echo "Note: You'll need to accept the self-signed certificate in your browser"
 	gleam run
 
 # Development mode with file watching
@@ -48,6 +49,7 @@ watch:
 	@echo "Starting development mode..."
 	@echo "Frontend assets will be built with file watching"
 	@echo "Start the backend server with 'gleam run' in another terminal"
+	@echo "Server will be available at https://localhost:8443"
 	cd frontend && npm run build:watch
 
 # Run tests

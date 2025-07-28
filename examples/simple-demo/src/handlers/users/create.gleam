@@ -4,9 +4,9 @@
 //// JSON decoding, validation, and error handling. It demonstrates
 //// proper form processing with the Response Builder API.
 ////
-//// Key insight: When validation fails, only errors need to be returned.
-//// Inertia.js preserves form state on the frontend, eliminating the need
-//// to echo form data back from the server.
+//// Key insight: With sessionized errors, validation failures redirect back
+//// to the form with errors stored in signed cookies. This preserves form
+//// state while allowing clean redirects after POST requests.
 
 import data/users
 import gleam/dict
@@ -24,7 +24,7 @@ import wisp.{type Request, type Response}
 /// 2. Validate the data
 /// 3. Create user in database
 /// 4. On success: redirect to users index
-/// 5. On error: return only errors (frontend preserves form state)
+/// 5. On error: redirect back to form with errors in cookies
 pub fn handler(req: Request, db: Connection) -> Response {
   use request <- decode_request(req)
   let create_result = {
@@ -40,7 +40,8 @@ pub fn handler(req: Request, db: Connection) -> Response {
       req
       |> inertia.response_builder("Users/Create")
       |> inertia.errors(errors_dict)
-      |> inertia.response(200)
+      |> inertia.redirect("/users/create")
+      |> echo
     }
   }
 }
@@ -54,11 +55,12 @@ fn decode_request(
 
   case users.decode_create_user_request(json_data) {
     Error(_) -> {
-      // JSON decoding failed - return to form with errors only
+      // JSON decoding failed - redirect back to form with errors
       req
       |> inertia.response_builder("Users/Create")
       |> inertia.errors(dict.from_list([#("form", "Invalid form data")]))
-      |> inertia.response(200)
+      |> inertia.redirect("/users/create")
+      |> echo
     }
     Ok(request) -> cont(request)
   }

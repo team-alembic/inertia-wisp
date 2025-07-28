@@ -829,9 +829,23 @@ pub fn session_errors_with_error_bag_test() {
 }
 
 pub fn cookie_cleared_after_consuming_errors_test() {
-  // Create a request with a cookie containing errors (simulating previous redirect)
+  // Step 1: Create a redirect response with errors to get a properly signed cookie
+  let redirect_response =
+    testing.inertia_request()
+    |> response_builder.response_builder("Users/Create")
+    |> response_builder.errors(dict.from_list([#("field", "error")]))
+    |> response_builder.redirect("/users/new")
+
+  // Extract the actual signed cookie value from the redirect response
+  let assert Ok(cookie_header) = response.get_header(redirect_response, "set-cookie")
+  let cookie_value = string.replace(cookie_header, "inertia_errors=", "")
+    |> string.split(";")
+    |> list.first()
+    |> result.unwrap("")
+
+  // Step 2: Create a request with the properly signed cookie (simulating browser sending cookie back)
   let req = testing.inertia_request()
-    |> request.set_header("cookie", "inertia_errors=SFM1MTI.eyJmaWVsZCI6ImVycm9yIn0.signature")
+    |> request.set_header("cookie", "inertia_errors=" <> cookie_value)
 
   // Build a regular 200 response (non-redirect) - should consume and clear cookie
   let response =
@@ -840,7 +854,21 @@ pub fn cookie_cleared_after_consuming_errors_test() {
     |> response_builder.response(200)
 
   // Should have set-cookie header that clears the cookie (Max-Age=0)
-  let assert Ok(cookie_header) = response.get_header(response, "set-cookie")
-  assert string.contains(cookie_header, "inertia_errors=")
-  assert string.contains(cookie_header, "Max-Age=0")
+  let assert Ok(clear_cookie_header) = response.get_header(response, "set-cookie")
+  assert string.contains(clear_cookie_header, "inertia_errors=")
+  assert string.contains(clear_cookie_header, "Max-Age=0")
+}
+
+pub fn no_cookie_clearing_when_no_cookie_present_test() {
+  // Create a request with no inertia_errors cookie
+  let req = testing.inertia_request()
+
+  // Build a regular 200 response - should NOT set any cookie clearing header
+  let response =
+    req
+    |> response_builder.response_builder("Users/Create")
+    |> response_builder.response(200)
+
+  // Should not have any set-cookie header
+  let assert Error(_) = response.get_header(response, "set-cookie")
 }
