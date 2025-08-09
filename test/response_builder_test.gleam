@@ -14,7 +14,6 @@ import inertia_wisp/internal/types
 import inertia_wisp/response_builder
 import inertia_wisp/testing
 
-
 pub fn main() {
   gleeunit.main()
 }
@@ -764,10 +763,8 @@ pub fn url_with_empty_query_string_test() {
 
 pub fn redirect_with_errors_then_form_display_test() {
   let req = testing.inertia_request()
-  let validation_errors = dict.from_list([
-    #("first_name", "is required"),
-    #("email", "is invalid"),
-  ])
+  let validation_errors =
+    dict.from_list([#("first_name", "is required"), #("email", "is invalid")])
 
   // Step 1: Redirect with errors stores them in cookie
   let redirect_response =
@@ -778,18 +775,22 @@ pub fn redirect_with_errors_then_form_display_test() {
 
   // Should be a redirect response with cookie containing errors
   assert redirect_response.status == 303
-  let assert Ok("/users/new") = response.get_header(redirect_response, "location")
-  let assert Ok(cookie_header) = response.get_header(redirect_response, "set-cookie")
+  let assert Ok("/users/new") =
+    response.get_header(redirect_response, "location")
+  let assert Ok(cookie_header) =
+    response.get_header(redirect_response, "set-cookie")
   assert string.contains(cookie_header, "inertia_errors=")
 
   // Step 2: Next request should automatically retrieve errors from cookie
   // Create new request with the cookie (simulating browser sending cookie back)
-  let cookie_value = string.replace(cookie_header, "inertia_errors=", "")
+  let cookie_value =
+    string.replace(cookie_header, "inertia_errors=", "")
     |> string.split(";")
     |> list.first()
     |> result.unwrap("")
 
-  let form_request = testing.inertia_request()
+  let form_request =
+    testing.inertia_request()
     |> request.set_header("cookie", "inertia_errors=" <> cookie_value)
 
   let form_response =
@@ -801,7 +802,11 @@ pub fn redirect_with_errors_then_form_display_test() {
   let assert Ok("application/json; charset=utf-8") =
     response.get_header(form_response, "content-type")
   let assert Ok("is required") =
-    testing.prop(form_response, "errors", decode.at(["first_name"], decode.string))
+    testing.prop(
+      form_response,
+      "errors",
+      decode.at(["first_name"], decode.string),
+    )
   let assert Ok("is invalid") =
     testing.prop(form_response, "errors", decode.at(["email"], decode.string))
 }
@@ -812,9 +817,7 @@ pub fn session_errors_with_error_bag_test() {
     testing.inertia_request()
     |> request.set_header("x-inertia-error-bag", "createUser")
 
-  let validation_errors = dict.from_list([
-    #("name", "is required"),
-  ])
+  let validation_errors = dict.from_list([#("name", "is required")])
 
   // Form display should nest errors under bag name
   let response =
@@ -825,7 +828,11 @@ pub fn session_errors_with_error_bag_test() {
 
   // Errors should be nested under createUser bag
   let assert Ok("is required") =
-    testing.prop(response, "errors", decode.at(["createUser", "name"], decode.string))
+    testing.prop(
+      response,
+      "errors",
+      decode.at(["createUser", "name"], decode.string),
+    )
 }
 
 pub fn cookie_cleared_after_consuming_errors_test() {
@@ -837,14 +844,17 @@ pub fn cookie_cleared_after_consuming_errors_test() {
     |> response_builder.redirect("/users/new")
 
   // Extract the actual signed cookie value from the redirect response
-  let assert Ok(cookie_header) = response.get_header(redirect_response, "set-cookie")
-  let cookie_value = string.replace(cookie_header, "inertia_errors=", "")
+  let assert Ok(cookie_header) =
+    response.get_header(redirect_response, "set-cookie")
+  let cookie_value =
+    string.replace(cookie_header, "inertia_errors=", "")
     |> string.split(";")
     |> list.first()
     |> result.unwrap("")
 
   // Step 2: Create a request with the properly signed cookie (simulating browser sending cookie back)
-  let req = testing.inertia_request()
+  let req =
+    testing.inertia_request()
     |> request.set_header("cookie", "inertia_errors=" <> cookie_value)
 
   // Build a regular 200 response (non-redirect) - should consume and clear cookie
@@ -854,7 +864,8 @@ pub fn cookie_cleared_after_consuming_errors_test() {
     |> response_builder.response(200)
 
   // Should have set-cookie header that clears the cookie (Max-Age=0)
-  let assert Ok(clear_cookie_header) = response.get_header(response, "set-cookie")
+  let assert Ok(clear_cookie_header) =
+    response.get_header(response, "set-cookie")
   assert string.contains(clear_cookie_header, "inertia_errors=")
   assert string.contains(clear_cookie_header, "Max-Age=0")
 }

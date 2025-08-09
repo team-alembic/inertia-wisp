@@ -392,7 +392,7 @@ fn inertia_data(
   |> result.map_error(fn(x) {
     UnableToDecode(decode.decode_error("JSON in response", dynamic.string(x)))
   })
-  |> result.then(fn(x) { json.parse(x, decoder) })
+  |> result.try(json.parse(_, decoder))
 }
 
 /// Check if response has JSON content type

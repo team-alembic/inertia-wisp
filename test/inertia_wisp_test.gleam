@@ -1,4 +1,3 @@
-
 import gleam/erlang/charlist
 import gleam/io
 import gleam/list

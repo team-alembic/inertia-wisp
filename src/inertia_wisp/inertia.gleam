@@ -62,10 +62,7 @@ pub fn errors(
   response_builder.errors(builder, errors)
 }
 
-pub fn redirect(
-  builder: InertiaResponseBuilder,
-  url: String,
-) -> Response {
+pub fn redirect(builder: InertiaResponseBuilder, url: String) -> Response {
   response_builder.redirect(builder, url)
 }
 
