@@ -30,7 +30,7 @@ pub fn init_sample_data_test() {
 
   // Should have inserted some sample users
   let assert Ok(all_users) = users.get_all_users(db)
-  assert list.length(all_users) > 0
+  assert all_users != []
 }
 
 /// Test getting all users from database
@@ -134,7 +134,7 @@ pub fn search_users_test() {
   let assert Ok(found_users) = result
 
   // Should find users with "Demo" in their name
-  assert list.length(found_users) > 0
+  assert found_users != []
 
   // All found users should contain the search term
   list.each(found_users, fn(user) {

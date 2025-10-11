@@ -228,7 +228,7 @@ pub fn search_results_filtering_test() {
     testing.prop(response, "search_results", results_decoder)
 
   // Should have at least some results
-  assert list.length(users_data) > 0
+  assert users_data != []
 
   // All results should contain "Demo" in the name
   list.each(users_data, fn(user_tuple) {

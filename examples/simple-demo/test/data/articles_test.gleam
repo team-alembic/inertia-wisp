@@ -19,7 +19,7 @@ pub fn get_articles_paginated_test() {
 
   let assert Ok(tech_articles) =
     articles.get_articles_paginated(db, test_user_1, 1, 10, "technology")
-  assert list.length(tech_articles) > 0
+  assert tech_articles != []
 
   sqlight.close(db)
 }

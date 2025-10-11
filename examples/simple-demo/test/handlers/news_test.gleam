@@ -77,7 +77,7 @@ pub fn news_feed_handler_filters_articles_by_category_test() {
     testing.prop(response, "news_feed", articles_decoder)
 
   // Verify we have technology articles to test filtering
-  assert list.length(article_categories) > 0
+  assert article_categories != []
 
   // Verify ALL articles are technology category (actual filtering behavior)
   assert list.all(article_categories, fn(category) { category == "technology" })
@@ -125,7 +125,8 @@ pub fn news_feed_container_handles_empty_results_test() {
   let total_count_decoder = decode.at(["meta", "total_count"], decode.int)
   let has_more_decoder = decode.at(["has_more"], decode.bool)
 
-  let assert Ok(articles) = testing.prop(response, "news_feed", articles_decoder)
+  let assert Ok(articles) =
+    testing.prop(response, "news_feed", articles_decoder)
   assert articles == []
   assert testing.prop(response, "news_feed", total_count_decoder) == Ok(0)
   assert testing.prop(response, "news_feed", has_more_decoder) == Ok(False)
@@ -186,13 +187,15 @@ pub fn simple_article_insertion_works_test() {
   let assert Ok(_) = articles.create_article_reads_table(db)
 
   // Insert one article manually
-  let sql = "INSERT INTO articles (title, summary, author, published_at, category, read_time, image_url) VALUES ('Test', 'Test Summary', 'Test Author', '2024-01-15T10:30:00Z', 'technology', 5, 'https://example.com/test.jpg')"
+  let sql =
+    "INSERT INTO articles (title, summary, author, published_at, category, read_time, image_url) VALUES ('Test', 'Test Summary', 'Test Author', '2024-01-15T10:30:00Z', 'technology', 5, 'https://example.com/test.jpg')"
   let assert Ok(_) = sqlight.exec(sql, db)
 
   // Check if it was inserted
   let count_sql = "SELECT COUNT(*) FROM articles"
   let decoder = decode.at([0], decode.int)
-  let assert Ok(rows) = sqlight.query(count_sql, on: db, with: [], expecting: decoder)
+  let assert Ok(rows) =
+    sqlight.query(count_sql, on: db, with: [], expecting: decoder)
   let assert [count] = rows
   assert count == 1
 }
@@ -210,7 +213,8 @@ pub fn news_feed_container_provides_scroll_coordination_data_test() {
 
   // These props enable frontend container to manage infinite scroll state
   assert testing.prop(response, "news_feed", has_more_decoder) |> result.is_ok
-  assert testing.prop(response, "news_feed", current_page_decoder) |> result.is_ok
+  assert testing.prop(response, "news_feed", current_page_decoder)
+    |> result.is_ok
   assert testing.prop(response, "news_feed", per_page_decoder) |> result.is_ok
 }
 
@@ -254,7 +258,9 @@ fn setup_test_news_database() -> Result(sqlight.Connection, sqlight.Error) {
 }
 
 /// Create test database with exact number of articles for deterministic testing
-fn setup_test_database_with_exact_articles(count: Int) -> Result(sqlight.Connection, sqlight.Error) {
+fn setup_test_database_with_exact_articles(
+  count: Int,
+) -> Result(sqlight.Connection, sqlight.Error) {
   let assert Ok(db) = sqlight.open(":memory:")
   let assert Ok(_) = articles.create_articles_table(db)
   let assert Ok(_) = articles.create_article_reads_table(db)
@@ -265,7 +271,10 @@ fn setup_test_database_with_exact_articles(count: Int) -> Result(sqlight.Connect
 }
 
 /// Insert exactly N test articles into database
-fn insert_test_articles(db: sqlight.Connection, count: Int) -> Result(Nil, sqlight.Error) {
+fn insert_test_articles(
+  db: sqlight.Connection,
+  count: Int,
+) -> Result(Nil, sqlight.Error) {
   case count {
     15 -> {
       let sql =
@@ -323,10 +332,11 @@ fn insert_test_articles(db: sqlight.Connection, count: Int) -> Result(Nil, sqlig
 
       sqlight.exec(sql, db)
     }
-    _ -> Error(sqlight.SqlightError(
-      code: sqlight.GenericError,
-      message: "Unsupported article count for test: " <> int.to_string(count),
-      offset: -1,
-    ))
+    _ ->
+      Error(sqlight.SqlightError(
+        code: sqlight.GenericError,
+        message: "Unsupported article count for test: " <> int.to_string(count),
+        offset: -1,
+      ))
   }
 }
