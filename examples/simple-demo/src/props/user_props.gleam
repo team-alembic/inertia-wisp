@@ -9,7 +9,7 @@ import gleam/dict
 import gleam/json
 import gleam/option
 import gleam/result
-import inertia_wisp/internal/types
+import inertia_wisp/prop.{type Prop, DefaultProp, DeferProp, OptionalProp}
 
 /// Represents the different types of props that can be sent to user pages
 pub type UserProp {
@@ -31,36 +31,36 @@ pub type UserProp {
 // Factory functions for creating Prop(UserProp) instances
 
 /// Create a form data prop (DefaultProp)
-pub fn form_data(name: String, email: String) -> types.Prop(UserProp) {
-  types.DefaultProp("form_data", UserFormData(name, email))
+pub fn form_data(name: String, email: String) -> Prop(UserProp) {
+  DefaultProp("form_data", UserFormData(name, email))
 }
 
 /// Create a user data prop (DefaultProp)
-pub fn user_data(user: users.User) -> types.Prop(UserProp) {
-  types.DefaultProp("user", UserData(user))
+pub fn user_data(user: users.User) -> Prop(UserProp) {
+  DefaultProp("user", UserData(user))
 }
 
 /// Create a user list prop (DefaultProp)
-pub fn user_list(users: List(users.User)) -> types.Prop(UserProp) {
-  types.DefaultProp("users", UserList(users))
+pub fn user_list(users: List(users.User)) -> Prop(UserProp) {
+  DefaultProp("users", UserList(users))
 }
 
 /// Create a user count prop (DefaultProp)
-pub fn user_count(count: Int) -> types.Prop(UserProp) {
-  types.DefaultProp("user_count", UserCount(count))
+pub fn user_count(count: Int) -> Prop(UserProp) {
+  DefaultProp("user_count", UserCount(count))
 }
 
 /// Create a search query prop (DefaultProp)
-pub fn search_query(query: String) -> types.Prop(UserProp) {
-  types.DefaultProp("search_query", SearchQuery(query))
+pub fn search_query(query: String) -> Prop(UserProp) {
+  DefaultProp("search_query", SearchQuery(query))
 }
 
 /// Create a user analytics prop (OptionalProp)
 /// This is expensive to compute and should only be included when specifically requested
 pub fn user_analytics(
   analytics_fn: fn() -> Result(users.UserAnalytics, dict.Dict(String, String)),
-) -> types.Prop(UserProp) {
-  types.OptionalProp("user_analytics", fn() {
+) -> Prop(UserProp) {
+  OptionalProp("user_analytics", fn() {
     result.map(analytics_fn(), UserAnalytics)
   })
 }
@@ -69,29 +69,27 @@ pub fn user_analytics(
 /// This is very expensive to compute and should be deferred until specifically requested
 pub fn user_report(
   report_fn: fn() -> Result(users.UserReport, dict.Dict(String, String)),
-) -> types.Prop(UserProp) {
-  types.DeferProp("user_report", option.Some("reports"), fn() {
+) -> Prop(UserProp) {
+  DeferProp("user_report", option.Some("reports"), fn() {
     result.map(report_fn(), UserReport)
   })
 }
 
 /// Create search filters prop (DefaultProp)
-pub fn search_filters(filters: users.SearchFilters) -> types.Prop(UserProp) {
-  types.DefaultProp("search_filters", SearchFilters(filters))
+pub fn search_filters(filters: users.SearchFilters) -> Prop(UserProp) {
+  DefaultProp("search_filters", SearchFilters(filters))
 }
 
 /// Create search results prop (DefaultProp)
-pub fn search_results(results: List(users.User)) -> types.Prop(UserProp) {
-  types.DefaultProp("search_results", SearchResults(results))
+pub fn search_results(results: List(users.User)) -> Prop(UserProp) {
+  DefaultProp("search_results", SearchResults(results))
 }
 
 /// Create search analytics prop (OptionalProp)
 pub fn search_analytics(
   analytics_fn: fn() -> Result(users.SearchAnalytics, dict.Dict(String, String)),
-) -> types.Prop(UserProp) {
-  types.OptionalProp("analytics", fn() {
-    result.map(analytics_fn(), SearchAnalytics)
-  })
+) -> Prop(UserProp) {
+  OptionalProp("analytics", fn() { result.map(analytics_fn(), SearchAnalytics) })
 }
 
 /// Helper function to encode a single user to JSON

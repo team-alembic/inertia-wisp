@@ -9,7 +9,7 @@ repository = { type = "github", user = "your-username", repo = "inertia-wisp" }
 gleam_stdlib = ">= 0.60.0"
 gleam_http = ">= 4.0.0"
 gleam_json = ">= 3.0.0"
-wisp = ">= 1.8.0 and < 2.0.0"
+wisp = ">= 2.0.0"
 gleam_crypto = ">= 1.5.0 and < 2.0.0"
 simplifile = ">= 2.2.1 and < 3.0.0"
 gleam_otp = ">= 1.0.0 and < 2.0.0"

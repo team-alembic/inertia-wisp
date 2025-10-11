@@ -9,13 +9,14 @@
 //// - Response format is valid for both JSON and HTML requests
 
 import gleam/dynamic/decode
+import gleam/http
 import gleam/list
 import gleam/string
 import handlers/home
 import inertia_wisp/testing
 
 import utils/test_util
-import wisp/testing as wisp_testing
+import wisp/simulate as wisp_testing
 
 /// Main function to run only home page tests
 pub fn main() {
@@ -100,7 +101,7 @@ pub fn home_page_current_user_prop_test() {
 
 /// Test response format for non-Inertia request (HTML response)
 pub fn home_page_html_response_test() {
-  let req = wisp_testing.get("/", [])
+  let req = wisp_testing.request(http.Get, "/")
   // No Inertia headers
   let response = home.home_page(req)
 

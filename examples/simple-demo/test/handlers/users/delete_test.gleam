@@ -4,7 +4,7 @@
 //// including both integration (routing) and unit (business logic) tests.
 
 import data/users
-import gleam/bit_array
+
 import gleam/dynamic/decode
 import gleam/http
 import gleam/option
@@ -14,13 +14,13 @@ import handlers/users as user_handlers
 import inertia_wisp/testing
 import sqlight
 import utils/test_db
-import wisp/testing as wisp_testing
+import wisp/simulate as wisp_simulate
 
 /// Test user deletion success
 pub fn users_delete_test() {
   let assert Ok(db) = test_db.setup_test_database()
 
-  let req = wisp_testing.request(http.Post, "/users/1/delete", [], <<>>)
+  let req = wisp_simulate.request(http.Post, "/users/1/delete")
   let response = user_handlers.users_delete(req, "1", db)
 
   // Should redirect after deletion (303 status code)
@@ -34,8 +34,7 @@ pub fn users_delete_test() {
 pub fn users_delete_route_test() {
   let assert Ok(db) = test_db.setup_test_database()
 
-  let req =
-    wisp_testing.request(http.Delete, "/users/1", [], bit_array.from_string(""))
+  let req = wisp_simulate.request(http.Delete, "/users/1")
   let response = user_handlers.users_delete(req, "1", db)
 
   assert response.status == 303
@@ -46,7 +45,7 @@ pub fn users_delete_invalid_id_test() {
   let assert Ok(db) = sqlight.open(":memory:")
   let assert Ok(_) = users.create_users_table(db)
 
-  let req = wisp_testing.request(http.Post, "/users/invalid/delete", [], <<>>)
+  let req = wisp_simulate.request(http.Post, "/users/invalid/delete")
   let response = user_handlers.users_delete(req, "invalid", db)
 
   // Should show error component for invalid ID
@@ -61,7 +60,7 @@ pub fn users_delete_not_found_test() {
   let assert Ok(db) = sqlight.open(":memory:")
   let assert Ok(_) = users.create_users_table(db)
 
-  let req = wisp_testing.request(http.Post, "/users/999/delete", [], <<>>)
+  let req = wisp_simulate.request(http.Post, "/users/999/delete")
   let response = user_handlers.users_delete(req, "999", db)
 
   // Should redirect (deleting non-existent user is successful no-op)

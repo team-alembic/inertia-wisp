@@ -5,7 +5,7 @@ import gleam/list
 import gleam/option
 
 import gleam/string
-import inertia_wisp/internal/types
+import inertia_wisp/prop
 import news/props
 
 // Test data for prop factories
@@ -45,10 +45,10 @@ pub fn news_feed_factory_test() {
   let prop = props.news_feed(test_news_feed)
 
   // Verify it creates a MergeProp wrapping a DefaultProp
-  let assert types.MergeProp(inner_prop, match_on, deep) = prop
+  let assert prop.MergeProp(inner_prop, match_on, deep) = prop
   assert match_on == option.None
   assert deep == True
-  let assert types.DefaultProp(key, props.NewsFeed(feed)) = inner_prop
+  let assert prop.DefaultProp(key, props.NewsFeed(feed)) = inner_prop
   assert key == "news_feed"
   assert feed.meta.current_page == 1
   assert feed.total_unread == 64
@@ -60,7 +60,7 @@ pub fn article_list_factory_test() {
   let prop = props.article_list(articles_fn)
 
   // Verify it creates an OptionalProp with correct key and callable function
-  let assert types.OptionalProp(key, compute_fn) = prop
+  let assert prop.OptionalProp(key, compute_fn) = prop
   assert key == "articles"
   let assert Ok(props.ArticleList(article_list)) = compute_fn()
   assert list.length(article_list) == 1
@@ -73,7 +73,7 @@ pub fn pagination_meta_factory_test() {
   let prop = props.pagination_meta(test_pagination_meta)
 
   // Verify it creates a DefaultProp with correct key and data
-  let assert types.DefaultProp(key, props.PaginationMeta(meta)) = prop
+  let assert prop.DefaultProp(key, props.PaginationMeta(meta)) = prop
   assert key == "pagination"
   assert meta.current_page == 1
   assert meta.per_page == 20
@@ -85,7 +85,7 @@ pub fn article_data_factory_test() {
   let prop = props.article_data(test_article_with_read_status)
 
   // Verify it creates a DefaultProp with correct key and data
-  let assert types.DefaultProp(key, props.ArticleData(article)) = prop
+  let assert prop.DefaultProp(key, props.ArticleData(article)) = prop
   assert key == "article"
   assert article.article.id == 1
   assert article.article.title == "Test Article"
@@ -96,7 +96,7 @@ pub fn category_filter_factory_test() {
   let prop = props.category_filter("technology")
 
   // Verify it creates a DefaultProp with correct key and data
-  let assert types.DefaultProp(key, props.CategoryFilter(category)) = prop
+  let assert prop.DefaultProp(key, props.CategoryFilter(category)) = prop
   assert key == "category"
   assert category == "technology"
 }
@@ -106,7 +106,7 @@ pub fn unread_count_factory_test() {
   let prop = props.unread_count(count_fn)
 
   // Verify it creates a DeferProp with correct key and callable function
-  let assert types.DeferProp(key, partial_key, compute_fn) = prop
+  let assert prop.DeferProp(key, partial_key, compute_fn) = prop
   assert key == "unread_count"
   assert partial_key == option.None
   let assert Ok(props.UnreadCount(count)) = compute_fn()
@@ -146,7 +146,10 @@ pub fn available_categories_factory_test() {
   let prop = props.available_categories(categories)
 
   // Verify it creates a DefaultProp with correct key and data
-  let assert types.DefaultProp(key, props.AvailableCategories(returned_categories)) = prop
+  let assert prop.DefaultProp(
+    key,
+    props.AvailableCategories(returned_categories),
+  ) = prop
   assert key == "available_categories"
   assert list.length(returned_categories) == 3
   assert list.contains(returned_categories, articles.Technology)
@@ -156,7 +159,8 @@ pub fn available_categories_factory_test() {
 
 pub fn news_prop_to_json_available_categories_test() {
   let categories = [articles.Technology, articles.Business, articles.Science]
-  let json_result = props.news_prop_to_json(props.AvailableCategories(categories))
+  let json_result =
+    props.news_prop_to_json(props.AvailableCategories(categories))
   let json_string = json.to_string(json_result)
 
   // Verify JSON contains all categories as array

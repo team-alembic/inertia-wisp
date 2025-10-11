@@ -74,7 +74,6 @@
 //// type-safe testing of response data. This catches both missing props
 //// and type mismatches at test time.
 
-import gleam/bit_array
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/http
@@ -84,7 +83,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import wisp.{type Request, type Response}
-import wisp/testing
+import wisp/simulate
 
 /// Create a mock Inertia XHR request for testing.
 ///
@@ -119,11 +118,10 @@ pub fn inertia_request() -> Request {
 /// assert testing.component(response) == Ok("Users/Index")
 /// ```
 pub fn inertia_request_to(path: String) -> Request {
-  testing.get(path, [
-    #("accept", "application/json"),
-    #("x-inertia", "true"),
-    #("x-inertia-version", "1"),
-  ])
+  simulate.request(http.Get, path)
+  |> simulate.header("accept", "application/json")
+  |> simulate.header("x-inertia", "true")
+  |> simulate.header("x-inertia-version", "1")
 }
 
 /// Create a regular HTTP request for testing initial page loads.
@@ -156,7 +154,8 @@ pub fn regular_request() -> Request {
 /// assert testing.component(response) == Ok("Users/Show")
 /// ```
 pub fn regular_request_to(path: String) -> Request {
-  testing.get(path, [#("accept", "text/html")])
+  simulate.request(http.Get, path)
+  |> simulate.header("accept", "text/html")
 }
 
 /// Add partial data headers to a request for testing partial reloads.
@@ -233,17 +232,11 @@ pub fn partial_component(req: Request, component: String) -> Request {
 /// assert testing.component(response) == Ok("Users/Create") // Should return form with errors
 /// ```
 pub fn inertia_post(path: String, data: json.Json) -> Request {
-  testing.request(
-    http.Post,
-    path,
-    [
-      #("content-type", "application/json"),
-      #("accept", "application/json"),
-      #("x-inertia", "true"),
-      #("x-inertia-version", "1"),
-    ],
-    json.to_string(data) |> bit_array.from_string,
-  )
+  simulate.request(http.Post, path)
+  |> simulate.header("accept", "application/json")
+  |> simulate.header("x-inertia", "true")
+  |> simulate.header("x-inertia-version", "1")
+  |> simulate.json_body(data)
 }
 
 /// Extract the component name from an Inertia response.
@@ -383,11 +376,10 @@ fn inertia_data(
   response: Response,
   decoder: decode.Decoder(a),
 ) -> Result(a, json.DecodeError) {
+  let body = simulate.read_body(response)
   case is_json_response(response) {
-    True -> Ok(testing.string_body(response))
-    False -> {
-      extract_json_from_html(testing.string_body(response))
-    }
+    True -> Ok(body)
+    False -> extract_json_from_html(body)
   }
   |> result.map_error(fn(x) {
     UnableToDecode(decode.decode_error("JSON in response", dynamic.string(x)))

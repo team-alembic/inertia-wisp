@@ -4,8 +4,9 @@
 //// including both integration (routing) and unit (business logic) tests.
 
 import data/users
-import gleam/dynamic/decode
 import gleam/json
+import gleam/list
+import gleam/string
 import handlers/users as user_handlers
 import inertia_wisp/testing
 import sqlight
@@ -58,12 +59,13 @@ pub fn users_create_validation_errors_test() {
   let req = testing.inertia_post("/users", json_data)
   let response = user_handlers.users_create(req, db)
 
-  // Should return to create form with errors
-  assert testing.component(response) == Ok("Users/Create")
+  // Should redirect back to create form (303 status)
+  assert response.status == 303
 
-  // Should include validation errors with specific messages (no form data needed)
-  assert testing.prop(response, "errors", decode.at(["name"], decode.string))
-    == Ok("Name is too short")
-  assert testing.prop(response, "errors", decode.at(["email"], decode.string))
-    == Ok("Email format is invalid")
+  // Should redirect to the create form
+  assert list.key_find(response.headers, "location") == Ok("/users/create")
+
+  // Should include validation errors in session cookie
+  let assert Ok(cookie) = list.key_find(response.headers, "set-cookie")
+  assert string.contains(cookie, "inertia_errors=")
 }

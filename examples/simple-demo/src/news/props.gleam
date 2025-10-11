@@ -9,7 +9,9 @@ import gleam/dict
 import gleam/json
 import gleam/option
 import gleam/result
-import inertia_wisp/internal/types
+import inertia_wisp/prop.{
+  type Prop, DefaultProp, DeferProp, MergeProp, OptionalProp,
+}
 
 /// Represents the different types of props that can be sent to news pages
 pub type NewsProp {
@@ -26,9 +28,9 @@ pub type NewsProp {
 // Factory functions for creating Prop(NewsProp) instances
 
 /// Create a news feed prop (MergeProp for infinite scroll)
-pub fn news_feed(feed: articles.NewsFeed) -> types.Prop(NewsProp) {
-  types.MergeProp(
-    prop: types.DefaultProp("news_feed", NewsFeed(feed)),
+pub fn news_feed(feed: articles.NewsFeed) -> Prop(NewsProp) {
+  MergeProp(
+    prop: DefaultProp("news_feed", NewsFeed(feed)),
     match_on: option.None,
     deep: True,
   )
@@ -38,39 +40,37 @@ pub fn news_feed(feed: articles.NewsFeed) -> types.Prop(NewsProp) {
 pub fn article_list(
   articles_fn: fn() ->
     Result(List(articles.ArticleWithReadStatus), dict.Dict(String, String)),
-) -> types.Prop(NewsProp) {
-  types.OptionalProp("articles", fn() { result.map(articles_fn(), ArticleList) })
+) -> Prop(NewsProp) {
+  OptionalProp("articles", fn() { result.map(articles_fn(), ArticleList) })
 }
 
 /// Create pagination metadata prop (DefaultProp)
-pub fn pagination_meta(meta: articles.PaginationMeta) -> types.Prop(NewsProp) {
-  types.DefaultProp("pagination", PaginationMeta(meta))
+pub fn pagination_meta(meta: articles.PaginationMeta) -> Prop(NewsProp) {
+  DefaultProp("pagination", PaginationMeta(meta))
 }
 
 /// Create a single article prop (DefaultProp)
-pub fn article_data(
-  article: articles.ArticleWithReadStatus,
-) -> types.Prop(NewsProp) {
-  types.DefaultProp("article", ArticleData(article))
+pub fn article_data(article: articles.ArticleWithReadStatus) -> Prop(NewsProp) {
+  DefaultProp("article", ArticleData(article))
 }
 
 /// Create a category filter prop (DefaultProp)
-pub fn category_filter(category: String) -> types.Prop(NewsProp) {
-  types.DefaultProp("category", CategoryFilter(category))
+pub fn category_filter(category: String) -> Prop(NewsProp) {
+  DefaultProp("category", CategoryFilter(category))
 }
 
 /// Create available categories prop (DefaultProp)
 pub fn available_categories(
   categories: List(articles.ArticleCategory),
-) -> types.Prop(NewsProp) {
-  types.DefaultProp("available_categories", AvailableCategories(categories))
+) -> Prop(NewsProp) {
+  DefaultProp("available_categories", AvailableCategories(categories))
 }
 
 /// Create unread count prop (DeferProp for expensive calculation)
 pub fn unread_count(
   count_fn: fn() -> Result(Int, dict.Dict(String, String)),
-) -> types.Prop(NewsProp) {
-  types.DeferProp(name: "unread_count", group: option.None, resolver: fn() {
+) -> Prop(NewsProp) {
+  DeferProp(name: "unread_count", group: option.None, resolver: fn() {
     result.map(count_fn(), UnreadCount)
   })
 }
@@ -147,7 +147,8 @@ pub fn news_prop_to_json(prop: NewsProp) -> json.Json {
     ArticleData(article) -> encode_article_with_read_status(article)
     PaginationMeta(meta) -> encode_pagination_meta(meta)
     CategoryFilter(category) -> json.string(category)
-    AvailableCategories(categories) -> json.array(categories, encode_article_category)
+    AvailableCategories(categories) ->
+      json.array(categories, encode_article_category)
     UnreadCount(count) -> json.int(count)
     LoadingState(is_loading) -> json.bool(is_loading)
   }

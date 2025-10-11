@@ -10,7 +10,9 @@ import gleam/result
 import gleam/string
 import gleeunit
 import gleeunit/should
-import inertia_wisp/internal/types
+import inertia_wisp/prop.{
+  AlwaysProp, DefaultProp, DeferProp, LazyProp, MergeProp, OptionalProp,
+}
 import inertia_wisp/response_builder
 import inertia_wisp/testing
 
@@ -58,7 +60,7 @@ pub fn component_sets_component_name_test() {
 // Props handling tests
 pub fn props_with_single_prop_test() {
   let req = testing.inertia_request()
-  let props = [types.DefaultProp("user", UserData("John", "john@example.com"))]
+  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
 
   let response =
     req
@@ -74,8 +76,8 @@ pub fn props_with_single_prop_test() {
 pub fn props_with_multiple_props_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DefaultProp("count", CountData(42)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DefaultProp("count", CountData(42)),
   ]
 
   let response =
@@ -168,7 +170,7 @@ pub fn version_sets_version_string_test() {
 // Complete response building tests
 pub fn response_builds_basic_response_test() {
   let req = testing.inertia_request()
-  let props = [types.DefaultProp("user", UserData("John", "john@example.com"))]
+  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
 
   let response =
     req
@@ -202,7 +204,7 @@ pub fn response_builds_error_only_response_test() {
 
 pub fn response_includes_props_in_json_test() {
   let req = testing.inertia_request()
-  let props = [types.DefaultProp("user", UserData("John", "john@example.com"))]
+  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
 
   let response =
     req
@@ -239,8 +241,8 @@ pub fn response_includes_errors_in_json_test() {
 pub fn deferred_props_not_evaluated_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() {
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DeferProp("expensive", option.None, fn() {
       // This should NOT be called during response building
       panic as "Should not be evaluated"
     }),
@@ -259,9 +261,9 @@ pub fn deferred_props_not_evaluated_test() {
 pub fn deferred_props_included_in_json_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    types.DeferProp("analytics", option.Some("custom"), fn() {
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
+    DeferProp("analytics", option.Some("custom"), fn() {
       Ok(CountData(100))
     }),
   ]
@@ -282,14 +284,14 @@ pub fn deferred_props_included_in_json_test() {
 pub fn merge_props_metadata_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.MergeProp(
-      types.DefaultProp("posts", CountData(5)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    MergeProp(
+      DefaultProp("posts", CountData(5)),
       option.None,
       False,
     ),
-    types.MergeProp(
-      types.DefaultProp("comments", CountData(10)),
+    MergeProp(
+      DefaultProp("comments", CountData(10)),
       option.None,
       False,
     ),
@@ -309,13 +311,13 @@ pub fn merge_props_metadata_test() {
 pub fn deep_merge_props_metadata_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.MergeProp(
-      types.DefaultProp("nested", CountData(5)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    MergeProp(
+      DefaultProp("nested", CountData(5)),
       option.None,
       True,
     ),
-    types.MergeProp(types.DefaultProp("deep", CountData(10)), option.None, True),
+    MergeProp(DefaultProp("deep", CountData(10)), option.None, True),
   ]
 
   let response =
@@ -332,14 +334,14 @@ pub fn deep_merge_props_metadata_test() {
 pub fn match_props_on_metadata_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.MergeProp(
-      types.DefaultProp("posts", CountData(5)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    MergeProp(
+      DefaultProp("posts", CountData(5)),
       option.Some(["id", "slug"]),
       False,
     ),
-    types.MergeProp(
-      types.DefaultProp("comments", CountData(10)),
+    MergeProp(
+      DefaultProp("comments", CountData(10)),
       option.Some(["user_id"]),
       True,
     ),
@@ -359,17 +361,17 @@ pub fn match_props_on_metadata_test() {
 pub fn mixed_advanced_props_test() {
   let req = testing.inertia_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    types.MergeProp(
-      types.DeferProp("analytics", option.Some("custom"), fn() {
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
+    MergeProp(
+      DeferProp("analytics", option.Some("custom"), fn() {
         Ok(CountData(100))
       }),
       option.None,
       False,
     ),
-    types.MergeProp(
-      types.DefaultProp("nested", CountData(5)),
+    MergeProp(
+      DefaultProp("nested", CountData(5)),
       option.Some(["id"]),
       deep: True,
     ),
@@ -407,9 +409,9 @@ pub fn partial_reload_component_match_test() {
     |> testing.partial_component("Users/Show")
 
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DefaultProp("message", CountData(42)),
-    types.AlwaysProp("count", CountData(100)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DefaultProp("message", CountData(42)),
+    AlwaysProp("count", CountData(100)),
   ]
 
   let response =
@@ -435,9 +437,9 @@ pub fn partial_reload_component_mismatch_test() {
     |> testing.partial_component("DifferentComponent")
 
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DefaultProp("message", CountData(42)),
-    types.AlwaysProp("count", CountData(100)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DefaultProp("message", CountData(42)),
+    AlwaysProp("count", CountData(100)),
   ]
 
   let response =
@@ -460,10 +462,10 @@ pub fn partial_reload_always_props_included_test() {
     |> testing.partial_component("Users/Index")
 
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DefaultProp("specific", CountData(42)),
-    types.AlwaysProp("always1", CountData(100)),
-    types.AlwaysProp("always2", CountData(200)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DefaultProp("specific", CountData(42)),
+    AlwaysProp("always1", CountData(100)),
+    AlwaysProp("always2", CountData(200)),
   ]
 
   let response =
@@ -492,9 +494,9 @@ pub fn partial_reload_optional_props_test() {
     |> testing.partial_component("Users/Index")
 
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.OptionalProp("optional", fn() { Ok(CountData(42)) }),
-    types.AlwaysProp("always", CountData(100)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    OptionalProp("optional", fn() { Ok(CountData(42)) }),
+    AlwaysProp("always", CountData(100)),
   ]
 
   let response =
@@ -523,9 +525,9 @@ pub fn partial_reload_no_component_header_test() {
   // No partial_component header
 
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DefaultProp("message", CountData(42)),
-    types.AlwaysProp("count", CountData(100)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DefaultProp("message", CountData(42)),
+    AlwaysProp("count", CountData(100)),
   ]
 
   let response =
@@ -548,9 +550,9 @@ pub fn partial_reload_deferred_props_test() {
     |> testing.partial_component("Users/Show")
 
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    types.AlwaysProp("always", CountData(100)),
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
+    AlwaysProp("always", CountData(100)),
   ]
 
   let response =
@@ -583,9 +585,9 @@ pub fn partial_reload_deferred_props_test() {
 pub fn initial_page_load_deferred_props_test() {
   let req = testing.regular_request()
   let props = [
-    types.DefaultProp("user", UserData("John", "john@example.com")),
-    types.DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    types.DeferProp("analytics", option.Some("custom"), fn() {
+    DefaultProp("user", UserData("John", "john@example.com")),
+    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
+    DeferProp("analytics", option.Some("custom"), fn() {
       Ok(CountData(100))
     }),
   ]
@@ -614,7 +616,7 @@ pub fn initial_page_load_deferred_props_test() {
 // Fluent API chaining tests
 pub fn fluent_api_chaining_test() {
   let req = testing.inertia_request()
-  let props = [types.DefaultProp("user", UserData("John", "john@example.com"))]
+  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
   let errors = dict.from_list([#("name", "Name is too short")])
 
   let response =
@@ -634,7 +636,7 @@ pub fn fluent_api_chaining_test() {
 pub fn test_lazy_prop_error_handling() {
   let req = testing.inertia_request()
   let error_dict = dict.from_list([#("database", "Connection failed")])
-  let failing_prop = types.LazyProp("user_count", fn() { Error(error_dict) })
+  let failing_prop = LazyProp("user_count", fn() { Error(error_dict) })
 
   let response =
     req
@@ -658,7 +660,7 @@ pub fn test_optional_prop_error_handling() {
     |> testing.partial_component("Users/Index")
   let error_dict = dict.from_list([#("analytics", "Service unavailable")])
   let failing_prop =
-    types.OptionalProp("user_analytics", fn() { Error(error_dict) })
+    OptionalProp("user_analytics", fn() { Error(error_dict) })
 
   let response =
     req
@@ -682,7 +684,7 @@ pub fn test_defer_prop_error_handling() {
     |> testing.partial_component("Users/Index")
   let error_dict = dict.from_list([#("external_api", "Timeout")])
   let failing_prop =
-    types.DeferProp("external_data", option.None, fn() { Error(error_dict) })
+    DeferProp("external_data", option.None, fn() { Error(error_dict) })
 
   let response =
     req
@@ -701,7 +703,7 @@ pub fn test_defer_prop_error_handling() {
 
 pub fn url_without_query_params_test() {
   let req = testing.inertia_request_to("/dashboard")
-  let props = [types.DefaultProp("user_count", CountData(42))]
+  let props = [DefaultProp("user_count", CountData(42))]
 
   let response =
     req
@@ -716,7 +718,7 @@ pub fn url_without_query_params_test() {
 
 pub fn url_with_query_params_test() {
   let req = testing.inertia_request_to("/dashboard?delay=5000")
-  let props = [types.DefaultProp("user_count", CountData(42))]
+  let props = [DefaultProp("user_count", CountData(42))]
 
   let response =
     req
@@ -731,7 +733,7 @@ pub fn url_with_query_params_test() {
 
 pub fn url_with_multiple_query_params_test() {
   let req = testing.inertia_request_to("/users?search=test&page=2&sort=name")
-  let props = [types.DefaultProp("user_count", CountData(42))]
+  let props = [DefaultProp("user_count", CountData(42))]
 
   let response =
     req
@@ -746,7 +748,7 @@ pub fn url_with_multiple_query_params_test() {
 
 pub fn url_with_empty_query_string_test() {
   let req = testing.inertia_request_to("/dashboard?")
-  let props = [types.DefaultProp("user_count", CountData(42))]
+  let props = [DefaultProp("user_count", CountData(42))]
 
   let response =
     req

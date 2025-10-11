@@ -12,7 +12,7 @@ import gleam/option
 import gleam/result
 import gleam/uri
 import inertia_wisp/inertia
-import inertia_wisp/internal/types
+import inertia_wisp/prop.{type Prop, DefaultProp, DeferProp}
 import props/user_props
 import sqlight.{type Connection}
 import utils/demo_data
@@ -28,7 +28,7 @@ pub fn dashboard_page(req: Request, db: Connection) -> Response {
     Ok(count) -> {
       // Create basic props that load immediately (included in initial loads only)
       let basic_props = [
-        types.DefaultProp("user_count", user_props.UserCount(count)),
+        DefaultProp("user_count", user_props.UserCount(count)),
       ]
 
       // Create deferred props that load only when requested
@@ -60,8 +60,8 @@ pub fn dashboard_page(req: Request, db: Connection) -> Response {
 fn dashboard_analytics_prop(
   db: Connection,
   delay_ms: Int,
-) -> types.Prop(user_props.UserProp) {
-  types.DeferProp("analytics", option.None, fn() {
+) -> Prop(user_props.UserProp) {
+  DeferProp("analytics", option.None, fn() {
     // Artificial delay to demonstrate progressive loading
     process.sleep(delay_ms)
     users.compute_user_analytics(db)
@@ -99,8 +99,8 @@ fn get_delay_param(req: Request) -> Int {
 fn activity_feed_prop(
   db: Connection,
   delay_ms: Int,
-) -> types.Prop(user_props.UserProp) {
-  types.DeferProp("activity_feed", option.Some("activity"), fn() {
+) -> Prop(user_props.UserProp) {
+  DeferProp("activity_feed", option.Some("activity"), fn() {
     // Artificial delay to demonstrate progressive loading
     process.sleep(delay_ms)
     demo_data.generate_activity_feed(db)

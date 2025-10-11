@@ -4,7 +4,7 @@
 //// Each prop type represents a different piece of data that the frontend will receive.
 
 import gleam/json
-import inertia_wisp/internal/types
+import inertia_wisp/prop.{type Prop, AlwaysProp, DefaultProp}
 
 /// Represents the different types of props that can be sent to the Home page
 pub type HomeProp {
@@ -74,26 +74,26 @@ fn encode_navigation_item(item: NavigationItem) -> json.Json {
 // Factory functions for creating Prop(HomeProp) instances
 
 /// Create a welcome message prop (DefaultProp)
-pub fn welcome_message(message: String) -> types.Prop(HomeProp) {
-  types.DefaultProp("welcome_message", WelcomeMessage(message))
+pub fn welcome_message(message: String) -> Prop(HomeProp) {
+  DefaultProp("welcome_message", WelcomeMessage(message))
 }
 
 /// Create a navigation items prop (AlwaysProp)
-pub fn navigation_items(items: List(NavigationItem)) -> types.Prop(HomeProp) {
-  types.AlwaysProp("navigation", NavigationItems(items))
+pub fn navigation_items(items: List(NavigationItem)) -> Prop(HomeProp) {
+  AlwaysProp("navigation", NavigationItems(items))
 }
 
 /// Create a CSRF token prop (AlwaysProp)
-pub fn csrf_token(token: String) -> types.Prop(HomeProp) {
-  types.AlwaysProp("csrf_token", CsrfToken(token))
+pub fn csrf_token(token: String) -> Prop(HomeProp) {
+  AlwaysProp("csrf_token", CsrfToken(token))
 }
 
 /// Create an app version prop (DefaultProp)
-pub fn app_version(version: String) -> types.Prop(HomeProp) {
-  types.DefaultProp("app_version", AppVersion(version))
+pub fn app_version(version: String) -> Prop(HomeProp) {
+  DefaultProp("app_version", AppVersion(version))
 }
 
 /// Create a current user prop (DefaultProp)
-pub fn current_user(name: String, email: String) -> types.Prop(HomeProp) {
-  types.DefaultProp("current_user", CurrentUser(name, email))
+pub fn current_user(name: String, email: String) -> Prop(HomeProp) {
+  DefaultProp("current_user", CurrentUser(name, email))
 }

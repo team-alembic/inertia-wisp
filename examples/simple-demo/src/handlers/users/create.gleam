@@ -41,7 +41,6 @@ pub fn handler(req: Request, db: Connection) -> Response {
       |> inertia.response_builder("Users/Create")
       |> inertia.errors(errors_dict)
       |> inertia.redirect("/users/create")
-      |> echo
     }
   }
 }
@@ -60,7 +59,6 @@ fn decode_request(
       |> inertia.response_builder("Users/Create")
       |> inertia.errors(dict.from_list([#("form", "Invalid form data")]))
       |> inertia.redirect("/users/create")
-      |> echo
     }
     Ok(request) -> cont(request)
   }

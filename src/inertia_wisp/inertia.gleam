@@ -2,10 +2,11 @@
 
 import gleam/dict
 import gleam/json
-import gleam/string_tree
+
 import inertia_wisp/internal/html
 import inertia_wisp/internal/middleware
 import inertia_wisp/internal/types.{type Page}
+import inertia_wisp/prop.{type Prop}
 import inertia_wisp/response_builder
 import wisp.{type Request, type Response}
 
@@ -24,14 +25,13 @@ fn render_json_response(page: Page(prop)) -> Response {
   let json_body = types.encode_page(page) |> json.to_string()
 
   json_body
-  |> string_tree.from_string()
   |> wisp.json_response(200)
   |> middleware.add_inertia_headers()
 }
 
 fn render_html_response(page: Page(prop)) -> Response {
   let html_body = html.root_template(page, page.component)
-  wisp.html_response(string_tree.from_string(html_body), 200)
+  wisp.html_response(html_body, 200)
 }
 
 pub fn external_redirect(url: String) -> Response {
@@ -49,7 +49,7 @@ pub fn response_builder(
 
 pub fn props(
   builder: InertiaResponseBuilder,
-  props: List(types.Prop(p)),
+  props: List(Prop(p)),
   encode_prop: fn(p) -> json.Json,
 ) -> InertiaResponseBuilder {
   response_builder.props(builder, props, encode_prop)

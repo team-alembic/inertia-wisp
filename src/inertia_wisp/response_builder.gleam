@@ -12,10 +12,12 @@ import gleam/list
 import gleam/option.{type Option}
 import gleam/result
 import gleam/string
-import gleam/string_tree
 
 import inertia_wisp/internal/middleware
-import inertia_wisp/internal/types
+import inertia_wisp/prop.{
+  type Prop, AlwaysProp, DefaultProp, DeferProp, LazyProp, MergeProp,
+  OptionalProp,
+}
 import wisp.{type Request, type Response}
 
 /// Result of processing a single prop
@@ -89,7 +91,7 @@ pub fn component(
 /// Add props to the response (handles evaluation and JSON encoding internally)
 pub fn props(
   builder: InertiaResponseBuilder,
-  props: List(types.Prop(p)),
+  props: List(Prop(p)),
   encode_prop: fn(p) -> json.Json,
 ) -> InertiaResponseBuilder {
   // Check for partial reload headers and validate component match
@@ -367,7 +369,6 @@ fn build_json_response(
   let json_body = json.object(final_json) |> json.to_string()
 
   json_body
-  |> string_tree.from_string()
   |> wisp.json_response(status)
   |> middleware.add_inertia_headers()
 }
@@ -395,7 +396,7 @@ fn build_html_response(
 </body>
 </html>"
 
-  wisp.html_response(string_tree.from_string(html_content), status)
+  wisp.html_response(html_content, status)
 }
 
 //
@@ -404,7 +405,7 @@ fn build_html_response(
 
 /// Process props and separate them into evaluated props, deferred props, and merge metadata
 fn process_props(
-  props: List(types.Prop(p)),
+  props: List(Prop(p)),
   encode_prop: fn(p) -> json.Json,
   partial_data: option.Option(List(String)),
 ) -> #(
@@ -517,27 +518,28 @@ fn process_props(
 
 /// Process a single prop and return its evaluation result
 fn process_single_prop(
-  prop: types.Prop(p),
+  prop: Prop(p),
   encode_prop: fn(p) -> json.Json,
   partial_data: option.Option(List(String)),
 ) -> PropEval {
   case prop {
     // Regular props - evaluate immediately
-    types.DefaultProp(name, value) -> {
+    DefaultProp(name, value) -> {
       let json_value = encode_prop(value)
       Evaluated(name, json_value, NoMerge)
     }
-    types.LazyProp(name, resolver) ->
+    LazyProp(name, resolver) -> {
       resolve_prop_result(name, resolver, encode_prop)
-    types.OptionalProp(name, resolver) ->
+    }
+    OptionalProp(name, resolver) ->
       resolve_prop_result(name, resolver, encode_prop)
-    types.AlwaysProp(name, value) -> {
+    AlwaysProp(name, value) -> {
       let json_value = encode_prop(value)
       Evaluated(name, json_value, NoMerge)
     }
 
     // Deferred props - evaluate if requested in partial reload, otherwise just track names
-    types.DeferProp(name, group, resolver) -> {
+    DeferProp(name, group, resolver) -> {
       let group_name = option.unwrap(group, "default")
       case partial_data {
         option.Some(requested_props) -> {
@@ -560,7 +562,7 @@ fn process_single_prop(
     }
 
     // Merge props - process inner prop and add merge metadata
-    types.MergeProp(inner_prop, match_on, deep) -> {
+    MergeProp(inner_prop, match_on, deep) -> {
       let inner_eval =
         process_single_prop(inner_prop, encode_prop, partial_data)
       case inner_eval {
@@ -580,9 +582,9 @@ fn process_single_prop(
 
 /// Filter props based on request type and partial reload settings
 fn filter_props_for_request(
-  props: List(types.Prop(p)),
+  props: List(Prop(p)),
   partial_data: option.Option(List(String)),
-) -> List(types.Prop(p)) {
+) -> List(Prop(p)) {
   case partial_data {
     option.None -> props |> list.filter(is_non_partial_prop)
     option.Some(requested_props) ->
@@ -594,25 +596,24 @@ fn filter_props_for_request(
 /// Include all non-optional props
 /// OptionalProp: Excluded because they're only meant for partial reloads when explicitly requested
 /// DeferProp: Retained here so process_props can move them to the deferred_props list
-fn is_non_partial_prop(prop: types.Prop(p)) -> Bool {
+fn is_non_partial_prop(prop: Prop(p)) -> Bool {
   case prop {
-    types.OptionalProp(_, _) -> False
-    types.MergeProp(inner_prop, _, _) -> is_non_partial_prop(inner_prop)
+    OptionalProp(_, _) -> False
+    MergeProp(inner_prop, _, _) -> is_non_partial_prop(inner_prop)
     _ -> True
   }
 }
 
 /// Predicate for partial reload requests
 /// Include only requested props plus always props
-fn is_partial_prop(prop: types.Prop(p), partial_data: List(String)) -> Bool {
+fn is_partial_prop(prop: Prop(p), partial_data: List(String)) -> Bool {
   case prop {
-    types.AlwaysProp(_, _) -> True
-    types.MergeProp(inner_prop, _, _) ->
-      is_partial_prop(inner_prop, partial_data)
-    types.DefaultProp(name, _) -> list.contains(partial_data, name)
-    types.LazyProp(name, _) -> list.contains(partial_data, name)
-    types.OptionalProp(name, _) -> list.contains(partial_data, name)
-    types.DeferProp(name, _, _) -> list.contains(partial_data, name)
+    AlwaysProp(_, _) -> True
+    MergeProp(inner_prop, _, _) -> is_partial_prop(inner_prop, partial_data)
+    DefaultProp(name, _) -> list.contains(partial_data, name)
+    LazyProp(name, _) -> list.contains(partial_data, name)
+    OptionalProp(name, _) -> list.contains(partial_data, name)
+    DeferProp(name, _, _) -> list.contains(partial_data, name)
   }
 }
 
