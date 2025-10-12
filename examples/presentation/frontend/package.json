@@ -2,14 +2,13 @@
   "name": "presentation-frontend",
   "version": "1.0.0",
   "description": "Frontend for presentation example - showcasing Inertia-Wisp by presenting itself",
-  "main": "src/app.tsx",
+  "main": "src/main.tsx",
   "scripts": {
     "build:css": "npx @tailwindcss/cli -i ./src/styles.css -o ../priv/static/css/styles.css --minify",
-    "build:js": "esbuild src/app.tsx --bundle --outfile=../priv/static/js/main.js --format=esm --minify --external:./styles.css",
+    "build:js": "esbuild src/main.tsx --bundle --outdir=../priv/static/js --format=esm --splitting --chunk-names=[name]-[hash] --jsx=automatic --minify --external:./styles.css",
     "build": "npm run build:css && npm run build:js",
-    "dev": "esbuild src/app.tsx --bundle --outfile=../priv/static/js/main.js --format=esm --external:./styles.css && esbuild src/styles.css --bundle --outfile=../priv/static/css/styles.css --watch --servedir=../priv/static --port=3000",
     "watch:css": "npx @tailwindcss/cli -i ./src/styles.css -o ../priv/static/css/styles.css --watch",
-    "watch:js": "esbuild src/app.tsx --bundle --outfile=../priv/static/js/main.js --format=esm --watch --external:./styles.css",
+    "watch:js": "esbuild src/main.tsx --bundle --outdir=../priv/static/js --format=esm --splitting --chunk-names=[name]-[hash] --jsx=automatic --minify --external:./styles.css --watch",
     "watch": "npm-run-all --parallel watch:css watch:js",
     "build:watch": "npm run watch"
   },
