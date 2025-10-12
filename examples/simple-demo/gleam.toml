@@ -1,6 +1,6 @@
 name = "simple_demo"
 version = "1.0.0"
-description = "Simple demo showcasing the new inertia.eval API design"
+description = "Simple demo showcasing inertia wisp"
 target = "erlang"
 
 [dependencies]
