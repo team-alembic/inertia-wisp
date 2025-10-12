@@ -1247,12 +1247,12 @@ img {
 }
 ;" data-marpit-pagination-total="53" data-size="16:9">
 <h2 id="the-backend-youll-love-1">The Backend You'll Love</h2>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">route_request</span>(req: wisp.Request) <span class="hljs-punctuation">-&gt;</span> wisp.Response {
-  case req.method, wisp.<span class="hljs-title function_ invoke__">path_segments</span>(req) {
-    http.Get, [] <span class="hljs-punctuation">-&gt;</span> home.<span class="hljs-title function_ invoke__">home_page</span>(req)
-    http.Get, [<span class="hljs-string">&quot;news&quot;</span>] <span class="hljs-punctuation">-&gt;</span> news.<span class="hljs-title function_ invoke__">news_feed</span>(req)
-    http.Get, [<span class="hljs-string">&quot;news&quot;</span>, <span class="hljs-string">&quot;article&quot;</span>, id] <span class="hljs-punctuation">-&gt;</span> news.<span class="hljs-title function_ invoke__">news_article</span>(req, id)
-    _, _ <span class="hljs-punctuation">-&gt;</span> wisp.<span class="hljs-title function_ invoke__">not_found</span>()
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-gleam">fn route_request(req: wisp.Request) -&gt; wisp.Response {
+  case req.method, wisp.path_segments(req) {
+    http.Get, [] -&gt; home.home_page(req)
+    http.Get, [&quot;news&quot;] -&gt; news.news_feed(req)
+    http.Get, [&quot;news&quot;, &quot;article&quot;, id] -&gt; news.news_article(req, id)
+    _, _ -&gt; wisp.not_found()
   }
 }
 </code></pre>

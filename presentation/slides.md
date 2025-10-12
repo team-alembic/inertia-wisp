@@ -201,7 +201,7 @@ interface User {
 
 ## The Backend You'll Love
 
-```rust
+```gleam
 fn route_request(req: wisp.Request) -> wisp.Response {
   case req.method, wisp.path_segments(req) {
     http.Get, [] -> home.home_page(req)
