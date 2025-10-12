@@ -12,7 +12,16 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@presentation_shared/*": [
+        "../presentation_shared/build/dev/javascript/*"
+      ],
+      "@gleam_stdlib/*": [
+        "../presentation_shared/build/dev/javascript/gleam_stdlib/*"
+      ]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

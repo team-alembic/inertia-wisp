@@ -5,7 +5,8 @@ all: deps build
 
 # Install all dependencies
 deps: frontend-deps
-	gleam deps download
+	cd backend && gleam deps download
+	cd presentation_shared && gleam deps download
 
 # Install frontend dependencies
 frontend-deps:
@@ -19,21 +20,33 @@ certs:
 		echo "Install it with: brew install mkcert (macOS) or see https://github.com/FiloSottile/mkcert"; \
 		exit 1; \
 	fi
-	@mkdir -p priv/certs
-	cd priv/certs && mkcert localhost 127.0.0.1 ::1
-	cd priv/certs && mv localhost+2.pem localhost.crt && mv localhost+2-key.pem localhost.key
+	@mkdir -p backend/priv/certs
+	cd backend/priv/certs && mkcert localhost 127.0.0.1 ::1
+	cd backend/priv/certs && mv localhost+2.pem localhost.crt && mv localhost+2-key.pem localhost.key
 	@echo "✅ Certificates generated successfully!"
 
+# Build shared project for JavaScript target
+shared-build:
+	cd presentation_shared && gleam build --target javascript
+
+# Typecheck frontend TypeScript
+frontend-typecheck: shared-build
+	cd frontend && npm run typecheck
+
 # Build frontend assets
-frontend-build:
+frontend-build: shared-build
 	cd frontend && npm run build
 
 # Build everything
 build: frontend-build
+	cd backend && gleam build
+
+# Typecheck and build everything
+check: frontend-typecheck build
 
 # Run the server
 run:
-	gleam run
+	cd backend && gleam run
 
 # Development mode - watch frontend and run server in separate terminals
 dev:
@@ -46,13 +59,14 @@ dev-frontend:
 
 # Run server (for development)
 dev-server:
-	gleam run
+	cd backend && gleam run
 
 # Clean build artifacts
 clean:
-	rm -rf build/
-	rm -rf priv/static/css/
-	rm -rf priv/static/js/
+	rm -rf backend/build/
+	rm -rf backend/priv/static/css/
+	rm -rf backend/priv/static/js/
+	rm -rf shared/build/
 	cd frontend && rm -rf node_modules/
 
 # Clean and rebuild everything
@@ -61,16 +75,18 @@ rebuild: clean all
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  make all          - Install dependencies and build everything (default)"
-	@echo "  make deps         - Install Gleam and frontend dependencies"
-	@echo "  make certs        - Generate trusted HTTPS certificates with mkcert"
-	@echo "  make build        - Build frontend assets"
-	@echo "  make run          - Run the presentation server"
-	@echo "  make dev          - Show instructions for development mode"
-	@echo "  make dev-frontend - Watch and rebuild frontend assets"
-	@echo "  make dev-server   - Run the server"
-	@echo "  make clean        - Remove build artifacts"
-	@echo "  make rebuild      - Clean and rebuild everything"
+	@echo "  make all               - Install dependencies and build everything (default)"
+	@echo "  make deps              - Install Gleam and frontend dependencies"
+	@echo "  make certs             - Generate trusted HTTPS certificates with mkcert"
+	@echo "  make frontend-typecheck - Type check frontend TypeScript code"
+	@echo "  make build             - Build frontend assets"
+	@echo "  make check             - Type check and build everything"
+	@echo "  make run               - Run the presentation server"
+	@echo "  make dev               - Show instructions for development mode"
+	@echo "  make dev-frontend      - Watch and rebuild frontend assets"
+	@echo "  make dev-server        - Run the server"
+	@echo "  make clean             - Remove build artifacts"
+	@echo "  make rebuild           - Clean and rebuild everything"
 	@echo ""
 	@echo "Development workflow:"
 	@echo "  1. Terminal 1: make dev-frontend"

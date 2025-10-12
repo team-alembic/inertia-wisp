@@ -1,7 +1,13 @@
 import React, { useEffect } from "react";
 import { Head, Link, router } from "@inertiajs/react";
-import { SlidePageProps, SlideContentBlock } from "../types";
 import Prism from "prismjs";
+import {
+  SlidePagePropsSchema,
+  type ContentBlock,
+  type ImageData,
+  type SlidePageProps,
+} from "../schemas";
+import { validateProps } from "../lib/validateProps";
 
 // Import core languages
 import "prismjs/components/prism-typescript";
@@ -32,11 +38,7 @@ Prism.languages.gleam = {
   boolean: /\b(?:True|False)\b/,
 };
 
-export default function Slide({
-  slide,
-  navigation,
-  presentation_title,
-}: SlidePageProps) {
+function Slide({ slide, navigation, presentation_title }: SlidePageProps) {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -100,7 +102,7 @@ export default function Slide({
   );
 }
 
-function ContentBlockRenderer({ block }: { block: SlideContentBlock }) {
+function ContentBlockRenderer({ block }: { block: ContentBlock }) {
   switch (block.type) {
     case "heading":
       return (
@@ -123,7 +125,7 @@ function ContentBlockRenderer({ block }: { block: SlideContentBlock }) {
         </p>
       );
 
-    case "code":
+    case "code_block":
       const lang = Prism.languages[block.language] ? block.language : "text";
       const highlightedCode =
         lang === "text"
@@ -219,3 +221,5 @@ function ContentBlockRenderer({ block }: { block: SlideContentBlock }) {
       return null;
   }
 }
+
+export default validateProps(Slide, SlidePagePropsSchema);
