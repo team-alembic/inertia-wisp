@@ -226,20 +226,6 @@ fn route_request(req: wisp.Request) -> wisp.Response {
 
 **You get the best of both worlds.**
 
----
-
-## Why This Matters Now
-
-**84% of developers using AI tools** (2025 Survey)
-
-AI-assisted development makes learning new languages faster than ever:
-- Gleam's simplicity is perfect for AI assistance
-- Clear error messages help AI fix mistakes
-- You can be productive in hours, not weeks
-
-**The timing is right to expand your stack.**
-
----
 
 <!-- _class: default -->
 
@@ -328,6 +314,19 @@ list.map(users, transform_fn)
 
 Where does `list.map` come from?
 → `gleam/stdlib/src/list.gleam` - one definition, that's the code.
+
+
+---
+
+## Why This Matters Now
+
+**84% of developers using AI tools** (2025 Survey)
+
+AI-assisted development makes learning new languages faster than ever:
+- Gleam's simplicity is perfect for AI assistance
+- Clear error messages help AI fix mistakes
+- You can be productive in hours, not weeks
+
 
 ---
 

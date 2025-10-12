@@ -18,10 +18,12 @@ import slides/slide_08
 import slides/slide_09
 import slides/slide_10
 import slides/slide_11
+import slides/slide_12
+import slides/slide_13
 import wisp.{type Request, type Response}
 
 /// Total number of slides in the presentation
-const total_slides = 11
+const total_slides = 13
 
 /// Handle requests to view a specific slide
 pub fn view_slide(req: Request, slide_num_str: String) -> Response {
@@ -64,6 +66,8 @@ fn get_slide(number: Int) -> content.Slide {
     9 -> slide_09.slide()
     10 -> slide_10.slide()
     11 -> slide_11.slide()
+    12 -> slide_12.slide()
+    13 -> slide_13.slide()
     _ -> panic as "Invalid slide number - should be caught by validation"
   }
 }
