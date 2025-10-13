@@ -1,23 +1,32 @@
-//// Slide 10: With Type-Safe Integration (Compiled TypeScript)
+//// Slide 10: With Type-Safe Integration (Generated TypeScript)
 ////
-//// Shows the compiled TypeScript output from Gleam types
+//// Shows the TypeScript types automatically generated from Gleam
 
-import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
-pub fn slide() -> Slide {
+pub fn slide(step: Int) -> Slide {
+  // Determine which lines to highlight based on step
+  let highlight_lines = case step {
+    1 -> [1, 2, 3, 4, 5]
+    // Class definition
+    2 -> [6, 7, 8, 9]
+    // Factory function
+    _ -> []
+  }
+
   Slide(
     number: 10,
     title: "With Type-Safe Integration",
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("Compile to TypeScript:"),
+      Subheading("Gleam Compiles to TypeScript Definitions:"),
       CodeBlock(
-        "export class UserName extends _.CustomType {\n  constructor(name: string);\n  name: string;\n}\nexport class UserEmail extends _.CustomType {\n  constructor(email: string);\n  email: string;\n}\nexport class UserRole extends _.CustomType {\n  constructor(role: string);\n  role: string;\n}\nexport type DashboardPageProp$ =\n  | UserName\n  | UserEmail\n  | UserRole",
+        "export class User$ extends _.CustomType {\n  constructor(name: string, email: string);\n  name: string;\n  email: string;\n}\nexport function User$User(\n  name: string,\n  email: string,\n): User$;",
         "typescript",
-        [],
+        highlight_lines,
       ),
     ],
-    notes: "Gleam types automatically compile to TypeScript, creating type-safe interfaces for the frontend.",
+    notes: "Gleam automatically generates TypeScript type definitions when compiling to JavaScript. These provide type information for the frontend.",
   )
 }

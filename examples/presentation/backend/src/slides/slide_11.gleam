@@ -1,31 +1,32 @@
-//// Slide 11: With Type-Safe Integration (Use in React)
+//// Slide 10: With Type-Safe Integration (TypeScript Zod Schema)
 ////
-//// Shows how to use the projected types in React components
+//// Shows the Zod schema that validates backend JSON
 
-import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
-pub fn slide() -> Slide {
+pub fn slide(step: Int) -> Slide {
+  // Determine which lines to highlight based on step
+  let highlight_lines = case step {
+    1 -> [1, 2, 3, 4, 5, 6]
+    // Zod schema
+    2 -> [8]
+    // Inferred type
+    _ -> []
+  }
+
   Slide(
     number: 11,
     title: "With Type-Safe Integration",
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("Use in React:"),
+      Subheading("TypeScript: Define Zod Schemas"),
       CodeBlock(
-        "
-        import type { PageProps } from \"../types/gleam-projections\";
-        type DashboardProps = PageProps<DashboardPageProp$>
-
-        export default function Dashboard(props: DashboardProps) {
-          const { name, email, role } = props;
-          return ...
-        }
-        ",
-        "tsx",
-        [],
+        "export const UserSchema = z\n  .object({\n    name: z.string(),\n    email: z.string().email(),\n  })\n  .strict();\n\nexport type User = z.infer<typeof UserSchema>;",
+        "typescript",
+        highlight_lines,
       ),
     ],
-    notes: "Through clever projection types, React components get clean, type-safe props directly from Gleam definitions.",
+    notes: "Define Zod schemas in TypeScript that mirror the Gleam JSON encoders. The .strict() ensures any mismatch is caught.",
   )
 }

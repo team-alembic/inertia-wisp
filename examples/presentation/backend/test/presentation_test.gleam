@@ -3,7 +3,7 @@
 //// Basic tests to ensure the presentation structure works correctly
 
 import gleeunit
-import slides/content
+import shared/content
 import slides/slide_01
 import slides/slide_02
 import slides/slide_03

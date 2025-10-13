@@ -1,50 +1,36 @@
-//// Slide 12: Many Languages Claim "Simple"
+//// Slide 11: With Type-Safe Integration (Property-Based Tests)
 ////
-//// Showing how different languages approach simplicity
+//// Shows property-based tests ensuring encoder/schema compatibility
 
-import slides/content.{type Slide, Slide, BulletList, Heading, Spacer}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
-pub fn slide() -> Slide {
+pub fn slide(step: Int) -> Slide {
+  // Determine which lines to highlight based on step
+  let highlight_lines = case step {
+    1 -> [2, 3, 4, 5, 6]
+    // Arbitrary definition
+    2 -> [10]
+    // fc.property line
+    3 -> [12, 13, 14]
+    // Gleam encoding
+    4 -> [17, 18]
+    // Zod validation
+    _ -> []
+  }
+
   Slide(
     number: 12,
-    title: "Gleam's Simplicity",
+    title: "With Type-Safe Integration",
     content: [
-      Heading("Gleam's Simplicity"),
+      Heading("With Type-Safe Integration"),
       Spacer,
-      content.Columns(
-        left: [
-          BulletList([
-            "Gleam programs are simple due to Gleam's constraints",
-            "Paradigm: Types and Functions in Modules",
-            "Limited syntax sugar",
-            "No macros or meta programming",
-            "Limited reflection",
-            "No traits, type classes, higher-kinded types",
-            "Explicit imports and exports",
-            "Modules map to file system",
-          ]),
-        ],
-        right: [
-          content.CodeBlock(
-            code: "
-case req.method, wisp.path_segments(req) {
-  Get, [] -> home.home_page(req)
-  Get, [\"dashboard\"] -> dashboard.dashboard_page(req, db)
-  Post, [\"users\"] -> users.users_create(req, db)
-  Get, [\"users\", id] -> users.users_show(req, id, db)
-  Get, [\"users\", id, \"edit\"] -> users.users_edit_form(req, id, db)
-  Put, [\"users\", id] -> users.users_update(req, id, db)
-  Delete, [\"users\", id] -> users.users_delete(req, id, db)
-  _, _ -> wisp.not_found()
-}
-",
-            language: "gleam",
-            highlight_lines: [],
-          ),
-          content.Paragraph("Wisp router is a case expression"),
-        ],
+      Subheading("Property-Based Tests Ensure Compatibility:"),
+      CodeBlock(
+        "// Arbitrary generates Gleam types directly\nconst userArbitrary = fc\n  .record({ name: fc.string(), email: fc.string() })\n  .map(({ name, email }) => \n    Shared.User$User(name, email)\n  );\n\nit(\"User: Gleam encoder produces valid Zod JSON\", () => {\n  fc.assert(\n    fc.property(userArbitrary, (gleamUser) => {\n      // 1. Encode with Gleam\n      const json = Shared.user_to_json(gleamUser);\n      const jsonString = GleamJson.to_string(json);\n      const parsed = JSON.parse(jsonString);\n      \n      // 2. Validate with Zod (strict!)\n      const result = UserSchema.safeParse(parsed);\n      expect(result.success).toBe(true);\n    }),\n    { numRuns: 1000 }\n  );\n});",
+        "typescript",
+        highlight_lines,
       ),
     ],
-    notes: "",
+    notes: "Property-based tests generate 1000s of random Gleam values, encode them to JSON, and verify Zod validation passes. Catches mismatches immediately!",
   )
 }

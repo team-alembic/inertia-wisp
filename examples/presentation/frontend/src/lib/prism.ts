@@ -30,17 +30,41 @@ Prism.languages.gleam = {
 };
 
 /**
- * Highlight code with Prism syntax highlighting
+ * Highlight code with Prism syntax highlighting and optionally highlight specific lines
  * @param code - The code to highlight
  * @param language - The language name (e.g., 'typescript', 'gleam', 'javascript')
+ * @param highlightLines - Array of line numbers to highlight (1-based)
  * @returns HTML string with syntax highlighting
  */
-export function highlightCode(code: string, language: string): string {
+export function highlightCode(
+  code: string,
+  language: string,
+  highlightLines: number[] = [],
+): string {
   const lang = Prism.languages[language] ? language : "text";
 
   if (lang === "text") {
     return code;
   }
 
-  return Prism.highlight(code, Prism.languages[lang], lang);
+  const highlighted = Prism.highlight(code, Prism.languages[lang], lang);
+
+  // If no lines to highlight, return as-is
+  if (highlightLines.length === 0) {
+    return highlighted;
+  }
+
+  // Split into lines and wrap highlighted ones
+  const lines = highlighted.split("\n");
+  const result = lines
+    .map((line, index) => {
+      const lineNum = index + 1;
+      if (highlightLines.includes(lineNum)) {
+        return `<span class="highlighted-line">${line}</span>`;
+      }
+      return line;
+    })
+    .join("\n");
+
+  return result;
 }

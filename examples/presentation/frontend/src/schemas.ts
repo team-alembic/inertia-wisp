@@ -4,11 +4,13 @@
 import { z } from "zod";
 
 // ImageData schema
-export const ImageDataSchema = z.object({
-  url: z.string(),
-  alt: z.string(),
-  width: z.number(),
-});
+export const ImageDataSchema = z
+  .object({
+    url: z.string(),
+    alt: z.string(),
+    width: z.number(),
+  })
+  .strict();
 
 // ContentBlock schemas with discriminated union
 const HeadingBlockSchema = z.object({
@@ -105,29 +107,35 @@ export const ContentBlockSchema: z.ZodType<ContentBlockType> = z.lazy(() =>
 );
 
 // Slide schema
-export const SlideSchema = z.object({
-  number: z.number(),
-  title: z.string(),
-  content: z.array(ContentBlockSchema),
-  notes: z.string(),
-});
+export const SlideSchema = z
+  .object({
+    number: z.number(),
+    title: z.string(),
+    content: z.array(ContentBlockSchema),
+    notes: z.string(),
+  })
+  .strict();
 
 // SlideNavigation schema
-export const SlideNavigationSchema = z.object({
-  current: z.number(),
-  total: z.number(),
-  has_previous: z.boolean(),
-  has_next: z.boolean(),
-  previous_url: z.string(),
-  next_url: z.string(),
-});
+export const SlideNavigationSchema = z
+  .object({
+    current: z.number(),
+    total: z.number(),
+    has_previous: z.boolean(),
+    has_next: z.boolean(),
+    previous_url: z.string(),
+    next_url: z.string(),
+  })
+  .strict();
 
 // SlidePageProps schema
-export const SlidePagePropsSchema = z.object({
-  slide: SlideSchema,
-  navigation: SlideNavigationSchema,
-  presentation_title: z.string(),
-});
+export const SlidePagePropsSchema = z
+  .object({
+    slide: SlideSchema,
+    navigation: SlideNavigationSchema,
+    presentation_title: z.string(),
+  })
+  .strict();
 
 // Export inferred types
 export type ImageData = z.infer<typeof ImageDataSchema>;

@@ -5,7 +5,7 @@
 
 import gleam/json.{type Json}
 
-import slides/content
+import shared/content
 
 /// Prop types for slide pages
 pub type SlideProp {

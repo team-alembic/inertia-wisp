@@ -1,36 +1,39 @@
-//// Slide 15: The Trade-offs - Generic Abstractions
+//// Slide 13: Why This Matters Now
 ////
-//// Second trade-off: Generic abstractions need explicit dictionaries
+//// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
 
-import slides/content.{
-  type Slide, Slide, CodeBlock, Columns, Heading, Paragraph, Spacer, Subheading,
+import shared/content.{
+  type Slide, BulletList, Columns, Heading, Image, Slide, Spacer, Subheading,
 }
 
 pub fn slide() -> Slide {
   Slide(
     number: 15,
-    title: "The Trade-offs",
+    title: "Why This Matters Now",
     content: [
-      Heading("The Trade-offs"),
+      Heading("Why This Matters Now"),
       Spacer,
-      Subheading("Generic abstractions need explicit dictionaries"),
+      Subheading("AI-Assisted Development"),
       Columns(
         left: [
-          Paragraph("Haskell sort requires Ord type class"),
-          CodeBlock("sort :: Ord a => [a] -> [a]", "haskell", []),
+          Image(
+            "/static/images/stackoverflow-dev-survey-2025-ai-sentiment-and-usage-ai-sel-prof-social.png",
+            "Stack Overflow Survey 2025 - AI Usage",
+            400,
+          ),
         ],
         right: [
-          Paragraph("Gleam sort requires comparison function"),
-          CodeBlock(
-            "pub fn sort(
-  list: List(a),
-  by compare: fn(a, a) -> order.Order) -> List(a)",
-            "gleam",
-            [],
-          ),
+          BulletList([
+            "> 50% of developers using AI tools daily",
+            "Consistent syntax = detects patterns reliably ",
+            "No metaprogramming = no additional context required",
+            "Single definitions = Agent directly reads implementation code",
+            "Clear error messages help AI fix mistakes",
+            "Feel productive while learning with AI assistance",
+          ]),
         ],
       ),
     ],
-    notes: "Generic abstractions in Gleam require explicit dictionary passing rather than implicit type classes. This is more verbose but always explicit - you always pass the comparison function directly.",
+    notes: "The widespread adoption of AI tools (84% of developers) makes Gleam's simplicity particularly valuable. AI can understand and work with Gleam effectively due to its clear syntax, explicit structure, and helpful error messages, enabling rapid productivity.",
   )
 }

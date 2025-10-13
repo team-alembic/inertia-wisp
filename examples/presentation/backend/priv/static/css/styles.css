@@ -582,6 +582,12 @@ pre[data-line] code {
 pre .line-highlight {
   margin-top: 0;
 }
+.highlighted-line {
+  background-color: rgba(255, 255, 0, 0.2);
+  border-left: 4px solid #fbbf24;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
 @property --tw-space-y-reverse {
   syntax: "*";
   inherits: false;

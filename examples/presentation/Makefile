@@ -1,4 +1,4 @@
-.PHONY: all build run dev clean deps frontend-deps frontend-build frontend-watch certs test backend-test frontend-test help
+.PHONY: all build run dev clean deps frontend-deps shared-build frontend-build frontend-watch certs test backend-test frontend-test help
 
 # Default target
 all: deps build
@@ -28,8 +28,12 @@ certs:
 frontend-typecheck:
 	cd frontend && npm run typecheck
 
+# Build shared code to JavaScript (for frontend tests)
+shared-build:
+	cd shared && gleam clean && gleam build --target javascript
+
 # Build frontend assets
-frontend-build:
+frontend-build: shared-build
 	cd frontend && npm run build
 
 # Build everything
@@ -44,7 +48,7 @@ backend-test:
 	cd backend && gleam test
 
 # Run frontend tests
-frontend-test:
+frontend-test: shared-build
 	cd frontend && npm test
 
 # Run all tests (backend + frontend)
@@ -70,6 +74,7 @@ dev-server:
 # Clean build artifacts
 clean:
 	rm -rf backend/build/
+	rm -rf shared/build/
 	rm -rf backend/priv/static/css/
 	rm -rf backend/priv/static/js/
 	cd frontend && rm -rf node_modules/
@@ -84,6 +89,7 @@ help:
 	@echo "  make deps              - Install Gleam and frontend dependencies"
 	@echo "  make certs             - Generate trusted HTTPS certificates with mkcert"
 	@echo "  make frontend-typecheck - Type check frontend TypeScript code"
+	@echo "  make shared-build      - Compile shared code to JavaScript (for frontend tests)"
 	@echo "  make build             - Build frontend assets"
 	@echo "  make check             - Type check and build everything"
 	@echo "  make test              - Run all tests (backend + frontend)"

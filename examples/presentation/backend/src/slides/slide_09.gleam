@@ -2,22 +2,31 @@
 ////
 //// How Inertia.js bridges Gleam and TypeScript type-safely
 
-import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
-pub fn slide() -> Slide {
+pub fn slide(step: Int) -> Slide {
+  // Determine which lines to highlight based on step
+  let highlight_lines = case step {
+    1 -> [1, 2, 3, 4]
+    // Type definition
+    2 -> [6, 7, 8, 9, 10, 11, 12, 13]
+    // JSON encoder
+    _ -> []
+  }
+
   Slide(
     number: 9,
     title: "With Type-Safe Integration",
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("Gleam Types:"),
+      Subheading("Gleam: Define Types & JSON Encoders"),
       CodeBlock(
-        "pub type DashboardPageProp {\n  UserName(name: String)\n  UserEmail(email: String)\n  UserRole(role: String)\n}",
+        "// Define the type\npub type User {\n  User(name: String, email: String)\n}\n\n// JSON encoder\npub fn user_to_json(user: User) -> json.Json {\n  let User(name:, email:) = user\n  json.object([\n    #(\"name\", json.string(name)),\n    #(\"email\", json.string(email)),\n  ])\n}",
         "gleam",
-        [],
+        highlight_lines,
       ),
     ],
-    notes: "Define types in Gleam - this is the single source of truth for the entire application.",
+    notes: "Define types and encoders in Gleam - encoders are tested with property-based tests to ensure they match the frontend Zod schemas.",
   )
 }

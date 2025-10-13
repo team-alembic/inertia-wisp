@@ -2,8 +2,8 @@
 ////
 //// JavaScript and TypeScript as the dominant languages
 
-import slides/content.{
-  type Slide, Slide, BulletList, CodeBlock, Columns, Heading, Image, Spacer,
+import shared/content.{
+  type Slide, BulletList, CodeBlock, Columns, Heading, Image, Slide, Spacer,
 }
 
 pub fn slide() -> Slide {

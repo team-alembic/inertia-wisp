@@ -1,39 +1,32 @@
-//// Slide 13: Why This Matters Now
+//// Slide 12: With Type-Safe Integration (React Component)
 ////
-//// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
+//// Shows React component using validated props
 
-import slides/content.{
-  type Slide, Slide, BulletList, Columns, Heading, Image, Spacer, Subheading,
-}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
-pub fn slide() -> Slide {
+pub fn slide(step: Int) -> Slide {
+  // Determine which lines to highlight based on step
+  let highlight_lines = case step {
+    1 -> [1]
+    // Function signature
+    2 -> [11, 12, 13, 14]
+    // validateProps wrapper
+    _ -> []
+  }
+
   Slide(
     number: 13,
-    title: "Why This Matters Now",
+    title: "With Type-Safe Integration",
     content: [
-      Heading("Why This Matters Now"),
+      Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("AI-Assisted Development"),
-      Columns(
-        left: [
-          Image(
-            "/static/images/stackoverflow-dev-survey-2025-ai-sentiment-and-usage-ai-sel-prof-social.png",
-            "Stack Overflow Survey 2025 - AI Usage",
-            400,
-          ),
-        ],
-        right: [
-          BulletList([
-            "> 50% of developers using AI tools daily",
-            "Consistent syntax = detects patterns reliably ",
-            "No metaprogramming = no additional context required",
-            "Single definitions = Agent directly reads implementation code",
-            "Clear error messages help AI fix mistakes",
-            "Feel productive while learning with AI assistance",
-          ]),
-        ],
+      Subheading("React: Use Validated Props"),
+      CodeBlock(
+        "function UserProfile({ user }: { user: User }) {\n  return (\n    <div>\n      <h1>{user.name}</h1>\n      <p>{user.email}</p>\n    </div>\n  );\n}\n\n// Wrap with validation\nexport default validateProps(\n  UserProfile,\n  UserSchema\n);",
+        "typescript",
+        highlight_lines,
       ),
     ],
-    notes: "The widespread adoption of AI tools (84% of developers) makes Gleam's simplicity particularly valuable. AI can understand and work with Gleam effectively due to its clear syntax, explicit structure, and helpful error messages, enabling rapid productivity.",
+    notes: "React components receive type-safe props validated at runtime with Zod. Any mismatch between backend and frontend is caught immediately.",
   )
 }

@@ -1,59 +1,50 @@
-//// Slide 14: The Trade-offs - Embedded DSLs
+//// Slide 12: Many Languages Claim "Simple"
 ////
-//// First trade-off: Embedded DSLs aren't really possible
+//// Showing how different languages approach simplicity
 
-import slides/content.{
-  type Slide, Slide, CodeBlock, Columns, Heading, Paragraph, Spacer, Subheading,
-}
+import shared/content.{type Slide, BulletList, Heading, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(
     number: 14,
-    title: "The Trade-offs",
+    title: "Gleam's Simplicity",
     content: [
-      Heading("The Trade-offs"),
+      Heading("Gleam's Simplicity"),
       Spacer,
-      Subheading("Embedded DSLs aren't really possible"),
-      Columns(
+      content.Columns(
         left: [
-          Paragraph("Elixir's Ecto Query DSL"),
-          CodeBlock(
-            "query = \n  from u in User,\n    where: u.email like \"%gmail%\",\n    select: {u.id, u.email}",
-            "elixir",
-            [],
-          ),
+          BulletList([
+            "Gleam programs are simple due to Gleam's constraints",
+            "Paradigm: Types and Functions in Modules",
+            "Limited syntax sugar",
+            "No macros or meta programming",
+            "Limited reflection",
+            "No traits, type classes, higher-kinded types",
+            "Explicit imports and exports",
+            "Modules map to file system",
+          ]),
         ],
         right: [
-          Paragraph("Gleam's Parrot library generates bindings to SQL"),
-          CodeBlock(
-            "-- name: FindGmailUsers :many\nSELECT id, email FROM user WHERE email like '%gmail%';",
-            "SQL",
-            [],
-          ),
-          CodeBlock("gleam run -m parrot", "bash", []),
-          CodeBlock(
-            "
-pub type FindGmailUsers {
-  FindGmailUsers(id: Int, email: String)
-}
-
-pub fn find_gmail_users() {
-  let sql = \"SELECT id, email FROM users WHERE email like '%gmail%'\"
-  #(sql, [], find_gmail_users_decoder())
-}
-
-pub fn find_gmail_users_decoder() -> decode.Decoder(FindGmailUsers) {
-  use id <- decode.field(0, decode.int)
-  use email <- decode.field(1, decode.string)
-  decode.success(FindGmailUsers(id:, email:))
+          content.CodeBlock(
+            code: "
+case req.method, wisp.path_segments(req) {
+  Get, [] -> home.home_page(req)
+  Get, [\"dashboard\"] -> dashboard.dashboard_page(req, db)
+  Post, [\"users\"] -> users.users_create(req, db)
+  Get, [\"users\", id] -> users.users_show(req, id, db)
+  Get, [\"users\", id, \"edit\"] -> users.users_edit_form(req, id, db)
+  Put, [\"users\", id] -> users.users_update(req, id, db)
+  Delete, [\"users\", id] -> users.users_delete(req, id, db)
+  _, _ -> wisp.not_found()
 }
 ",
-            "gleam",
-            [],
+            language: "gleam",
+            highlight_lines: [],
           ),
+          content.Paragraph("Wisp router is a case expression"),
         ],
       ),
     ],
-    notes: "Gleam's simplicity comes with a trade-off: embedded DSLs like Ecto queries aren't possible. Instead, use external SQL files with codegen tools like Parrot.",
+    notes: "",
   )
 }

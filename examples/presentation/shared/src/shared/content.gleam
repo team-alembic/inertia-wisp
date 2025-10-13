@@ -4,7 +4,6 @@
 //// All content is provided by the backend, with the frontend acting as
 //// a generic rendering engine.
 
-import gleam/dynamic/decode
 import gleam/int
 import gleam/json
 
@@ -20,13 +19,6 @@ pub fn image_data_to_json(image_data: ImageData) -> json.Json {
     #("alt", json.string(alt)),
     #("width", json.int(width)),
   ])
-}
-
-pub fn image_data_decoder() -> decode.Decoder(ImageData) {
-  use url <- decode.field("url", decode.string)
-  use alt <- decode.field("alt", decode.string)
-  use width <- decode.field("width", decode.int)
-  decode.success(ImageData(url:, alt:, width:))
 }
 
 /// Content block types for slides
@@ -109,63 +101,6 @@ pub fn content_block_to_json(content_block: ContentBlock) -> json.Json {
   }
 }
 
-pub fn content_block_decoder() -> decode.Decoder(ContentBlock) {
-  use variant <- decode.field("type", decode.string)
-  case variant {
-    "heading" -> {
-      use text <- decode.field("text", decode.string)
-      decode.success(Heading(text:))
-    }
-    "subheading" -> {
-      use text <- decode.field("text", decode.string)
-      decode.success(Subheading(text:))
-    }
-    "paragraph" -> {
-      use text <- decode.field("text", decode.string)
-      decode.success(Paragraph(text:))
-    }
-    "code_block" -> {
-      use code <- decode.field("code", decode.string)
-      use language <- decode.field("language", decode.string)
-      use highlight_lines <- decode.field(
-        "highlight_lines",
-        decode.list(decode.int),
-      )
-      decode.success(CodeBlock(code:, language:, highlight_lines:))
-    }
-    "bullet_list" -> {
-      use items <- decode.field("items", decode.list(decode.string))
-      decode.success(BulletList(items:))
-    }
-    "numbered_list" -> {
-      use items <- decode.field("items", decode.list(decode.string))
-      decode.success(NumberedList(items:))
-    }
-    "quote" -> {
-      use text <- decode.field("text", decode.string)
-      use author <- decode.field("author", decode.string)
-      decode.success(Quote(text:, author:))
-    }
-    "image" -> {
-      use url <- decode.field("url", decode.string)
-      use alt <- decode.field("alt", decode.string)
-      use width <- decode.field("width", decode.int)
-      decode.success(Image(url:, alt:, width:))
-    }
-    "image_row" -> {
-      use images <- decode.field("images", decode.list(image_data_decoder()))
-      decode.success(ImageRow(images:))
-    }
-    "columns" -> {
-      use left <- decode.field("left", decode.list(content_block_decoder()))
-      use right <- decode.field("right", decode.list(content_block_decoder()))
-      decode.success(Columns(left:, right:))
-    }
-    "spacer" -> decode.success(Spacer)
-    _ -> decode.failure(Spacer, "ContentBlock")
-  }
-}
-
 /// Complete slide definition with all content
 pub type Slide {
   Slide(number: Int, title: String, content: List(ContentBlock), notes: String)
@@ -179,14 +114,6 @@ pub fn slide_to_json(slide: Slide) -> json.Json {
     #("content", json.array(content, content_block_to_json)),
     #("notes", json.string(notes)),
   ])
-}
-
-pub fn slide_decoder() -> decode.Decoder(Slide) {
-  use number <- decode.field("number", decode.int)
-  use title <- decode.field("title", decode.string)
-  use content <- decode.field("content", decode.list(content_block_decoder()))
-  use notes <- decode.field("notes", decode.string)
-  decode.success(Slide(number:, title:, content:, notes:))
 }
 
 /// Navigation information for a slide
@@ -218,23 +145,6 @@ pub fn slide_navigation_to_json(slide_navigation: SlideNavigation) -> json.Json 
     #("previous_url", json.string(previous_url)),
     #("next_url", json.string(next_url)),
   ])
-}
-
-pub fn slide_navigation_decoder() -> decode.Decoder(SlideNavigation) {
-  use current <- decode.field("current", decode.int)
-  use total <- decode.field("total", decode.int)
-  use has_previous <- decode.field("has_previous", decode.bool)
-  use has_next <- decode.field("has_next", decode.bool)
-  use previous_url <- decode.field("previous_url", decode.string)
-  use next_url <- decode.field("next_url", decode.string)
-  decode.success(SlideNavigation(
-    current:,
-    total:,
-    has_previous:,
-    has_next:,
-    previous_url:,
-    next_url:,
-  ))
 }
 
 /// Helper to create navigation info

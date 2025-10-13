@@ -1,6 +1,0 @@
-{
-  "type": "code_block",
-  "code": "pub fn main() {\n  io.println(\"Hello, Gleam!\")\n}",
-  "language": "gleam",
-  "highlight_lines": [2]
-}

@@ -52,7 +52,11 @@ function ContentBlockRenderer({ block }: { block: ContentBlock }) {
       );
 
     case "code_block":
-      const highlightedCode = highlightCode(block.code, block.language);
+      const highlightedCode = highlightCode(
+        block.code,
+        block.language,
+        block.highlight_lines,
+      );
 
       return (
         <pre className="bg-white/90 rounded-lg p-6 mb-6 overflow-x-auto shadow-lg">

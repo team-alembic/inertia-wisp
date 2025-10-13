@@ -2,8 +2,8 @@
 ////
 //// Showcasing Gleam and Wisp with their benefits
 
-import slides/content.{
-  type Slide, Slide, BulletList, Heading, ImageData, ImageRow, Spacer,
+import shared/content.{
+  type Slide, BulletList, Heading, ImageData, ImageRow, Slide, Spacer,
 }
 
 pub fn slide() -> Slide {

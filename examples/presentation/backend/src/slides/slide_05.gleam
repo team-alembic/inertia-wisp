@@ -2,8 +2,8 @@
 ////
 //// React and TypeScript as the frontend foundation
 
-import slides/content.{
-  type Slide, Slide, BulletList, CodeBlock, Columns, Heading, Image, Spacer,
+import shared/content.{
+  type Slide, BulletList, CodeBlock, Columns, Heading, Image, Slide, Spacer,
 }
 
 pub fn slide() -> Slide {
