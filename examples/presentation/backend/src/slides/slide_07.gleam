@@ -28,5 +28,6 @@ pub fn slide() -> Slide {
       ]),
     ],
     notes: "Gleam and Wisp provide an excellent backend development experience with simplicity, type safety, fast builds, clear errors, and the power of the BEAM.",
+    max_steps: 1,
   )
 }

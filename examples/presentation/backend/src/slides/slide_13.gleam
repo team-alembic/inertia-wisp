@@ -28,5 +28,6 @@ pub fn slide(step: Int) -> Slide {
       ),
     ],
     notes: "React components receive type-safe props validated at runtime with Zod. Any mismatch between backend and frontend is caught immediately.",
+    max_steps: 2,
   )
 }

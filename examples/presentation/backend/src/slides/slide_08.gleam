@@ -27,5 +27,6 @@ pub fn slide(step: Int) -> Slide {
       ),
     ],
     notes: "Clean, readable Gleam code showing pattern matching for routing - simple and type-safe",
+    max_steps: 4,
   )
 }

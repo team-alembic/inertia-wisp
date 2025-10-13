@@ -32,5 +32,6 @@ pub fn slide(step: Int) -> Slide {
       ),
     ],
     notes: "Property-based tests generate 1000s of random Gleam values, encode them to JSON, and verify Zod validation passes. Catches mismatches immediately!",
+    max_steps: 4,
   )
 }

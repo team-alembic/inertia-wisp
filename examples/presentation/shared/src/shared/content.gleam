@@ -110,16 +110,23 @@ pub fn content_block_to_json(content_block: ContentBlock) -> json.Json {
 
 /// Complete slide definition with all content
 pub type Slide {
-  Slide(number: Int, title: String, content: List(ContentBlock), notes: String)
+  Slide(
+    number: Int,
+    title: String,
+    content: List(ContentBlock),
+    notes: String,
+    max_steps: Int,
+  )
 }
 
 pub fn slide_to_json(slide: Slide) -> json.Json {
-  let Slide(number:, title:, content:, notes:) = slide
+  let Slide(number:, title:, content:, notes:, max_steps:) = slide
   json.object([
     #("number", json.int(number)),
     #("title", json.string(title)),
     #("content", json.array(content, content_block_to_json)),
     #("notes", json.string(notes)),
+    #("max_steps", json.int(max_steps)),
   ])
 }
 

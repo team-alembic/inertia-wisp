@@ -17,5 +17,6 @@ pub fn slide() -> Slide {
       Paragraph("alembic.com.au"),
     ],
     notes: "Acknowledgments slide - thanking Alembic for their support",
+    max_steps: 1,
   )
 }

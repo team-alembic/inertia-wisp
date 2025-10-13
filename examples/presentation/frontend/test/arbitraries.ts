@@ -124,9 +124,10 @@ export const slideArbitrary: fc.Arbitrary<Slide$> = fc
     title: fc.string(),
     content: fc.array(contentBlockArbitrary, { maxLength: 10 }),
     notes: fc.string(),
+    max_steps: fc.integer({ min: 1, max: 4 }),
   })
-  .map(({ number, title, content, notes }) =>
-    GleamContent.Slide$Slide(number, title, toList(content), notes),
+  .map(({ number, title, content, notes, max_steps }) =>
+    GleamContent.Slide$Slide(number, title, toList(content), notes, max_steps),
   );
 
 export const slideNavigationArbitrary: fc.Arbitrary<SlideNavigation$> = fc

@@ -24,5 +24,6 @@ pub fn slide() -> Slide {
       ]),
     ],
     notes: "Introduction to Michael Buhot - background in functional programming, Elixir, and interest in Gleam and AI assistants",
+    max_steps: 1,
   )
 }

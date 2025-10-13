@@ -121,6 +121,7 @@ export const SlideSchema = z
     title: z.string(),
     content: z.array(ContentBlockSchema),
     notes: z.string(),
+    max_steps: z.number(),
   })
   .strict();
 

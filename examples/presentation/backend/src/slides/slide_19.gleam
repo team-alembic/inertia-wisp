@@ -23,5 +23,6 @@ pub fn slide() -> Slide {
       Paragraph("Continue exploring the presentation with the arrow keys →"),
     ],
     notes: "This slide confirms successful form submission. It demonstrates how Inertia handles redirects after form submissions. The user was redirected here from the contact form after their data passed validation.",
+    max_steps: 1,
   )
 }

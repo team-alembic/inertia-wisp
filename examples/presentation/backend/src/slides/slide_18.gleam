@@ -30,5 +30,6 @@ pub fn slide() -> Slide {
       LinkButton("Try the Contact Form Demo →", "/forms/contact"),
     ],
     notes: "This slide introduces form handling in Inertia-Wisp. The demo shows a contact form with name, email, and message fields. Validation happens on the backend and errors are displayed inline. Use arrow keys or click the link in the footer to navigate to the demo form.",
+    max_steps: 1,
   )
 }

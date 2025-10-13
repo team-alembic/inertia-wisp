@@ -46,5 +46,6 @@ case req.method, wisp.path_segments(req) {
       ),
     ],
     notes: "",
+    max_steps: 1,
   )
 }

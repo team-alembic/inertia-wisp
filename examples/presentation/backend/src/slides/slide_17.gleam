@@ -32,5 +32,6 @@ pub fn slide() -> Slide {
       ),
     ],
     notes: "Generic abstractions in Gleam require explicit dictionary passing rather than implicit type classes. This is more verbose but always explicit - you always pass the comparison function directly.",
+    max_steps: 1,
   )
 }

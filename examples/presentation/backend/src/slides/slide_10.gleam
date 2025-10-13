@@ -28,5 +28,6 @@ pub fn slide(step: Int) -> Slide {
       ),
     ],
     notes: "Gleam automatically generates TypeScript type definitions when compiling to JavaScript. These provide type information for the frontend.",
+    max_steps: 2,
   )
 }

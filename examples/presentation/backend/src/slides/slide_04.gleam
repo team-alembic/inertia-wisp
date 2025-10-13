@@ -16,5 +16,6 @@ pub fn slide() -> Slide {
       Paragraph("With Type-Safe Integration"),
     ],
     notes: "The core value proposition - combining familiar frontend tech with powerful backend capabilities through type-safe integration",
+    max_steps: 1,
   )
 }

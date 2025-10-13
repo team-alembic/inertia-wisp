@@ -35,5 +35,6 @@ pub fn slide() -> Slide {
       ),
     ],
     notes: "The widespread adoption of AI tools (84% of developers) makes Gleam's simplicity particularly valuable. AI can understand and work with Gleam effectively due to its clear syntax, explicit structure, and helpful error messages, enabling rapid productivity.",
+    max_steps: 1,
   )
 }

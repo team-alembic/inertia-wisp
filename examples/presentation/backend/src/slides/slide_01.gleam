@@ -15,5 +15,6 @@ pub fn slide() -> Slide {
       Paragraph("Michael Buhot"),
     ],
     notes: "Title slide - introducing the presentation on building full-stack type-safe applications with Gleam and TypeScript using Inertia-Wisp",
+    max_steps: 1,
   )
 }

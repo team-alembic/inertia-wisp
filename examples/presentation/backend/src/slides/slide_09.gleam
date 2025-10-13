@@ -28,5 +28,6 @@ pub fn slide(step: Int) -> Slide {
       ),
     ],
     notes: "Define types and encoders in Gleam - encoders are tested with property-based tests to ensure they match the frontend Zod schemas.",
+    max_steps: 2,
   )
 }

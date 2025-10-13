@@ -37,5 +37,6 @@ pub fn slide() -> Slide {
       ),
     ],
     notes: "React is the most popular frontend framework with a huge ecosystem and many talented developers. TypeScript provides type safety.",
+    max_steps: 1,
   )
 }

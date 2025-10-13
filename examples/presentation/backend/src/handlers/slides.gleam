@@ -50,11 +50,16 @@ fn presentation_title(title: String) -> prop.Prop(slide_props.SlideProp) {
   AlwaysProp("presentation_title", slide_props.PresentationTitle(title))
 }
 
-/// Handle requests to view a specific slide
-pub fn view_slide(req: Request, slide_num_str: String) -> Response {
+/// Parse slide number and step from request parameters
+/// Step defaults to 1 if not provided or invalid
+/// Returns 404 if slide number is invalid
+fn parse_slide_params(
+  slide_num_str: String,
+  req: Request,
+  next: fn(Int, Int) -> Response,
+) -> Response {
   case int.parse(slide_num_str) {
     Ok(slide_num) if slide_num >= 1 && slide_num <= total_slides -> {
-      // Parse step query parameter (default to 1)
       let step = case wisp.get_query(req) |> list.key_find("step") {
         Ok(step_str) ->
           case int.parse(step_str) {
@@ -63,23 +68,29 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
           }
         Error(_) -> 1
       }
-
-      let slide = get_slide(slide_num, step)
-      let nav = navigation_with_steps(slide_num, step, total_slides)
-
-      let props = [
-        slide_content(slide),
-        navigation(nav),
-        presentation_title("Gleam + TypeScript"),
-      ]
-
-      req
-      |> inertia.response_builder("Slide")
-      |> inertia.props(props, slide_props.slide_prop_to_json)
-      |> inertia.response(200)
+      next(slide_num, step)
     }
     _ -> wisp.not_found()
   }
+}
+
+/// Handle requests to view a specific slide
+pub fn view_slide(req: Request, slide_num_str: String) -> Response {
+  use slide_num, step <- parse_slide_params(slide_num_str, req)
+  let slide = get_slide(slide_num, step)
+  let nav =
+    navigation_with_steps(slide_num, step, total_slides, slide.max_steps)
+
+  let props = [
+    slide_content(slide),
+    navigation(nav),
+    presentation_title("Gleam + TypeScript"),
+  ]
+
+  req
+  |> inertia.response_builder("Slide")
+  |> inertia.props(props, slide_props.slide_prop_to_json)
+  |> inertia.response(200)
 }
 
 /// Handle requests to the presentation home (redirect to first slide)
@@ -113,33 +124,13 @@ fn get_slide(number: Int, step: Int) -> content.Slide {
   }
 }
 
-/// Get the maximum number of steps for a slide
-fn get_max_steps(slide_num: Int) -> Int {
-  case slide_num {
-    8 -> 4
-    // Slide 8 has 4 steps
-    9 -> 2
-    // Slide 9 has 2 steps (type definition, encoder)
-    10 -> 2
-    // Slide 10 has 2 steps (class definition, factory function)
-    11 -> 2
-    // Slide 11 has 2 steps (schema, inferred type)
-    12 -> 4
-    // Slide 12 has 4 steps (arbitrary, fc.property, encoding, validation)
-    13 -> 2
-    // Slide 13 has 2 steps (function, validateProps wrapper)
-    _ -> 1
-    // Default: no stepping
-  }
-}
-
 /// Create navigation with step support
 fn navigation_with_steps(
   current: Int,
   step: Int,
   total: Int,
+  max_steps: Int,
 ) -> content.SlideNavigation {
-  let max_steps = get_max_steps(current)
   let has_previous = current > 1 || step > 1
   let has_next = current < total || step < max_steps
 

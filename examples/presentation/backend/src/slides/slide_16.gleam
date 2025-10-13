@@ -55,5 +55,6 @@ pub fn find_gmail_users_decoder() -> decode.Decoder(FindGmailUsers) {
       ),
     ],
     notes: "Gleam's simplicity comes with a trade-off: embedded DSLs like Ecto queries aren't possible. Instead, use external SQL files with codegen tools like Parrot.",
+    max_steps: 1,
   )
 }

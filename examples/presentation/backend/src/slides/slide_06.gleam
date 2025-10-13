@@ -36,5 +36,6 @@ pub fn slide() -> Slide {
       ),
     ],
     notes: "JavaScript is the most used programming language, and TypeScript provides type safety on top of it, making it extremely popular.",
+    max_steps: 1,
   )
 }

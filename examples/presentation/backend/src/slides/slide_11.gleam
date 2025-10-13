@@ -28,5 +28,6 @@ pub fn slide(step: Int) -> Slide {
       ),
     ],
     notes: "Define Zod schemas in TypeScript that mirror the Gleam JSON encoders. The .strict() ensures any mismatch is caught.",
+    max_steps: 2,
   )
 }
