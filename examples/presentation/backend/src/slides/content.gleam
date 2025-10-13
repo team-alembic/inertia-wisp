@@ -13,7 +13,7 @@ pub type ImageData {
   ImageData(url: String, alt: String, width: Int)
 }
 
-fn image_data_to_json(image_data: ImageData) -> json.Json {
+pub fn image_data_to_json(image_data: ImageData) -> json.Json {
   let ImageData(url:, alt:, width:) = image_data
   json.object([
     #("url", json.string(url)),
@@ -22,7 +22,7 @@ fn image_data_to_json(image_data: ImageData) -> json.Json {
   ])
 }
 
-fn image_data_decoder() -> decode.Decoder(ImageData) {
+pub fn image_data_decoder() -> decode.Decoder(ImageData) {
   use url <- decode.field("url", decode.string)
   use alt <- decode.field("alt", decode.string)
   use width <- decode.field("width", decode.int)

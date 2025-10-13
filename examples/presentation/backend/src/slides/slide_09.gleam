@@ -2,7 +2,7 @@
 ////
 //// How Inertia.js bridges Gleam and TypeScript type-safely
 
-import presentation_shared/slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
+import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
 
 pub fn slide() -> Slide {
   Slide(

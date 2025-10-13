@@ -14,15 +14,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "baseUrl": ".",
-    "paths": {
-      "@presentation_shared/*": [
-        "../presentation_shared/build/dev/javascript/*"
-      ],
-      "@gleam_stdlib/*": [
-        "../presentation_shared/build/dev/javascript/gleam_stdlib/*"
-      ]
-    }
+    "types": ["node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules"]
 }

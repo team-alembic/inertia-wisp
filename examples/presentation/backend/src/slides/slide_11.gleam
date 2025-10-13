@@ -2,7 +2,7 @@
 ////
 //// Shows how to use the projected types in React components
 
-import presentation_shared/slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
+import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
 
 pub fn slide() -> Slide {
   Slide(

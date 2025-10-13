@@ -2,7 +2,7 @@
 ////
 //// Shows the compiled TypeScript output from Gleam types
 
-import presentation_shared/slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
+import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer, Subheading}
 
 pub fn slide() -> Slide {
   Slide(

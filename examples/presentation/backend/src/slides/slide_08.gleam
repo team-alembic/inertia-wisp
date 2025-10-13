@@ -2,7 +2,7 @@
 ////
 //// Gleam code example showing clean routing
 
-import presentation_shared/slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer}
+import slides/content.{type Slide, Slide, CodeBlock, Heading, Spacer}
 
 pub fn slide() -> Slide {
   Slide(

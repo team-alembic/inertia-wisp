@@ -2,7 +2,7 @@
 ////
 //// Acknowledging Alembic for supporting this work
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Heading, Image, Paragraph, Slide, Spacer,
 }
 

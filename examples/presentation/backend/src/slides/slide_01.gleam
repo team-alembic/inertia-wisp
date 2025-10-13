@@ -2,9 +2,7 @@
 ////
 //// Introduction to the presentation
 
-import presentation_shared/slides/content.{
-  type Slide, Heading, Paragraph, Slide, Spacer, Subheading,
-}
+import slides/content.{type Slide, Heading, Paragraph, Slide, Spacer, Subheading}
 
 pub fn slide() -> Slide {
   Slide(

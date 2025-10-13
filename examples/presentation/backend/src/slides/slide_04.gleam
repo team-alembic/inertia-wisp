@@ -2,7 +2,7 @@
 ////
 //// Main value proposition of the framework
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Heading, Paragraph, Slide, Spacer,
 }
 

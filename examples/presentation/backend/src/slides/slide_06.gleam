@@ -2,7 +2,7 @@
 ////
 //// JavaScript and TypeScript as the dominant languages
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Slide, BulletList, CodeBlock, Columns, Heading, Image, Spacer,
 }
 

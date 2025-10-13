@@ -1,0 +1,23 @@
+{
+  "type": "columns",
+  "left": [
+    {
+      "type": "heading",
+      "text": "Left Column"
+    },
+    {
+      "type": "bullet_list",
+      "items": ["Point 1", "Point 2", "Point 3"]
+    }
+  ],
+  "right": [
+    {
+      "type": "heading",
+      "text": "Right Column"
+    },
+    {
+      "type": "paragraph",
+      "text": "This is a paragraph in the right column."
+    }
+  ]
+}

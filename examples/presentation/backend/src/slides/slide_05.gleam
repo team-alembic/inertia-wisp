@@ -2,7 +2,7 @@
 ////
 //// React and TypeScript as the frontend foundation
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Slide, BulletList, CodeBlock, Columns, Heading, Image, Spacer,
 }
 

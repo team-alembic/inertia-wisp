@@ -1,4 +1,4 @@
-.PHONY: all build run dev clean deps frontend-deps frontend-build frontend-watch certs help
+.PHONY: all build run dev clean deps frontend-deps frontend-build frontend-watch certs test backend-test frontend-test help
 
 # Default target
 all: deps build
@@ -6,7 +6,6 @@ all: deps build
 # Install all dependencies
 deps: frontend-deps
 	cd backend && gleam deps download
-	cd presentation_shared && gleam deps download
 
 # Install frontend dependencies
 frontend-deps:
@@ -25,16 +24,12 @@ certs:
 	cd backend/priv/certs && mv localhost+2.pem localhost.crt && mv localhost+2-key.pem localhost.key
 	@echo "✅ Certificates generated successfully!"
 
-# Build shared project for JavaScript target
-shared-build:
-	cd presentation_shared && gleam build --target javascript
-
 # Typecheck frontend TypeScript
-frontend-typecheck: shared-build
+frontend-typecheck:
 	cd frontend && npm run typecheck
 
 # Build frontend assets
-frontend-build: shared-build
+frontend-build:
 	cd frontend && npm run build
 
 # Build everything
@@ -43,6 +38,17 @@ build: frontend-build
 
 # Typecheck and build everything
 check: frontend-typecheck build
+
+# Run backend tests
+backend-test:
+	cd backend && gleam test
+
+# Run frontend tests
+frontend-test:
+	cd frontend && npm test
+
+# Run all tests (backend + frontend)
+test: backend-test frontend-test
 
 # Run the server
 run:
@@ -66,7 +72,6 @@ clean:
 	rm -rf backend/build/
 	rm -rf backend/priv/static/css/
 	rm -rf backend/priv/static/js/
-	rm -rf shared/build/
 	cd frontend && rm -rf node_modules/
 
 # Clean and rebuild everything
@@ -81,6 +86,9 @@ help:
 	@echo "  make frontend-typecheck - Type check frontend TypeScript code"
 	@echo "  make build             - Build frontend assets"
 	@echo "  make check             - Type check and build everything"
+	@echo "  make test              - Run all tests (backend + frontend)"
+	@echo "  make backend-test      - Run backend tests only"
+	@echo "  make frontend-test     - Run frontend tests only"
 	@echo "  make run               - Run the presentation server"
 	@echo "  make dev               - Show instructions for development mode"
 	@echo "  make dev-frontend      - Watch and rebuild frontend assets"

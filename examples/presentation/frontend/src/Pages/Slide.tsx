@@ -60,7 +60,7 @@ function Slide({ slide, navigation, presentation_title }: SlidePageProps) {
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-pink-200 to-purple-300">
         {/* Main slide content */}
         <main className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-6xl w-full">
+          <div className="max-w-7xl w-full">
             {slide.content.map((block, index) => (
               <ContentBlockRenderer key={index} block={block} />
             ))}

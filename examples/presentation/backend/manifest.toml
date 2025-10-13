@@ -26,7 +26,6 @@ packages = [
   { name = "nodejs", version = "3.1.3", build_tools = ["mix"], requirements = ["jason", "poolboy", "ssl_verify_fun"], otp_app = "nodejs", source = "hex", outer_checksum = "E7751AAD77AC55F8E6C5C07617378AFD88D2E0C349D9DB2EBB5273AAE46EF6A9" },
   { name = "platform", version = "1.0.0", build_tools = ["gleam"], requirements = [], otp_app = "platform", source = "hex", outer_checksum = "8339420A95AD89AAC0F82F4C3DB8DD401041742D6C3F46132A8739F6AEB75391" },
   { name = "poolboy", version = "1.5.2", build_tools = ["rebar3"], requirements = [], otp_app = "poolboy", source = "hex", outer_checksum = "DAD79704CE5440F3D5A3681C8590B9DC25D1A561E8F5A9C995281012860901E3" },
-  { name = "presentation_shared", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib"], source = "local", path = "../presentation_shared" },
   { name = "simplifile", version = "2.3.0", build_tools = ["gleam"], requirements = ["filepath", "gleam_stdlib"], otp_app = "simplifile", source = "hex", outer_checksum = "0A868DAC6063D9E983477981839810DC2E553285AB4588B87E3E9C96A7FB4CB4" },
   { name = "ssl_verify_fun", version = "1.1.7", build_tools = ["mix", "rebar3", "make"], requirements = [], otp_app = "ssl_verify_fun", source = "hex", outer_checksum = "FE4C190E8F37401D30167C8C405EDA19469F34577987C76DDE613E838BBC67F8" },
   { name = "telemetry", version = "1.3.0", build_tools = ["rebar3"], requirements = [], otp_app = "telemetry", source = "hex", outer_checksum = "7015FC8919DBE63764F4B4B87A95B7C0996BD539E0D499BE6EC9D7F3875B79E6" },
@@ -42,6 +41,5 @@ gleam_stdlib = { version = ">= 0.60.0" }
 gleeunit = { version = ">= 1.0.0" }
 inertia_wisp = { path = "../../../" }
 mist = { version = ">= 5.0.0" }
-presentation_shared = { path = "../presentation_shared" }
 simplifile = { version = ">= 2.2.1 and < 3.0.0" }
 wisp = { version = ">= 2.0.0" }

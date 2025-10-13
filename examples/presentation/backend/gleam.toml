@@ -9,7 +9,6 @@ gleam_http = ">= 4.0.0"
 gleam_json = ">= 3.0.0"
 wisp = ">= 2.0.0"
 inertia_wisp = { path = "../../../" }
-presentation_shared = { path = "../presentation_shared" }
 simplifile = ">= 2.2.1 and < 3.0.0"
 gleam_otp = ">= 1.0.0 and < 2.0.0"
 gleam_erlang = ">= 1.0.0 and < 2.0.0"

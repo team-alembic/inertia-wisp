@@ -2,7 +2,7 @@
 ////
 //// Second trade-off: Generic abstractions need explicit dictionaries
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Slide, CodeBlock, Columns, Heading, Paragraph, Spacer, Subheading,
 }
 

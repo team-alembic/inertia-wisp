@@ -2,7 +2,7 @@
 ////
 //// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Slide, BulletList, Columns, Heading, Image, Spacer, Subheading,
 }
 

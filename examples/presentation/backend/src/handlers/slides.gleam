@@ -6,8 +6,8 @@
 import gleam/int
 import inertia_wisp/inertia
 import inertia_wisp/prop.{AlwaysProp, DefaultProp}
-import presentation_shared/props/slide_props
-import presentation_shared/slides/content
+import props/slide_props
+import slides/content
 import slides/slide_01
 import slides/slide_02
 import slides/slide_03

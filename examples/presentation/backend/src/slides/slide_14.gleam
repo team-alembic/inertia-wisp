@@ -2,7 +2,7 @@
 ////
 //// First trade-off: Embedded DSLs aren't really possible
 
-import presentation_shared/slides/content.{
+import slides/content.{
   type Slide, Slide, CodeBlock, Columns, Heading, Paragraph, Spacer, Subheading,
 }
 

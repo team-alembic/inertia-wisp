@@ -1,8 +1,6 @@
 // TypeScript types for presentation slides
 // These correspond to the Gleam types defined in the backend
 
-import type { SlideNavigation$ } from "@presentation_shared/presentation_shared/presentation_shared/slides/content.mjs";
-
 export interface ContentBlock {
   type: string;
 }
@@ -93,11 +91,14 @@ export interface Slide {
   notes: string;
 }
 
-// Using Gleam-generated type
-// The backend sends plain JSON objects that match this structure.
-// TypeScript's structural typing ensures compatibility even though
-// the Gleam-generated type is technically a class.
-export type SlideNavigation = SlideNavigation$;
+export interface SlideNavigation {
+  current: number;
+  total: number;
+  has_previous: boolean;
+  has_next: boolean;
+  previous_url: string;
+  next_url: string;
+}
 
 export interface SlidePageProps {
   slide: Slide;
