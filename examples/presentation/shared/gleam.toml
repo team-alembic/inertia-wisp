@@ -1,7 +1,7 @@
 name = "shared"
 version = "1.0.0"
 description = "Shared encoders for backend and frontend property-based testing"
-target = "erlang"
+target = "javascript"
 
 [dependencies]
 gleam_stdlib = ">= 0.60.0"

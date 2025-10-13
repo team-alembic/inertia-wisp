@@ -6,6 +6,7 @@
 
 import gleam/erlang/process
 import gleam/http
+import handlers/forms
 import handlers/slides
 import mist
 import wisp
@@ -48,6 +49,8 @@ fn route_request(req: wisp.Request) -> wisp.Response {
   case wisp.path_segments(req), req.method {
     [], http.Get -> slides.index(req)
     ["slides", slide_num], http.Get -> slides.view_slide(req, slide_num)
+    ["forms", "contact"], http.Get -> forms.show_contact_form(req)
+    ["forms", "contact"], http.Post -> forms.submit_contact_form(req)
     _, _ -> wisp.not_found()
   }
 }

@@ -33,6 +33,7 @@ pub type ContentBlock {
   Image(url: String, alt: String, width: Int)
   ImageRow(images: List(ImageData))
   Columns(left: List(ContentBlock), right: List(ContentBlock))
+  LinkButton(text: String, href: String)
   Spacer
 }
 
@@ -93,6 +94,12 @@ pub fn content_block_to_json(content_block: ContentBlock) -> json.Json {
         #("type", json.string("columns")),
         #("left", json.array(left, content_block_to_json)),
         #("right", json.array(right, content_block_to_json)),
+      ])
+    LinkButton(text:, href:) ->
+      json.object([
+        #("type", json.string("link_button")),
+        #("text", json.string(text)),
+        #("href", json.string(href)),
       ])
     Spacer ->
       json.object([

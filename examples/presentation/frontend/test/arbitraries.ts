@@ -79,6 +79,13 @@ const spacerArbitrary: fc.Arbitrary<ContentBlock$> = fc.constant(
   GleamContent.ContentBlock$Spacer(),
 );
 
+const linkButtonArbitrary: fc.Arbitrary<ContentBlock$> = fc
+  .record({
+    text: fc.string(),
+    href: fc.webUrl(),
+  })
+  .map(({ text, href }) => GleamContent.ContentBlock$LinkButton(text, href));
+
 // Full content block including recursive Columns (with limited depth)
 export const contentBlockArbitrary: fc.Arbitrary<ContentBlock$> = fc.letrec(
   (tie) => ({
@@ -94,6 +101,7 @@ export const contentBlockArbitrary: fc.Arbitrary<ContentBlock$> = fc.letrec(
       imageBlockArbitrary,
       imageRowArbitrary,
       spacerArbitrary,
+      linkButtonArbitrary,
       fc
         .record({
           left: fc.array(tie("block") as fc.Arbitrary<ContentBlock$>, {

@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import {
   SlidePagePropsSchema,
   type ContentBlock,
@@ -142,6 +142,18 @@ function ContentBlockRenderer({ block }: { block: ContentBlock }) {
 
     case "spacer":
       return <div className="h-8" />;
+
+    case "link_button":
+      return (
+        <div className="flex justify-center mb-6">
+          <Link
+            href={block.href}
+            className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] text-xl"
+          >
+            {block.text}
+          </Link>
+        </div>
+      );
 
     default:
       return null;

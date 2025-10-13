@@ -67,6 +67,12 @@ const SpacerBlockSchema = z.object({
   type: z.literal("spacer"),
 });
 
+const LinkButtonBlockSchema = z.object({
+  type: z.literal("link_button"),
+  text: z.string(),
+  href: z.string(),
+});
+
 // Define the base type for ContentBlock
 type ContentBlockType =
   | z.infer<typeof HeadingBlockSchema>
@@ -79,6 +85,7 @@ type ContentBlockType =
   | z.infer<typeof ImageBlockSchema>
   | z.infer<typeof ImageRowBlockSchema>
   | z.infer<typeof SpacerBlockSchema>
+  | z.infer<typeof LinkButtonBlockSchema>
   | {
       type: "columns";
       left: ContentBlockType[];
@@ -103,6 +110,7 @@ export const ContentBlockSchema: z.ZodType<ContentBlockType> = z.lazy(() =>
       right: z.array(ContentBlockSchema),
     }),
     SpacerBlockSchema,
+    LinkButtonBlockSchema,
   ]),
 );
 
@@ -143,3 +151,15 @@ export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 export type Slide = z.infer<typeof SlideSchema>;
 export type SlideNavigation = z.infer<typeof SlideNavigationSchema>;
 export type SlidePageProps = z.infer<typeof SlidePagePropsSchema>;
+
+// ContactFormPageProps schema
+export const ContactFormPagePropsSchema = z
+  .object({
+    name: z.string(),
+    email: z.string(),
+    message: z.string(),
+    errors: z.record(z.string(), z.string()).optional(),
+  })
+  .strict();
+
+export type ContactFormPageProps = z.infer<typeof ContactFormPagePropsSchema>;
