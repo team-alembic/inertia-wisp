@@ -65,8 +65,8 @@ const SpacerBlockSchema = z.object({
   type: z.literal("spacer"),
 });
 
-// Recursive type using z.lazy() for proper type inference
-export const ContentBlockSchema: z.ZodType<
+// Define the base type for ContentBlock
+type ContentBlockType =
   | z.infer<typeof HeadingBlockSchema>
   | z.infer<typeof SubheadingBlockSchema>
   | z.infer<typeof ParagraphBlockSchema>
@@ -79,10 +79,12 @@ export const ContentBlockSchema: z.ZodType<
   | z.infer<typeof SpacerBlockSchema>
   | {
       type: "columns";
-      left: Array<z.infer<typeof ContentBlockSchema>>;
-      right: Array<z.infer<typeof ContentBlockSchema>>;
-    }
-> = z.lazy(() =>
+      left: ContentBlockType[];
+      right: ContentBlockType[];
+    };
+
+// ContentBlock schema
+export const ContentBlockSchema: z.ZodType<ContentBlockType> = z.lazy(() =>
   z.discriminatedUnion("type", [
     HeadingBlockSchema,
     SubheadingBlockSchema,

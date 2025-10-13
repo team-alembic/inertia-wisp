@@ -1,64 +1,19 @@
-import React, { useEffect } from "react";
-import { Head, Link, router } from "@inertiajs/react";
-import Prism from "prismjs";
+import { Head } from "@inertiajs/react";
 import {
   SlidePagePropsSchema,
   type ContentBlock,
-  type ImageData,
   type SlidePageProps,
 } from "../schemas";
 import { validateProps } from "../lib/validateProps";
-
-// Import core languages
-import "prismjs/components/prism-typescript";
-import "prismjs/components/prism-javascript";
-import "prismjs/components/prism-jsx";
-import "prismjs/components/prism-tsx";
-import "prismjs/components/prism-bash";
-import "prismjs/components/prism-json";
-import "prismjs/components/prism-markup";
-
-// Add Gleam language definition
-Prism.languages.gleam = {
-  comment: {
-    pattern: /\/\/.*|\/\*[\s\S]*?\*\//,
-    greedy: true,
-  },
-  string: {
-    pattern: /"(?:[^"\\]|\\.)*"/,
-    greedy: true,
-  },
-  keyword:
-    /\b(?:pub|fn|let|use|case|if|else|import|type|const|assert|panic|todo|as|opaque|external|javascript|erlang)\b/,
-  function: /\b[a-z_][a-zA-Z0-9_]*(?=\s*\()/,
-  type: /\b[A-Z][a-zA-Z0-9_]*\b/,
-  operator: /[|&<>=!+\-*/]+|->|<-|\.\./,
-  punctuation: /[{}[\]();,.]/,
-  number: /\b\d+(?:\.\d+)?\b/,
-  boolean: /\b(?:True|False)\b/,
-};
+import { highlightCode } from "../lib/prism";
+import { SlideNavigation } from "../components/SlideNavigation";
 
 function Slide({ slide, navigation, presentation_title }: SlidePageProps) {
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" && navigation.has_next) {
-        router.visit(navigation.next_url);
-      } else if (e.key === "ArrowLeft" && navigation.has_previous) {
-        router.visit(navigation.previous_url);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigation]);
-
   return (
     <>
       <Head title={slide.title} />
 
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-200 via-pink-200 to-purple-300">
-        {/* Main slide content */}
         <main className="flex-1 flex items-center justify-center p-8">
           <div className="max-w-7xl w-full">
             {slide.content.map((block, index) => (
@@ -67,36 +22,7 @@ function Slide({ slide, navigation, presentation_title }: SlidePageProps) {
           </div>
         </main>
 
-        {/* Navigation footer */}
-        <footer className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {navigation.has_previous ? (
-              <Link
-                href={navigation.previous_url}
-                className="px-4 py-2 bg-white bg-opacity-80 rounded-lg hover:bg-opacity-100 transition-all shadow-md"
-              >
-                ← Previous
-              </Link>
-            ) : (
-              <div className="px-4 py-2 text-gray-400">← Previous</div>
-            )}
-
-            {navigation.has_next ? (
-              <Link
-                href={navigation.next_url}
-                className="px-4 py-2 bg-white bg-opacity-80 rounded-lg hover:bg-opacity-100 transition-all shadow-md"
-              >
-                Next →
-              </Link>
-            ) : (
-              <div className="px-4 py-2 text-gray-400">Next →</div>
-            )}
-          </div>
-
-          <div className="text-lg font-semibold">
-            {navigation.current} / {navigation.total}
-          </div>
-        </footer>
+        <SlideNavigation navigation={navigation} />
       </div>
     </>
   );
@@ -126,11 +52,7 @@ function ContentBlockRenderer({ block }: { block: ContentBlock }) {
       );
 
     case "code_block":
-      const lang = Prism.languages[block.language] ? block.language : "text";
-      const highlightedCode =
-        lang === "text"
-          ? block.code
-          : Prism.highlight(block.code, Prism.languages[lang], lang);
+      const highlightedCode = highlightCode(block.code, block.language);
 
       return (
         <pre className="bg-white/90 rounded-lg p-6 mb-6 overflow-x-auto shadow-lg">

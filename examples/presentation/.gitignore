@@ -15,8 +15,8 @@ _build/
 frontend/node_modules/
 
 # Built static assets
-priv/static/css/
-priv/static/js/
+backend/priv/static/css/
+backend/priv/static/js/
 
 # Database files
 *.db
