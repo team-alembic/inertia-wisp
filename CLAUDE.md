@@ -2,17 +2,14 @@
 
 ## 1. WORKFLOW AND PLANNING
 
-### Planning Templates
-
-**For Features**: Use `/notes/templates/feature-plan-template.md`
-**For Bugs/Fixes**: Use `/notes/templates/fix-plan-template.md`
-
-### Feature Development Workflow
+### Development Workflow
 
 1. **Planning Phase** (MANDATORY FIRST STEP)
-   - Copy `/notes/templates/feature-plan-template.md` to `/notes/features/<number>-<name>.md`
-   - Complete all sections of the plan template
-   - Get human approval before proceeding
+   - The human will prompt you with a high level idea, requirement or defect
+   - Ask the human as many clarifying questions as possible
+   - Offer alternatives, and let the human choose the best approach
+   - Only consider coding and testing, not product requirements/deployment, you are only a coding assistant
+   - Once the planning conversation is done, document the design as concisely as possible. No verbose benefit statements or other marketing style nonsense. Just technical coding design choices that will inform our implementation session.
    - **NO IMPLEMENTATION WORK BEGINS WITHOUT AN APPROVED PLAN**
 
 2. **Implementation Phase**
@@ -25,21 +22,6 @@
    - Update plan to reflect any changes from original design
    - Ensure all implementation tasks are marked complete
 
-### Bug/Fix Development Workflow
-
-1. **Issue Documentation** (MANDATORY FIRST STEP)
-   - Copy `/notes/templates/fix-plan-template.md` to `/notes/fixes/<number>-<name>.md`
-   - Complete investigation and root cause analysis
-   - Design fix approach and get approval
-   - **NO FIX IMPLEMENTATION WITHOUT DOCUMENTED ROOT CAUSE**
-
-2. **Fix Implementation**
-   - Follow TDD process for fix and regression tests
-   - Test fix thoroughly before deployment
-   - Update plan tasks to mark completion status
-
-3. **Resolution Documentation**
-   - Update monitoring and testing to prevent recurrence
 
 ### Server Execution Rules
 
@@ -108,7 +90,7 @@ Don't ever commit code unless I tell you to.
 **REQUIRED: Refactor one function at a time, test after each change**
 ```
 ✅ Refactor function A → test → commit
-✅ Refactor function B → test → commit  
+✅ Refactor function B → test → commit
 ✅ Extract common patterns after individual refactors are proven
 ```
 
@@ -159,7 +141,7 @@ Don't ever commit code unless I tell you to.
 
 Previous violations included bundling:
 1. news_feed handler implementation
-2. news_article handler implementation  
+2. news_article handler implementation
 3. category filtering support
 4. integration tests
 5. HTTP status code API extension
@@ -182,7 +164,7 @@ Previous violations included bundling:
 
 **If a refactoring attempt creates more problems:**
 1. **STOP immediately** - don't try to fix a broken refactor with more changes
-2. **Revert to working state** 
+2. **Revert to working state**
 3. **Analyze what went wrong** - usually trying to change too much at once
 4. **Try smaller, incremental changes** - one pattern, one function, one concept
 5. **Test after each small change**
@@ -461,7 +443,7 @@ When changing implementation (especially API configurations), ALWAYS:
 ```
 1. Need to change MergeProp from deep: False to deep: True
 2. Find test: assert deep == False
-3. Update test: assert deep == True  
+3. Update test: assert deep == True
 4. Run test - it fails (RED)
 5. Change implementation: deep: True
 6. Run test - it passes (GREEN)
@@ -504,7 +486,7 @@ Then ask and answer these questions:
 **STEP 1: MANDATORY TEST NAME VALIDATION**
 - **EVERY WORD in the test name MUST be verified by assertions**
 - If test name contains "stores_in_session" → MUST assert session storage worked
-- If test name contains "retrieves_from_database" → MUST assert database retrieval  
+- If test name contains "retrieves_from_database" → MUST assert database retrieval
 - If test name contains "validates_email" → MUST assert email validation logic
 - **FORBIDDEN**: Testing redirect response when name claims to test session storage
 - **FORBIDDEN**: Testing existence when name claims to test specific values
@@ -542,7 +524,7 @@ pub fn user_email_validates_format_test() {
   // Test invalid email format
   let invalid_user = create_user("john", "invalid-email")
   let assert Error("Invalid email format") = invalid_user
-  
+
   // Test valid email format
   let valid_user = create_user("john", "john@example.com")
   let assert Ok(user) = valid_user
@@ -683,7 +665,7 @@ These rules were strengthened after real implementation problems in news feed de
 
 **Reward hacking behaviors that will be REJECTED:**
 - Removing or weakening test assertions instead of implementing functionality
-- Changing test names to match weaker assertions instead of implementing stronger behavior  
+- Changing test names to match weaker assertions instead of implementing stronger behavior
 - Deleting tests that expose missing functionality
 - Making tests pass by lowering expectations rather than meeting requirements
 
@@ -700,7 +682,7 @@ These rules were strengthened after real implementation problems in news feed de
 ### Debug Printing with Echo
 
 **Echo is a KEYWORD, not a function:**
-- **CORRECT**: `echo response` 
+- **CORRECT**: `echo response`
 - **FORBIDDEN**: `echo(response)` - No parentheses needed
 - **FORBIDDEN**: `let _ = echo response` - No assignment needed
 
@@ -710,7 +692,7 @@ These rules were strengthened after real implementation problems in news feed de
 // Simple echo
 echo response
 
-// In pipelines 
+// In pipelines
 response
 |> echo
 |> some_function()
@@ -729,64 +711,6 @@ response
 
 **When to Use Echo:**
 - **Debugging test failures** - inspect actual vs expected values
-- **Understanding data flow** - see intermediate pipeline values  
+- **Understanding data flow** - see intermediate pipeline values
 - **Investigating response structures** - examine headers, status, body
 - **Tracing function execution** - verify code paths taken
-
-## 6. CRITICAL LESSONS FROM TASK 2 INFINITE SCROLL IMPLEMENTATION
-
-### Rule Violations That Occurred and Must Be Prevented:
-
-**1. SERVER EXECUTION VIOLATION (ZERO TOLERANCE)**
-- **WHAT HAPPENED**: Executed `gleam run &` in terminal
-- **WHY WRONG**: Only humans run servers, this is fundamental
-- **PREVENTION**: Never use terminal for long-running processes, only provide instructions
-
-**2. MEANINGLESS TEST ASSERTIONS (UNACCEPTABLE)**
-- **WHAT HAPPENED**: `assert testing.prop(...) |> result.is_ok` (testing existence, not values)
-- **WHY WRONG**: Tests should verify actual expected behavior, not just that values exist
-- **PREVENTION**: Always assert on specific expected values, make tests deterministic
-
-**3. IMPLEMENTATION-FIRST INSTEAD OF TDD (BREAKS PROCESS)**
-- **WHAT HAPPENED**: Changed `deep: False` to `deep: True` before updating test
-- **WHY WRONG**: Violates TDD RED-GREEN-REFACTOR cycle
-- **PREVENTION**: Always update test expectations BEFORE changing implementation
-
-**4. IGNORING USER-PROVIDED RESOURCES (INEFFICIENT)**
-- **WHAT HAPPENED**: Didn't fetch external links when user provided them
-- **WHY WRONG**: Leads to assumptions instead of evidence-based solutions
-- **PREVENTION**: Always fetch and read provided links before responding
-
-**5. OVERCOMPLICATING SOLUTIONS (POOR ENGINEERING)**
-- **WHAT HAPPENED**: Custom intersection observer instead of built-in `<WhenVisible>`
-- **WHY WRONG**: Reinventing wheels instead of using framework capabilities
-- **PREVENTION**: Research existing solutions before implementing custom logic
-
-**6. NEEDLESSLY COMPLEX SYNTAX (POOR READABILITY)**
-- **WHAT HAPPENED**: `use _ <- result.try(expr)` when `let _ = expr` suffices
-- **WHY WRONG**: Complex syntax when simple patterns work
-- **PREVENTION**: Prefer simplicity - if ignoring results, just use `let _ = expr`
-
-**7. GETTING SIDETRACKED BY TEST FAILURES (LOSING FOCUS)**
-- **WHAT HAPPENED**: Debugging database setup instead of focusing on TDD RED phase
-- **WHY WRONG**: Lost sight of TDD process and task objectives
-- **PREVENTION**: Stay focused on current task phase, don't chase unrelated issues
-
-### Success Patterns That Should Be Repeated:
-
-**1. USING ECHO DEBUGGING EFFECTIVELY**
-- Added echo statements to understand data flow
-- Helped identify root cause (category filtering bug)
-- Removed debug statements after fixing issue
-
-**2. PROPER COMPONENT REFACTORING**
-- Extracted logical sections into focused components
-- Followed single responsibility principle
-- Made codebase more maintainable for LLMs and humans
-
-**3. INVESTIGATING EXISTING PATTERNS**
-- Looked at how other handlers solve similar problems
-- Found and fixed category filtering bug by understanding query logic
-- Led to better solutions than inventing new patterns
-
-These lessons are critical for future task implementation.
