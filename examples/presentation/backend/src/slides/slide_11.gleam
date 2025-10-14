@@ -1,16 +1,16 @@
-//// Slide 10: With Type-Safe Integration (TypeScript Zod Schema)
+//// Slide 11: With Type-Safe Integration (Generated TypeScript)
 ////
-//// Shows the Zod schema that validates backend JSON
+//// Shows the TypeScript types automatically generated from Gleam
 
 import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step
   let highlight_lines = case step {
-    1 -> [1, 2, 3, 4, 5, 6]
-    // Zod schema
-    2 -> [8]
-    // Inferred type
+    1 -> [1, 2, 3, 4, 5]
+    // Class definition
+    2 -> [6, 7, 8, 9]
+    // Factory function
     _ -> []
   }
 
@@ -20,14 +20,14 @@ pub fn slide(step: Int) -> Slide {
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("TypeScript: Define Zod Schemas"),
+      Subheading("Gleam Compiles to TypeScript Definitions:"),
       CodeBlock(
-        "export const UserSchema = z\n  .object({\n    name: z.string(),\n    email: z.string().email(),\n  })\n  .strict();\n\nexport type User = z.infer<typeof UserSchema>;",
+        "export class User$ extends _.CustomType {\n  constructor(name: string, email: string);\n  name: string;\n  email: string;\n}\nexport function User$User(\n  name: string,\n  email: string,\n): User$;",
         "typescript",
         highlight_lines,
       ),
     ],
-    notes: "Define Zod schemas in TypeScript that mirror the Gleam JSON encoders. The .strict() ensures any mismatch is caught.",
+    notes: "Gleam automatically generates TypeScript type definitions when compiling to JavaScript. These provide type information for the frontend.",
     max_steps: 2,
   )
 }

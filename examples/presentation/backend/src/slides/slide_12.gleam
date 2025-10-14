@@ -1,37 +1,33 @@
-//// Slide 11: With Type-Safe Integration (Property-Based Tests)
+//// Slide 10: With Type-Safe Integration (TypeScript Zod Schema)
 ////
-//// Shows property-based tests ensuring encoder/schema compatibility
+//// Shows the Zod schema that validates backend JSON
 
 import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step
   let highlight_lines = case step {
-    1 -> [2, 3, 4, 5, 6]
-    // Arbitrary definition
-    2 -> [10]
-    // fc.property line
-    3 -> [12, 13, 14]
-    // Gleam encoding
-    4 -> [17, 18]
-    // Zod validation
+    1 -> [1, 2, 3, 4, 5, 6]
+    // Zod schema
+    2 -> [8]
+    // Inferred type
     _ -> []
   }
 
   Slide(
-    number: 12,
+    number: 11,
     title: "With Type-Safe Integration",
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("Property-Based Tests Ensure Compatibility:"),
+      Subheading("TypeScript: Define Zod Schemas"),
       CodeBlock(
-        "// Arbitrary generates Gleam types directly\nconst userArbitrary = fc\n  .record({ name: fc.string(), email: fc.string() })\n  .map(({ name, email }) => \n    Shared.User$User(name, email)\n  );\n\nit(\"User: Gleam encoder produces valid Zod JSON\", () => {\n  fc.assert(\n    fc.property(userArbitrary, (gleamUser) => {\n      // 1. Encode with Gleam\n      const json = Shared.user_to_json(gleamUser);\n      const jsonString = GleamJson.to_string(json);\n      const parsed = JSON.parse(jsonString);\n      \n      // 2. Validate with Zod (strict!)\n      const result = UserSchema.safeParse(parsed);\n      expect(result.success).toBe(true);\n    }),\n    { numRuns: 1000 }\n  );\n});",
+        "export const UserSchema = z\n  .object({\n    name: z.string(),\n    email: z.string().email(),\n  })\n  .strict();\n\nexport type User = z.infer<typeof UserSchema>;",
         "typescript",
         highlight_lines,
       ),
     ],
-    notes: "Property-based tests generate 1000s of random Gleam values, encode them to JSON, and verify Zod validation passes. Catches mismatches immediately!",
-    max_steps: 4,
+    notes: "Define Zod schemas in TypeScript that mirror the Gleam JSON encoders. The .strict() ensures any mismatch is caught.",
+    max_steps: 2,
   )
 }

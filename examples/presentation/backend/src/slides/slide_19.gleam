@@ -1,28 +1,51 @@
-//// Slide 19: Form Submission Success
+//// Slide 19: Many Languages Claim "Simple"
 ////
-//// Confirmation after successful form submission
+//// Showing how different languages approach simplicity
 
-import shared/content.{type Slide, Heading, Paragraph, Slide, Spacer, Subheading}
+import shared/content.{type Slide, BulletList, Heading, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(
     number: 19,
-    title: "Form Submitted Successfully!",
+    title: "Gleam's Simplicity",
     content: [
-      Heading("✅ Success!"),
-      Subheading("Your form was validated and submitted"),
+      Heading("Gleam's Simplicity"),
       Spacer,
-      Paragraph(
-        "The form data passed all validation rules on the backend and was successfully processed.",
+      content.Columns(
+        left: [
+          BulletList([
+            "Gleam programs are simple due to Gleam's constraints",
+            "Paradigm: Types and Functions in Modules",
+            "Limited syntax sugar",
+            "No macros or meta programming",
+            "Limited reflection",
+            "No traits, type classes, higher-kinded types",
+            "Explicit imports and exports",
+            "Modules map to file system",
+          ]),
+        ],
+        right: [
+          content.CodeBlock(
+            code: "
+case req.method, wisp.path_segments(req) {
+  Get, [] -> home.home_page(req)
+  Get, [\"dashboard\"] -> dashboard.dashboard_page(req, db)
+  Post, [\"users\"] -> users.users_create(req, db)
+  Get, [\"users\", id] -> users.users_show(req, id, db)
+  Get, [\"users\", id, \"edit\"] -> users.users_edit_form(req, id, db)
+  Put, [\"users\", id] -> users.users_update(req, id, db)
+  Delete, [\"users\", id] -> users.users_delete(req, id, db)
+  _, _ -> wisp.not_found()
+}
+",
+            language: "gleam",
+            highlight_lines: [],
+          ),
+          content.Paragraph("Wisp router is a case expression"),
+        ],
       ),
-      Spacer,
-      Paragraph(
-        "Notice how Inertia handled the redirect seamlessly without a full page reload. This is the power of Inertia.js - server-side rendering with SPA-like navigation.",
-      ),
-      Spacer,
-      Paragraph("Continue exploring the presentation with the arrow keys →"),
     ],
-    notes: "This slide confirms successful form submission. It demonstrates how Inertia handles redirects after form submissions. The user was redirected here from the contact form after their data passed validation.",
+    notes: "",
     max_steps: 1,
   )
 }

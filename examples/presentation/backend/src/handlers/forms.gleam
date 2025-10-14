@@ -70,7 +70,7 @@ pub fn submit_contact_form(req: Request) -> Response {
   case validate_contact_form(name, email, message) {
     Ok(_) -> {
       // Success - redirect to next slide
-      wisp.redirect("/slides/19")
+      wisp.redirect("/slides/16")
     }
     Error(errors) -> {
       req

@@ -1,16 +1,20 @@
-//// Slide 12: With Type-Safe Integration (React Component)
+//// Slide 11: With Type-Safe Integration (Property-Based Tests)
 ////
-//// Shows React component using validated props
+//// Shows property-based tests ensuring encoder/schema compatibility
 
 import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step
   let highlight_lines = case step {
-    1 -> [1]
-    // Function signature
-    2 -> [11, 12, 13, 14]
-    // validateProps wrapper
+    1 -> [2, 3, 4, 5, 6]
+    // Arbitrary definition
+    2 -> [10]
+    // fc.property line
+    3 -> [12, 13, 14]
+    // Gleam encoding
+    4 -> [17, 18]
+    // Zod validation
     _ -> []
   }
 
@@ -20,14 +24,14 @@ pub fn slide(step: Int) -> Slide {
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("React: Use Validated Props"),
+      Subheading("Property-Based Tests Ensure Compatibility:"),
       CodeBlock(
-        "function UserProfile({ user }: { user: User }) {\n  return (\n    <div>\n      <h1>{user.name}</h1>\n      <p>{user.email}</p>\n    </div>\n  );\n}\n\n// Wrap with validation\nexport default validateProps(\n  UserProfile,\n  UserSchema\n);",
+        "// Arbitrary generates Gleam types directly\nconst userArbitrary = fc\n  .record({ name: fc.string(), email: fc.string() })\n  .map(({ name, email }) => \n    Shared.User$User(name, email)\n  );\n\nit(\"User: Gleam encoder produces valid Zod JSON\", () => {\n  fc.assert(\n    fc.property(userArbitrary, (gleamUser) => {\n      // 1. Encode with Gleam\n      const json = Shared.user_to_json(gleamUser);\n      const jsonString = GleamJson.to_string(json);\n      const parsed = JSON.parse(jsonString);\n      \n      // 2. Validate with Zod (strict!)\n      const result = UserSchema.safeParse(parsed);\n      expect(result.success).toBe(true);\n    }),\n    { numRuns: 1000 }\n  );\n});",
         "typescript",
         highlight_lines,
       ),
     ],
-    notes: "React components receive type-safe props validated at runtime with Zod. Any mismatch between backend and frontend is caught immediately.",
-    max_steps: 2,
+    notes: "Property-based tests generate 1000s of random Gleam values, encode them to JSON, and verify Zod validation passes. Catches mismatches immediately!",
+    max_steps: 4,
   )
 }

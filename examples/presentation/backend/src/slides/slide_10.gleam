@@ -1,16 +1,16 @@
-//// Slide 10: With Type-Safe Integration (Generated TypeScript)
+//// Slide 10: With Type-Safe Integration
 ////
-//// Shows the TypeScript types automatically generated from Gleam
+//// How Inertia.js bridges Gleam and TypeScript type-safely
 
 import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step
   let highlight_lines = case step {
-    1 -> [1, 2, 3, 4, 5]
-    // Class definition
-    2 -> [6, 7, 8, 9]
-    // Factory function
+    1 -> [1, 2, 3, 4]
+    // Type definition
+    2 -> [6, 7, 8, 9, 10, 11, 12, 13]
+    // JSON encoder
     _ -> []
   }
 
@@ -20,14 +20,14 @@ pub fn slide(step: Int) -> Slide {
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("Gleam Compiles to TypeScript Definitions:"),
+      Subheading("Gleam: Define Types & JSON Encoders"),
       CodeBlock(
-        "export class User$ extends _.CustomType {\n  constructor(name: string, email: string);\n  name: string;\n  email: string;\n}\nexport function User$User(\n  name: string,\n  email: string,\n): User$;",
-        "typescript",
+        "// Define the type\npub type User {\n  User(name: String, email: String)\n}\n\n// JSON encoder\npub fn user_to_json(user: User) -> json.Json {\n  let User(name:, email:) = user\n  json.object([\n    #(\"name\", json.string(name)),\n    #(\"email\", json.string(email)),\n  ])\n}",
+        "gleam",
         highlight_lines,
       ),
     ],
-    notes: "Gleam automatically generates TypeScript type definitions when compiling to JavaScript. These provide type information for the frontend.",
+    notes: "Define types and encoders in Gleam - encoders are tested with property-based tests to ensure they match the frontend Zod schemas.",
     max_steps: 2,
   )
 }

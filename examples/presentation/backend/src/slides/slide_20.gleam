@@ -1,35 +1,40 @@
-//// Slide 20: Pagination & Partial Reloads
+//// Slide 20: Why This Matters Now
 ////
-//// Introduction to pagination with partial reload optimization
+//// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
 
 import shared/content.{
-  type Slide, BulletList, Heading, LinkButton, Paragraph, Slide, Spacer,
-  Subheading,
+  type Slide, BulletList, Columns, Heading, Image, Slide, Spacer, Subheading,
 }
 
 pub fn slide() -> Slide {
   Slide(
     number: 20,
-    title: "Pagination & Partial Reloads",
+    title: "Why This Matters Now",
     content: [
-      Heading("Pagination & Deferred Props"),
-      Subheading("Optimizing with DeferProp"),
+      Heading("Why This Matters Now"),
       Spacer,
-      BulletList([
-        "DeferProp loads in a separate request after initial render",
-        "Page renders immediately without waiting for slow data",
-        "Only specified props reload during navigation",
-        "Watch the prop load with a 2-second delay",
-        "Dramatically improves perceived performance",
-      ]),
-      Spacer,
-      Paragraph(
-        "Click the button below to see a paginated users table with a deferred prop. Watch it load after 2 seconds!",
+      Subheading("AI-Assisted Development"),
+      Columns(
+        left: [
+          Image(
+            "/static/images/stackoverflow-dev-survey-2025-ai-sentiment-and-usage-ai-sel-prof-social.png",
+            "Stack Overflow Survey 2025 - AI Usage",
+            400,
+          ),
+        ],
+        right: [
+          BulletList([
+            "> 50% of developers using AI tools daily",
+            "Consistent syntax = detects patterns reliably ",
+            "No metaprogramming = no additional context required",
+            "Single definitions = Agent directly reads implementation code",
+            "Clear error messages help AI fix mistakes",
+            "Feel productive while learning with AI assistance",
+          ]),
+        ],
       ),
-      Spacer,
-      LinkButton("Try the Pagination Demo →", "/users/table"),
     ],
-    notes: "This slide introduces DeferProp for optimizing expensive data loading. The demo shows a users table with a DeferProp that has an artificial 2-second delay. Watch it load separately after the initial page render. When navigating pages, only the 'users', 'page', and 'total_pages' props reload - the 'demo_info' DeferProp is not re-fetched. Open browser dev tools network tab to see the separate request for the deferred prop.",
+    notes: "The widespread adoption of AI tools (84% of developers) makes Gleam's simplicity particularly valuable. AI can understand and work with Gleam effectively due to its clear syntax, explicit structure, and helpful error messages, enabling rapid productivity.",
     max_steps: 1,
   )
 }

@@ -1,51 +1,33 @@
-//// Slide 12: Many Languages Claim "Simple"
+//// Slide 12: With Type-Safe Integration (React Component)
 ////
-//// Showing how different languages approach simplicity
+//// Shows React component using validated props
 
-import shared/content.{type Slide, BulletList, Heading, Slide, Spacer}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
-pub fn slide() -> Slide {
+pub fn slide(step: Int) -> Slide {
+  // Determine which lines to highlight based on step
+  let highlight_lines = case step {
+    1 -> [1]
+    // Function signature
+    2 -> [11, 12, 13, 14]
+    // validateProps wrapper
+    _ -> []
+  }
+
   Slide(
     number: 14,
-    title: "Gleam's Simplicity",
+    title: "With Type-Safe Integration",
     content: [
-      Heading("Gleam's Simplicity"),
+      Heading("With Type-Safe Integration"),
       Spacer,
-      content.Columns(
-        left: [
-          BulletList([
-            "Gleam programs are simple due to Gleam's constraints",
-            "Paradigm: Types and Functions in Modules",
-            "Limited syntax sugar",
-            "No macros or meta programming",
-            "Limited reflection",
-            "No traits, type classes, higher-kinded types",
-            "Explicit imports and exports",
-            "Modules map to file system",
-          ]),
-        ],
-        right: [
-          content.CodeBlock(
-            code: "
-case req.method, wisp.path_segments(req) {
-  Get, [] -> home.home_page(req)
-  Get, [\"dashboard\"] -> dashboard.dashboard_page(req, db)
-  Post, [\"users\"] -> users.users_create(req, db)
-  Get, [\"users\", id] -> users.users_show(req, id, db)
-  Get, [\"users\", id, \"edit\"] -> users.users_edit_form(req, id, db)
-  Put, [\"users\", id] -> users.users_update(req, id, db)
-  Delete, [\"users\", id] -> users.users_delete(req, id, db)
-  _, _ -> wisp.not_found()
-}
-",
-            language: "gleam",
-            highlight_lines: [],
-          ),
-          content.Paragraph("Wisp router is a case expression"),
-        ],
+      Subheading("React: Use Validated Props"),
+      CodeBlock(
+        "function UserProfile({ user }: { user: User }) {\n  return (\n    <div>\n      <h1>{user.name}</h1>\n      <p>{user.email}</p>\n    </div>\n  );\n}\n\n// Wrap with validation\nexport default validateProps(\n  UserProfile,\n  UserSchema\n);",
+        "typescript",
+        highlight_lines,
       ),
     ],
-    notes: "",
-    max_steps: 1,
+    notes: "React components receive type-safe props validated at runtime with Zod. Any mismatch between backend and frontend is caught immediately.",
+    max_steps: 2,
   )
 }

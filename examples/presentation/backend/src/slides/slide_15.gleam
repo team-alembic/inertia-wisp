@@ -1,40 +1,35 @@
-//// Slide 13: Why This Matters Now
+//// Slide 15: Forms & Validation
 ////
-//// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
+//// Introduction to forms and validation with Inertia.js
 
 import shared/content.{
-  type Slide, BulletList, Columns, Heading, Image, Slide, Spacer, Subheading,
+  type Slide, BulletList, Heading, LinkButton, Paragraph, Slide, Spacer,
+  Subheading,
 }
 
 pub fn slide() -> Slide {
   Slide(
     number: 15,
-    title: "Why This Matters Now",
+    title: "Forms & Validation",
     content: [
-      Heading("Why This Matters Now"),
+      Heading("Forms & Validation"),
+      Subheading("Using the useForm Hook"),
       Spacer,
-      Subheading("AI-Assisted Development"),
-      Columns(
-        left: [
-          Image(
-            "/static/images/stackoverflow-dev-survey-2025-ai-sentiment-and-usage-ai-sel-prof-social.png",
-            "Stack Overflow Survey 2025 - AI Usage",
-            400,
-          ),
-        ],
-        right: [
-          BulletList([
-            "> 50% of developers using AI tools daily",
-            "Consistent syntax = detects patterns reliably ",
-            "No metaprogramming = no additional context required",
-            "Single definitions = Agent directly reads implementation code",
-            "Clear error messages help AI fix mistakes",
-            "Feel productive while learning with AI assistance",
-          ]),
-        ],
+      BulletList([
+        "Form state management with useForm hook",
+        "Backend validation with detailed error messages",
+        "Inline error display for better UX",
+        "Full type safety from frontend to backend",
+        "Standard Inertia error handling patterns",
+      ]),
+      Spacer,
+      Paragraph(
+        "Click the button below to try the interactive demo, then return to continue the presentation.",
       ),
+      Spacer,
+      LinkButton("Try the Contact Form Demo →", "/forms/contact"),
     ],
-    notes: "The widespread adoption of AI tools (84% of developers) makes Gleam's simplicity particularly valuable. AI can understand and work with Gleam effectively due to its clear syntax, explicit structure, and helpful error messages, enabling rapid productivity.",
+    notes: "This slide introduces form handling in Inertia-Wisp. The demo shows a contact form with name, email, and message fields. Validation happens on the backend and errors are displayed inline. Use arrow keys or click the link in the footer to navigate to the demo form.",
     max_steps: 1,
   )
 }

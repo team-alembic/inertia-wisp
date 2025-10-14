@@ -29,10 +29,12 @@ import slides/slide_17
 import slides/slide_18
 import slides/slide_19
 import slides/slide_20
+import slides/slide_21
+import slides/slide_22
 import wisp.{type Request, type Response}
 
 /// Total number of slides in the presentation
-const total_slides = 20
+const total_slides = 22
 
 // Factory functions for creating Prop(SlideProp) instances
 
@@ -109,19 +111,21 @@ fn get_slide(number: Int, step: Int) -> content.Slide {
     5 -> slide_05.slide()
     6 -> slide_06.slide()
     7 -> slide_07.slide()
-    8 -> slide_08.slide(step)
+    8 -> slide_08.slide()
     9 -> slide_09.slide(step)
     10 -> slide_10.slide(step)
     11 -> slide_11.slide(step)
     12 -> slide_12.slide(step)
     13 -> slide_13.slide(step)
-    14 -> slide_14.slide()
+    14 -> slide_14.slide(step)
     15 -> slide_15.slide()
     16 -> slide_16.slide()
     17 -> slide_17.slide()
     18 -> slide_18.slide()
     19 -> slide_19.slide()
     20 -> slide_20.slide()
+    21 -> slide_21.slide()
+    22 -> slide_22.slide()
     _ -> panic as "Invalid slide number - should be caught by validation"
   }
 }

@@ -35,16 +35,13 @@ fn users_prop_to_json(prop: UsersProp) -> json.Json {
 
 /// Display the paginated users table
 pub fn show_users_table(req: Request) -> Response {
-  // Parse page from query string, default to 1
   let page = parse_query_param(req, "page", int.parse, 1)
 
-  // Generate and paginate users
   let all_users = generate_users(100)
   let per_page = 10
   let paginated_users = paginate(all_users, page, per_page)
   let total_pages = { 100 + per_page - 1 } / per_page
 
-  // Build props
   let props = [
     DefaultProp("users", UsersProp(paginated_users)),
     DefaultProp("page", PageProp(page)),

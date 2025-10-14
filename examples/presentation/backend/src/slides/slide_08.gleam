@@ -1,32 +1,33 @@
-//// Slide 8: The Backend You'll Love (Code Example)
+//// Slide 8: The Backend You'll Love
 ////
-//// Gleam code example showing clean routing
+//// Showcasing Gleam and Wisp with their benefits
 
-import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer}
+import shared/content.{
+  type Slide, BulletList, Heading, ImageData, ImageRow, Slide, Spacer,
+}
 
-pub fn slide(step: Int) -> Slide {
-  // Determine which lines to highlight based on step
-  let highlight_lines = case step {
-    1 -> [1]
-    2 -> [2, 3]
-    3 -> [5]
-    4 -> [7, 8, 9, 10]
-    _ -> []
-  }
-
+pub fn slide() -> Slide {
   Slide(
     number: 8,
     title: "The Backend You'll Love",
     content: [
       Heading("The Backend You'll Love"),
       Spacer,
-      CodeBlock(
-        "pub fn show_user_handler(req: Request, id: String, db: Connection) -> Response {\n  use user_id <- try_parse_user_id(req, id)\n  use user <- try_get_user(req, user_id, db)\n\n  let props = [user_props.user_data(user)]\n\n  req\n  |> inertia.response_builder(\"Users/Show\")\n  |> inertia.props(props, user_props.user_prop_to_json)\n  |> inertia.response(200)\n}",
-        "gleam",
-        highlight_lines,
-      ),
+      ImageRow([
+        ImageData("/static/images/lucy.svg", "Lucy - Gleam mascot", 200),
+        ImageData("/static/images/wisp.png", "Wisp web framework logo", 200),
+      ]),
+      Spacer,
+      BulletList([
+        "Simplicity - code that's easy to understand and maintain",
+        "Type safety - compile-time guarantees",
+        "Fast builds - instant feedback",
+        "Clear errors - that tell you exactly what's wrong",
+        "Excellent Tooling - build tool + language server",
+        "BEAM power - fault tolerance, concurrency, scalability",
+      ]),
     ],
-    notes: "Clean, readable Gleam code showing pattern matching for routing - simple and type-safe",
-    max_steps: 4,
+    notes: "Gleam and Wisp provide an excellent backend development experience with simplicity, type safety, fast builds, clear errors, and the power of the BEAM.",
+    max_steps: 1,
   )
 }

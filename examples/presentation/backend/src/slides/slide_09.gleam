@@ -1,33 +1,32 @@
-//// Slide 9: With Type-Safe Integration
+//// Slide 9: The Backend You'll Love (Code Example)
 ////
-//// How Inertia.js bridges Gleam and TypeScript type-safely
+//// Gleam code example showing clean routing
 
-import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
+import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step
   let highlight_lines = case step {
-    1 -> [1, 2, 3, 4]
-    // Type definition
-    2 -> [6, 7, 8, 9, 10, 11, 12, 13]
-    // JSON encoder
+    1 -> [1]
+    2 -> [2, 3]
+    3 -> [5]
+    4 -> [7, 8, 9, 10]
     _ -> []
   }
 
   Slide(
     number: 9,
-    title: "With Type-Safe Integration",
+    title: "The Backend You'll Love",
     content: [
-      Heading("With Type-Safe Integration"),
+      Heading("The Backend You'll Love"),
       Spacer,
-      Subheading("Gleam: Define Types & JSON Encoders"),
       CodeBlock(
-        "// Define the type\npub type User {\n  User(name: String, email: String)\n}\n\n// JSON encoder\npub fn user_to_json(user: User) -> json.Json {\n  let User(name:, email:) = user\n  json.object([\n    #(\"name\", json.string(name)),\n    #(\"email\", json.string(email)),\n  ])\n}",
+        "pub fn show_user_handler(req: Request, id: String, db: Connection) -> Response {\n  use user_id <- try_parse_user_id(req, id)\n  use user <- try_get_user(req, user_id, db)\n\n  let props = [user_props.user_data(user)]\n\n  req\n  |> inertia.response_builder(\"Users/Show\")\n  |> inertia.props(props, user_props.user_prop_to_json)\n  |> inertia.response(200)\n}",
         "gleam",
         highlight_lines,
       ),
     ],
-    notes: "Define types and encoders in Gleam - encoders are tested with property-based tests to ensure they match the frontend Zod schemas.",
-    max_steps: 2,
+    notes: "Clean, readable Gleam code showing pattern matching for routing - simple and type-safe",
+    max_steps: 4,
   )
 }

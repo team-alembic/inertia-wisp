@@ -1,35 +1,48 @@
-//// Slide 18: Forms & Validation
+//// Slide 18: One Handler, Four Use Cases
 ////
-//// Introduction to forms and validation with Inertia.js
+//// How a single Inertia handler automatically handles multiple scenarios
 
-import shared/content.{
-  type Slide, BulletList, Heading, LinkButton, Paragraph, Slide, Spacer,
-  Subheading,
-}
+import shared/content.{type Slide, BulletList, CodeBlock, Heading, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(
     number: 18,
-    title: "Forms & Validation",
+    title: "One Handler, Four Use Cases",
     content: [
-      Heading("Forms & Validation"),
-      Subheading("Using the useForm Hook"),
+      Heading("One Handler, Four Use Cases"),
       Spacer,
       BulletList([
-        "Form state management with useForm hook",
-        "Backend validation with detailed error messages",
-        "Inline error display for better UX",
-        "Full type safety from frontend to backend",
-        "Standard Inertia error handling patterns",
+        "📄 Initial HTML load - Props embedded as JSON in server-rendered HTML",
+        "🔄 Page navigation - Load all props as JSON when linked from another page",
+        "⏳ Deferred data - Separate request for DeferProp after initial render",
+        "📊 Pagination - Partial reload with only necessary props",
       ]),
       Spacer,
-      Paragraph(
-        "Click the button below to try the interactive demo, then return to continue the presentation.",
+      CodeBlock(
+        "pub fn show_users_table(req: Request) -> Response {
+  let page = parse_query_param(req, \"page\", int.parse, 1)
+  let users = paginate(generate_users(100), page, 10)
+
+  let props = [
+    DefaultProp(\"users\", UsersProp(users)),
+    DefaultProp(\"page\", PageProp(page)),
+    DefaultProp(\"total_pages\", TotalPagesProp(10)),
+    DeferProp(\"demo_info\", option.None, fn() {
+      process.sleep(2000)  // Simulate expensive computation
+      Ok(DemoInfoProp(\"Loaded separately!\"))
+    }),
+  ]
+
+  req
+  |> inertia.response_builder(\"UsersTable\")
+  |> inertia.props(props, users_prop_to_json)
+  |> inertia.response(200)
+}",
+        "gleam",
+        [],
       ),
-      Spacer,
-      LinkButton("Try the Contact Form Demo →", "/forms/contact"),
     ],
-    notes: "This slide introduces form handling in Inertia-Wisp. The demo shows a contact form with name, email, and message fields. Validation happens on the backend and errors are displayed inline. Use arrow keys or click the link in the footer to navigate to the demo form.",
+    notes: "This slide drives home the elegance of Inertia's design. The same handler code handles: (1) Initial page load where the HTML includes embedded JSON props, (2) Navigation from other pages where it returns just JSON, (3) Deferred prop loading where it evaluates only the deferred functions, and (4) Partial reloads during pagination where it returns only the requested props. This eliminates the need for separate REST API routes, reduces code duplication, and ensures the frontend and backend stay in sync. Open the network tab during the demo to see these different request types in action.",
     max_steps: 1,
   )
 }

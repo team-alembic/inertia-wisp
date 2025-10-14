@@ -1,33 +1,56 @@
-//// Slide 7: The Backend You'll Love
+//// Slide 7: Inertia Pages - Fully Formed Props
 ////
-//// Showcasing Gleam and Wisp with their benefits
+//// How Inertia pages receive complete, validated data without loading states
 
 import shared/content.{
-  type Slide, BulletList, Heading, ImageData, ImageRow, Slide, Spacer,
+  type Slide, BulletList, CodeBlock, Heading, Paragraph, Slide, Spacer,
+  Subheading,
 }
 
 pub fn slide() -> Slide {
   Slide(
     number: 7,
-    title: "The Backend You'll Love",
+    title: "Inertia Pages - Fully Formed Props",
     content: [
-      Heading("The Backend You'll Love"),
+      Heading("Inertia Pages - Fully Formed Props"),
+      Subheading("No loading states. No error states. Just data."),
       Spacer,
-      ImageRow([
-        ImageData("/static/images/lucy.svg", "Lucy - Gleam mascot", 200),
-        ImageData("/static/images/wisp.png", "Wisp web framework logo", 200),
-      ]),
+      CodeBlock(
+        "function UsersTable({ users, page, total_pages }: Props) {
+  const handleNext = () => {
+    router.reload({
+      data: { page: page + 1 },
+      only: [\"users\", \"page\"]
+    });
+  };
+
+  return (
+    <div>
+      <UsersDataTable users={users} />
+      <PaginationControls
+        page={page}
+        total_pages={total_pages}
+        onNext={handleNext}
+      />
+    </div>
+  );
+}",
+        "tsx",
+        [],
+      ),
       Spacer,
       BulletList([
-        "Simplicity - code that's easy to understand and maintain",
-        "Type safety - compile-time guarantees",
-        "Fast builds - instant feedback",
-        "Clear errors - that tell you exactly what's wrong",
-        "Excellent Tooling - build tool + language server",
-        "BEAM power - fault tolerance, concurrency, scalability",
+        "Props arrive fully formed - no null checks, no loading spinners",
+        "Backend provides all data before rendering the page",
+        "Type-safe props interface ensures props conform to expected schema",
+        "Focus on UI logic, not data fetching orchestration",
       ]),
+      Spacer,
+      Paragraph(
+        "Traditional SPAs: useState, useEffect, loading states, error boundaries, retry logic. Inertia: just render the data.",
+      ),
     ],
-    notes: "Gleam and Wisp provide an excellent backend development experience with simplicity, type safety, fast builds, clear errors, and the power of the BEAM.",
+    notes: "This slide emphasizes one of Inertia's biggest advantages - your React components receive fully formed, validated props directly. No need for loading states, error states, or complex data fetching logic. The backend ensures all data is ready before the page renders, so your frontend code stays simple and focused on presentation. This eliminates entire categories of bugs and complexity that plague traditional SPAs.",
     max_steps: 1,
   )
 }

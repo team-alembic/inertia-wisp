@@ -1,37 +1,35 @@
-//// Slide 15: The Trade-offs - Generic Abstractions
+//// Slide 17: Pagination & Partial Reloads
 ////
-//// Second trade-off: Generic abstractions need explicit dictionaries
+//// Introduction to pagination with partial reload optimization
 
 import shared/content.{
-  type Slide, CodeBlock, Columns, Heading, Paragraph, Slide, Spacer, Subheading,
+  type Slide, BulletList, Heading, LinkButton, Paragraph, Slide, Spacer,
+  Subheading,
 }
 
 pub fn slide() -> Slide {
   Slide(
     number: 17,
-    title: "The Trade-offs",
+    title: "Pagination & Partial Reloads",
     content: [
-      Heading("The Trade-offs"),
+      Heading("Pagination & Deferred Props"),
+      Subheading("Optimizing with DeferProp"),
       Spacer,
-      Subheading("Generic abstractions need explicit dictionaries"),
-      Columns(
-        left: [
-          Paragraph("Haskell sort requires Ord type class"),
-          CodeBlock("sort :: Ord a => [a] -> [a]", "haskell", []),
-        ],
-        right: [
-          Paragraph("Gleam sort requires comparison function"),
-          CodeBlock(
-            "pub fn sort(
-  list: List(a),
-  by compare: fn(a, a) -> order.Order) -> List(a)",
-            "gleam",
-            [],
-          ),
-        ],
+      BulletList([
+        "DeferProp loads in a separate request after initial render",
+        "Page renders immediately without waiting for slow data",
+        "Only specified props reload during navigation",
+        "Watch the prop load with a 2-second delay",
+        "Dramatically improves perceived performance",
+      ]),
+      Spacer,
+      Paragraph(
+        "Click the button below to see a paginated users table with a deferred prop. Watch it load after 2 seconds!",
       ),
+      Spacer,
+      LinkButton("Try the Pagination Demo →", "/users/table"),
     ],
-    notes: "Generic abstractions in Gleam require explicit dictionary passing rather than implicit type classes. This is more verbose but always explicit - you always pass the comparison function directly.",
+    notes: "This slide introduces DeferProp for optimizing expensive data loading. The demo shows a users table with a DeferProp that has an artificial 2-second delay. Watch it load separately after the initial page render. When navigating pages, only the 'users', 'page', and 'total_pages' props reload - the 'demo_info' DeferProp is not re-fetched. Open browser dev tools network tab to see the separate request for the deferred prop.",
     max_steps: 1,
   )
 }
