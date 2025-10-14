@@ -8,6 +8,7 @@ import gleam/erlang/process
 import gleam/http
 import handlers/forms
 import handlers/slides
+import handlers/users_table
 import mist
 import wisp
 import wisp/wisp_mist
@@ -51,6 +52,7 @@ fn route_request(req: wisp.Request) -> wisp.Response {
     ["slides", slide_num], http.Get -> slides.view_slide(req, slide_num)
     ["forms", "contact"], http.Get -> forms.show_contact_form(req)
     ["forms", "contact"], http.Post -> forms.submit_contact_form(req)
+    ["users", "table"], http.Get -> users_table.show_users_table(req)
     _, _ -> wisp.not_found()
   }
 }

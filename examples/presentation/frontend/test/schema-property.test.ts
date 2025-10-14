@@ -1,10 +1,20 @@
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
 import { z } from "zod";
-import { SlideSchema, SlideNavigationSchema } from "../src/schemas.js";
-import * as GleamContent from "../../shared/build/dev/javascript/shared/shared/content.mjs";
-import * as GleamJson from "../../shared/build/dev/javascript/gleam_json/gleam/json.mjs";
-import { slideArbitrary, slideNavigationArbitrary } from "./arbitraries.js";
+import {
+  SlideSchema,
+  SlideNavigationSchema,
+  UserSchema,
+  UsersTablePagePropsSchema,
+} from "../src/schemas.js";
+import * as GleamContent from "@shared/content.mjs";
+import * as GleamUser from "@shared/user.mjs";
+import * as GleamJson from "@gleam/gleam_json/gleam/json.mjs";
+import {
+  slideArbitrary,
+  slideNavigationArbitrary,
+  userArbitrary,
+} from "./arbitraries.js";
 
 // Custom assertion: verifies that a Gleam value encodes to JSON that validates with Zod
 // Also verifies strictness by ensuring extra properties are rejected
@@ -34,6 +44,15 @@ function assertEncodesToSchema<T>(
 }
 
 describe("Property-based type safety tests", () => {
+  it("User: user_to_json can be parsed by UserSchema", () => {
+    fc.assert(
+      fc.property(userArbitrary, (gleamValue) => {
+        assertEncodesToSchema(gleamValue, GleamUser.user_to_json, UserSchema);
+      }),
+      { numRuns: 1000 },
+    );
+  });
+
   it("Slide: slide_to_json can be parsed by SlideSchema", () => {
     fc.assert(
       fc.property(slideArbitrary, (gleamValue) => {

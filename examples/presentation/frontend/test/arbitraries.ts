@@ -1,14 +1,25 @@
 import fc from "fast-check";
-import * as GleamContent from "../../shared/build/dev/javascript/shared/shared/content.mjs";
+import * as GleamContent from "@shared/content.mjs";
+import * as GleamUser from "@shared/user.mjs";
+import * as GleamJson from "@gleam/gleam_json/gleam/json.mjs";
 import type {
   ImageData$,
   ContentBlock$,
   Slide$,
   SlideNavigation$,
-} from "../../shared/build/dev/javascript/shared/shared/content.d.mts";
-import { toList } from "../../shared/build/dev/javascript/shared/gleam.mjs";
+} from "@shared/content.d.mts";
+import type { User$ } from "@shared/user.d.mts";
+import { toList } from "@gleam/shared/gleam.mjs";
 
 // Fast-check arbitraries that generate Gleam types directly
+
+export const userArbitrary: fc.Arbitrary<User$> = fc
+  .record({
+    id: fc.integer({ min: 1, max: 10000 }),
+    name: fc.string({ minLength: 1 }),
+    email: fc.emailAddress(),
+  })
+  .map(({ id, name, email }) => GleamUser.User$User(id, name, email));
 
 export const imageDataArbitrary: fc.Arbitrary<ImageData$> = fc
   .record({

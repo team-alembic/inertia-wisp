@@ -164,3 +164,25 @@ export const ContactFormPagePropsSchema = z
   .strict();
 
 export type ContactFormPageProps = z.infer<typeof ContactFormPagePropsSchema>;
+
+// User schema
+export const UserSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string(),
+  })
+  .strict();
+
+// UsersTablePageProps schema
+export const UsersTablePagePropsSchema = z
+  .object({
+    users: z.array(UserSchema),
+    page: z.number(),
+    total_pages: z.number(),
+    demo_info: z.string().optional(),
+  })
+  .strict();
+
+export type User = z.infer<typeof UserSchema>;
+export type UsersTablePageProps = z.infer<typeof UsersTablePagePropsSchema>;
