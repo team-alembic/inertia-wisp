@@ -5,6 +5,7 @@
 import gleam/io
 import gleam/string
 import inertia_wisp/schema
+import props/slide_props
 import schemas/contact_form
 import schemas/content
 import schemas/user
@@ -27,6 +28,8 @@ pub fn main() {
     <> schema.variant_to_zod_schema(content.content_block_schema())
     <> "\n\n"
     <> schema.to_zod_schema(content.slide_schema())
+    <> "\n\n"
+    <> schema.to_zod_schema(slide_props.slide_page_props_schema())
     <> "\n"
 
   let output_path = "../frontend/src/generated/schemas.ts"
@@ -41,6 +44,7 @@ pub fn main() {
       io.println("  - SlideNavigation")
       io.println("  - ContentBlock (variant)")
       io.println("  - Slide")
+      io.println("  - SlidePageProps")
     }
     Error(err) -> {
       io.println("✗ Failed to write file: " <> string.inspect(err))

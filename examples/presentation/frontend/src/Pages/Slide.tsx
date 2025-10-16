@@ -1,12 +1,9 @@
 import { Head, Link } from "@inertiajs/react";
-import {
-  SlidePagePropsSchema,
-  type ContentBlock,
-  type SlidePageProps,
-} from "../schemas";
+import { SlidePagePropsSchema, type SlidePageProps } from "../schemas";
 import { validateProps } from "../lib/validateProps";
 import { highlightCode } from "../lib/prism";
 import { SlideNavigation } from "../components/SlideNavigation";
+import { ContentBlock } from "src/generated/schemas";
 
 function Slide({ slide, navigation, presentation_title }: SlidePageProps) {
   return (

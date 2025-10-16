@@ -6,7 +6,6 @@
 import gleam/int
 import gleam/list
 import inertia_wisp/inertia
-import inertia_wisp/prop.{AlwaysProp, DefaultProp}
 import props/slide_props
 import schemas/content as content_schemas
 import slides/slide_01
@@ -35,25 +34,6 @@ import wisp.{type Request, type Response}
 
 /// Total number of slides in the presentation
 const total_slides = 22
-
-// Factory functions for creating Prop(SlideProp) instances
-
-/// Create a slide content prop (DefaultProp)
-fn slide_content(slide: content_schemas.Slide) -> prop.Prop(slide_props.SlideProp) {
-  DefaultProp("slide", slide_props.SlideContent(slide))
-}
-
-/// Create a navigation prop (AlwaysProp)
-fn navigation(
-  nav: content_schemas.SlideNavigation,
-) -> prop.Prop(slide_props.SlideProp) {
-  AlwaysProp("navigation", slide_props.Navigation(nav))
-}
-
-/// Create a presentation title prop (AlwaysProp)
-fn presentation_title(title: String) -> prop.Prop(slide_props.SlideProp) {
-  AlwaysProp("presentation_title", slide_props.PresentationTitle(title))
-}
 
 /// Parse slide number and step from request parameters
 /// Step defaults to 1 if not provided or invalid
@@ -87,9 +67,9 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
     navigation_with_steps(slide_num, step, total_slides, slide.max_steps)
 
   let props = [
-    slide_content(slide),
-    navigation(nav),
-    presentation_title("Gleam + TypeScript"),
+    slide_props.slide_content(slide),
+    slide_props.navigation(nav),
+    slide_props.presentation_title("Gleam + TypeScript"),
   ]
 
   req

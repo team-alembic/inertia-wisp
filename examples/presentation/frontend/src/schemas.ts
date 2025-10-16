@@ -2,156 +2,14 @@
 // These match the JSON structure produced by the backend encoders
 
 import { z } from "zod";
+import {
+  SlideNavigationSchema,
+  SlidePagePropsSchema,
+  SlideSchema,
+  UserSchema,
+} from "./generated/schemas";
 
-// ImageData schema
-export const ImageDataSchema = z
-  .object({
-    url: z.string(),
-    alt: z.string(),
-    width: z.number(),
-  })
-  .strict();
-
-// ContentBlock schemas with discriminated union
-const HeadingBlockSchema = z.object({
-  type: z.literal("heading"),
-  text: z.string(),
-});
-
-const SubheadingBlockSchema = z.object({
-  type: z.literal("subheading"),
-  text: z.string(),
-});
-
-const ParagraphBlockSchema = z.object({
-  type: z.literal("paragraph"),
-  text: z.string(),
-});
-
-const CodeBlockSchema = z.object({
-  type: z.literal("code_block"),
-  code: z.string(),
-  language: z.string(),
-  highlight_lines: z.array(z.number()),
-});
-
-const BulletListBlockSchema = z.object({
-  type: z.literal("bullet_list"),
-  items: z.array(z.string()),
-});
-
-const NumberedListBlockSchema = z.object({
-  type: z.literal("numbered_list"),
-  items: z.array(z.string()),
-});
-
-const QuoteBlockSchema = z.object({
-  type: z.literal("quote"),
-  text: z.string(),
-  author: z.string(),
-});
-
-const ImageBlockSchema = z.object({
-  type: z.literal("image"),
-  url: z.string(),
-  alt: z.string(),
-  width: z.number(),
-});
-
-const ImageRowBlockSchema = z.object({
-  type: z.literal("image_row"),
-  images: z.array(ImageDataSchema),
-});
-
-const SpacerBlockSchema = z.object({
-  type: z.literal("spacer"),
-});
-
-const LinkButtonBlockSchema = z.object({
-  type: z.literal("link_button"),
-  text: z.string(),
-  href: z.string(),
-});
-
-// Define the base type for ContentBlock
-type ContentBlockType =
-  | z.infer<typeof HeadingBlockSchema>
-  | z.infer<typeof SubheadingBlockSchema>
-  | z.infer<typeof ParagraphBlockSchema>
-  | z.infer<typeof CodeBlockSchema>
-  | z.infer<typeof BulletListBlockSchema>
-  | z.infer<typeof NumberedListBlockSchema>
-  | z.infer<typeof QuoteBlockSchema>
-  | z.infer<typeof ImageBlockSchema>
-  | z.infer<typeof ImageRowBlockSchema>
-  | z.infer<typeof SpacerBlockSchema>
-  | z.infer<typeof LinkButtonBlockSchema>
-  | {
-      type: "columns";
-      left: ContentBlockType[];
-      right: ContentBlockType[];
-    };
-
-// ContentBlock schema
-export const ContentBlockSchema: z.ZodType<ContentBlockType> = z.lazy(() =>
-  z.discriminatedUnion("type", [
-    HeadingBlockSchema,
-    SubheadingBlockSchema,
-    ParagraphBlockSchema,
-    CodeBlockSchema,
-    BulletListBlockSchema,
-    NumberedListBlockSchema,
-    QuoteBlockSchema,
-    ImageBlockSchema,
-    ImageRowBlockSchema,
-    z.object({
-      type: z.literal("columns"),
-      left: z.array(ContentBlockSchema),
-      right: z.array(ContentBlockSchema),
-    }),
-    SpacerBlockSchema,
-    LinkButtonBlockSchema,
-  ]),
-);
-
-// Slide schema
-export const SlideSchema = z
-  .object({
-    number: z.number(),
-    title: z.string(),
-    content: z.array(ContentBlockSchema),
-    notes: z.string(),
-    max_steps: z.number(),
-  })
-  .strict();
-
-// SlideNavigation schema
-export const SlideNavigationSchema = z
-  .object({
-    current: z.number(),
-    total: z.number(),
-    has_previous: z.boolean(),
-    has_next: z.boolean(),
-    previous_url: z.string(),
-    next_url: z.string(),
-  })
-  .strict();
-
-// SlidePageProps schema
-export const SlidePagePropsSchema = z
-  .object({
-    slide: SlideSchema,
-    navigation: SlideNavigationSchema,
-    presentation_title: z.string(),
-  })
-  .strict();
-
-// Export inferred types
-export type ImageData = z.infer<typeof ImageDataSchema>;
-export type ContentBlock = z.infer<typeof ContentBlockSchema>;
-export type Slide = z.infer<typeof SlideSchema>;
-export type SlideNavigation = z.infer<typeof SlideNavigationSchema>;
-export type SlidePageProps = z.infer<typeof SlidePagePropsSchema>;
+export { SlidePagePropsSchema, type SlidePageProps } from "./generated/schemas";
 
 // ContactFormPageProps schema
 export const ContactFormPagePropsSchema = z
@@ -165,15 +23,6 @@ export const ContactFormPagePropsSchema = z
 
 export type ContactFormPageProps = z.infer<typeof ContactFormPagePropsSchema>;
 
-// User schema
-export const UserSchema = z
-  .object({
-    id: z.number(),
-    name: z.string(),
-    email: z.string(),
-  })
-  .strict();
-
 // UsersTablePageProps schema
 export const UsersTablePagePropsSchema = z
   .object({
@@ -184,5 +33,4 @@ export const UsersTablePagePropsSchema = z
   })
   .strict();
 
-export type User = z.infer<typeof UserSchema>;
 export type UsersTablePageProps = z.infer<typeof UsersTablePagePropsSchema>;

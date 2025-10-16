@@ -169,3 +169,11 @@ export const SlideSchema = z.object({
 }).strict();
 
 export type Slide = z.infer<typeof SlideSchema>;
+
+export const SlidePagePropsSchema = z.object({
+  navigation: SlideNavigationSchema,
+  presentation_title: z.string(),
+  slide: SlideSchema,
+}).strict();
+
+export type SlidePageProps = z.infer<typeof SlidePagePropsSchema>;

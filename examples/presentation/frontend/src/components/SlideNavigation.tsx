@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, router } from "@inertiajs/react";
-import type { SlideNavigation as SlideNavigationType } from "../schemas";
+import type { SlideNavigation as SlideNavigationType } from "../generated/schemas";
 
 interface SlideNavigationProps {
   navigation: SlideNavigationType;

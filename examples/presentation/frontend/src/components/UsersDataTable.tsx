@@ -1,4 +1,4 @@
-import type { User } from "../schemas";
+import type { User } from "../generated/schemas";
 
 interface UsersDataTableProps {
   users: User[];
