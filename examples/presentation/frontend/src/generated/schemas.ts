@@ -37,102 +37,102 @@ export const SlideNavigationSchema = z.object({
 
 export type SlideNavigation = z.infer<typeof SlideNavigationSchema>;
 
-const bullet_list_0 = z.object({
+const BulletListSchema = z.object({
   type: z.literal("bullet_list"),
   items: z.array(z.string()),
 });
 
-const code_block_1 = z.object({
+const CodeBlockSchema = z.object({
   type: z.literal("code_block"),
   code: z.string(),
   highlight_lines: z.array(z.number()),
   language: z.string(),
 });
 
-const heading_3 = z.object({
+const HeadingSchema = z.object({
   type: z.literal("heading"),
   text: z.string(),
 });
 
-const image_4 = z.object({
+const ImageSchema = z.object({
   type: z.literal("image"),
   alt: z.string(),
   url: z.string(),
   width: z.number(),
 });
 
-const image_row_5 = z.object({
+const ImageRowSchema = z.object({
   type: z.literal("image_row"),
   images: z.array(ImageDataSchema),
 });
 
-const link_button_6 = z.object({
+const LinkButtonSchema = z.object({
   type: z.literal("link_button"),
   href: z.string(),
   text: z.string(),
 });
 
-const numbered_list_7 = z.object({
+const NumberedListSchema = z.object({
   type: z.literal("numbered_list"),
   items: z.array(z.string()),
 });
 
-const paragraph_8 = z.object({
+const ParagraphSchema = z.object({
   type: z.literal("paragraph"),
   text: z.string(),
 });
 
-const quote_9 = z.object({
+const QuoteSchema = z.object({
   type: z.literal("quote"),
   author: z.string(),
   text: z.string(),
 });
 
-const spacer_10 = z.object({
+const SpacerSchema = z.object({
   type: z.literal("spacer"),
 });
 
-const subheading_11 = z.object({
+const SubheadingSchema = z.object({
   type: z.literal("subheading"),
   text: z.string(),
 });
 
 type ContentBlockType =
-  | z.infer<typeof bullet_list_0>
-  | z.infer<typeof code_block_1>
+  | z.infer<typeof BulletListSchema>
+  | z.infer<typeof CodeBlockSchema>
   | {
       type: "columns";
     left: ContentBlockType[];
     right: ContentBlockType[];
     }
-  | z.infer<typeof heading_3>
-  | z.infer<typeof image_4>
-  | z.infer<typeof image_row_5>
-  | z.infer<typeof link_button_6>
-  | z.infer<typeof numbered_list_7>
-  | z.infer<typeof paragraph_8>
-  | z.infer<typeof quote_9>
-  | z.infer<typeof spacer_10>
-  | z.infer<typeof subheading_11>;
+  | z.infer<typeof HeadingSchema>
+  | z.infer<typeof ImageSchema>
+  | z.infer<typeof ImageRowSchema>
+  | z.infer<typeof LinkButtonSchema>
+  | z.infer<typeof NumberedListSchema>
+  | z.infer<typeof ParagraphSchema>
+  | z.infer<typeof QuoteSchema>
+  | z.infer<typeof SpacerSchema>
+  | z.infer<typeof SubheadingSchema>;
 
 export const ContentBlockSchema: z.ZodType<ContentBlockType> = z.lazy(() =>
   z.discriminatedUnion("type", [
-  bullet_list_0,
-  code_block_1,
+  BulletListSchema,
+  CodeBlockSchema,
   z.object({
     type: z.literal("columns"),
     left: z.array(ContentBlockSchema),
     right: z.array(ContentBlockSchema),
   }),
-  heading_3,
-  image_4,
-  image_row_5,
-  link_button_6,
-  numbered_list_7,
-  paragraph_8,
-  quote_9,
-  spacer_10,
-  subheading_11,
+  HeadingSchema,
+  ImageSchema,
+  ImageRowSchema,
+  LinkButtonSchema,
+  NumberedListSchema,
+  ParagraphSchema,
+  QuoteSchema,
+  SpacerSchema,
+  SubheadingSchema,
   ]),
 );
 

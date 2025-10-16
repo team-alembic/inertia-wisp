@@ -609,9 +609,9 @@ fn variant_to_zod_recursive(
   let case_schemas =
     schema.cases
     |> dict.to_list()
-    |> list.index_map(fn(case_entry, idx) {
+    |> list.map(fn(case_entry) {
       let #(tag, record_schema) = case_entry
-      let case_schema_name = tag <> "_" <> string.inspect(idx)
+      let case_schema_name = record_schema.name <> "Schema"
 
       // Check if this case has recursive references
       let has_recursive =
@@ -670,9 +670,9 @@ fn variant_to_zod_recursive(
   let union_cases =
     schema.cases
     |> dict.to_list()
-    |> list.index_map(fn(case_entry, idx) {
+    |> list.map(fn(case_entry) {
       let #(tag, record_schema) = case_entry
-      let case_schema_name = tag <> "_" <> string.inspect(idx)
+      let case_schema_name = record_schema.name <> "Schema"
       // Check if this case has recursive references
       let has_recursive =
         record_schema.fields
@@ -712,9 +712,9 @@ fn variant_to_zod_recursive(
   let schema_refs =
     schema.cases
     |> dict.to_list()
-    |> list.index_map(fn(case_entry, idx) {
+    |> list.map(fn(case_entry) {
       let #(tag, record_schema) = case_entry
-      let case_schema_name = tag <> "_" <> string.inspect(idx)
+      let case_schema_name = record_schema.name <> "Schema"
       // Check if this case has recursive references
       let has_recursive =
         record_schema.fields
