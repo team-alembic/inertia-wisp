@@ -2,7 +2,7 @@
 ////
 //// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, Columns, Heading, Image, Slide, Spacer, Subheading,
 }
 

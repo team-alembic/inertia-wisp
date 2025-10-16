@@ -11,7 +11,8 @@ import gleam/result
 import gleam/uri
 import inertia_wisp/inertia
 import inertia_wisp/prop.{DefaultProp, DeferProp}
-import shared/user.{type User, User, user_to_json}
+import inertia_wisp/schema
+import schemas/user.{type User, User, user_schema}
 import wisp.{type Request, type Response}
 
 // Prop types and JSON encoding
@@ -25,7 +26,7 @@ pub type UsersProp {
 fn users_prop_to_json(prop: UsersProp) -> json.Json {
   case prop {
     UsersProp(users) -> {
-      json.array(users, user_to_json)
+      json.array(users, fn(user) { schema.to_json(user_schema(), user) })
     }
     PageProp(page) -> json.int(page)
     TotalPagesProp(total) -> json.int(total)

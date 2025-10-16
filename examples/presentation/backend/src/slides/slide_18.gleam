@@ -2,7 +2,7 @@
 ////
 //// How a single Inertia handler automatically handles multiple scenarios
 
-import shared/content.{type Slide, BulletList, CodeBlock, Heading, Slide, Spacer}
+import schemas/content.{type Slide, BulletList, CodeBlock, Heading, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(

@@ -2,7 +2,7 @@
 ////
 //// Introduction to the presenter
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, Heading, Paragraph, Slide, Spacer, Subheading,
 }
 

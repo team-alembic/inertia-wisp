@@ -28,6 +28,10 @@ certs:
 frontend-typecheck:
 	cd frontend && npm run typecheck
 
+# Generate TypeScript/Zod schemas from Gleam schemas
+codegen:
+	cd backend && gleam run -m codegen
+
 # Build shared code to JavaScript (for frontend tests)
 shared-build:
 	cd shared && gleam clean && gleam build --target javascript
@@ -37,7 +41,7 @@ frontend-build: shared-build
 	cd frontend && npm run build
 
 # Build everything
-build: frontend-build
+build: codegen frontend-build
 	cd backend && gleam build
 
 # Typecheck and build everything
@@ -88,6 +92,7 @@ help:
 	@echo "  make all               - Install dependencies and build everything (default)"
 	@echo "  make deps              - Install Gleam and frontend dependencies"
 	@echo "  make certs             - Generate trusted HTTPS certificates with mkcert"
+	@echo "  make codegen           - Generate TypeScript/Zod schemas from Gleam"
 	@echo "  make frontend-typecheck - Type check frontend TypeScript code"
 	@echo "  make shared-build      - Compile shared code to JavaScript (for frontend tests)"
 	@echo "  make build             - Build frontend assets"

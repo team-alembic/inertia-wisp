@@ -2,7 +2,7 @@
 ////
 //// Main value proposition of the framework
 
-import shared/content.{type Slide, Heading, Paragraph, Slide, Spacer}
+import schemas/content.{type Slide, Heading, Paragraph, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(

@@ -2,7 +2,7 @@
 ////
 //// First trade-off: Embedded DSLs aren't really possible
 
-import shared/content.{
+import schemas/content.{
   type Slide, CodeBlock, Columns, Heading, Paragraph, Slide, Spacer, Subheading,
 }
 

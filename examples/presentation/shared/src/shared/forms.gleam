@@ -1,26 +1,10 @@
-//// Shared form types
+//// Shared form validation logic
 ////
-//// This module defines form data types that are shared between
-//// backend (Gleam) and frontend (TypeScript via JavaScript compilation).
+//// This module contains validation functions that can be used
+//// by both backend (Gleam) and frontend (compiled to JavaScript).
 
-import gleam/json
 import gleam/list
 import gleam/string
-
-/// Contact form submission data
-pub type ContactFormData {
-  ContactFormData(name: String, email: String, message: String)
-}
-
-/// Encode contact form data to JSON
-pub fn contact_form_data_to_json(data: ContactFormData) -> json.Json {
-  let ContactFormData(name:, email:, message:) = data
-  json.object([
-    #("name", json.string(name)),
-    #("email", json.string(email)),
-    #("message", json.string(message)),
-  ])
-}
 
 /// Validate a name field
 /// Returns Ok(trimmed_name) if valid, Error(message) if invalid

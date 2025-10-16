@@ -8,7 +8,7 @@ import gleam/list
 import inertia_wisp/inertia
 import inertia_wisp/prop.{AlwaysProp, DefaultProp}
 import props/slide_props
-import shared/content
+import schemas/content as content_schemas
 import slides/slide_01
 import slides/slide_02
 import slides/slide_03
@@ -39,12 +39,14 @@ const total_slides = 22
 // Factory functions for creating Prop(SlideProp) instances
 
 /// Create a slide content prop (DefaultProp)
-fn slide_content(slide: content.Slide) -> prop.Prop(slide_props.SlideProp) {
+fn slide_content(slide: content_schemas.Slide) -> prop.Prop(slide_props.SlideProp) {
   DefaultProp("slide", slide_props.SlideContent(slide))
 }
 
 /// Create a navigation prop (AlwaysProp)
-fn navigation(nav: content.SlideNavigation) -> prop.Prop(slide_props.SlideProp) {
+fn navigation(
+  nav: content_schemas.SlideNavigation,
+) -> prop.Prop(slide_props.SlideProp) {
   AlwaysProp("navigation", slide_props.Navigation(nav))
 }
 
@@ -102,7 +104,7 @@ pub fn index(_req: Request) -> Response {
 }
 
 /// Get slide content by number and step
-fn get_slide(number: Int, step: Int) -> content.Slide {
+fn get_slide(number: Int, step: Int) -> content_schemas.Slide {
   case number {
     1 -> slide_01.slide()
     2 -> slide_02.slide()
@@ -136,7 +138,7 @@ fn navigation_with_steps(
   step: Int,
   total: Int,
   max_steps: Int,
-) -> content.SlideNavigation {
+) -> content_schemas.SlideNavigation {
   let has_previous = current > 1 || step > 1
   let has_next = current < total || step < max_steps
 
@@ -166,7 +168,7 @@ fn navigation_with_steps(
       }
   }
 
-  content.SlideNavigation(
+  content_schemas.SlideNavigation(
     current: current,
     total: total,
     has_previous: has_previous,

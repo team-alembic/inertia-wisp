@@ -2,7 +2,7 @@
 ////
 //// Introduction to pagination with partial reload optimization
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, Heading, LinkButton, Paragraph, Slide, Spacer,
   Subheading,
 }

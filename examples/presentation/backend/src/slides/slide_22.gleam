@@ -2,7 +2,7 @@
 ////
 //// Second trade-off: Generic abstractions need explicit dictionaries
 
-import shared/content.{
+import schemas/content.{
   type Slide, CodeBlock, Columns, Heading, Paragraph, Slide, Spacer, Subheading,
 }
 

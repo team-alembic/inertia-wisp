@@ -4,29 +4,25 @@ import {
   ContactFormPagePropsSchema,
   type ContactFormPageProps,
 } from "../schemas";
+import { type ContactFormData } from "../generated/schemas";
 import { validateProps } from "../lib/validateProps";
 import { FormCard } from "../components/FormCard";
 import { FormField } from "../components/FormField";
 import { SubmitButton } from "../components/SubmitButton";
 import { ValidationRulesTip } from "../components/ValidationRulesTip";
-import {
-  ContactFormData$ContactFormData,
-  ContactFormData$ContactFormData$name,
-  ContactFormData$ContactFormData$email,
-  ContactFormData$ContactFormData$message,
-  validate_name,
-} from "../../../shared/build/dev/javascript/shared/shared/forms.mjs";
+import { validate_name } from "../../../shared/build/dev/javascript/shared/shared/forms.mjs";
 import {
   Result$Error$0,
   Result$isOk,
 } from "../../../shared/build/dev/javascript/prelude.mjs";
-import type { ContactFormData$ } from "../../../shared/build/dev/javascript/shared/shared/forms.d.mts";
 
 function ContactForm({ name, email, message }: ContactFormPageProps) {
   const { data, setData, post, processing, setError, clearErrors, errors } =
-    useForm<ContactFormData$>(
-      ContactFormData$ContactFormData(name, email, message),
-    );
+    useForm<ContactFormData>({
+      name,
+      email,
+      message,
+    });
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -66,7 +62,7 @@ function ContactForm({ name, email, message }: ContactFormPageProps) {
                   id="name"
                   label="Name"
                   type="text"
-                  value={ContactFormData$ContactFormData$name(data)}
+                  value={data.name}
                   onChange={handleNameChange}
                   error={errors?.name}
                   disabled={processing}
@@ -77,7 +73,7 @@ function ContactForm({ name, email, message }: ContactFormPageProps) {
                   id="email"
                   label="Email"
                   type="email"
-                  value={ContactFormData$ContactFormData$email(data)}
+                  value={data.email}
                   onChange={(value) => setData("email", value)}
                   error={errors?.email}
                   disabled={processing}
@@ -88,7 +84,7 @@ function ContactForm({ name, email, message }: ContactFormPageProps) {
                   id="message"
                   label="Message"
                   type="textarea"
-                  value={ContactFormData$ContactFormData$message(data)}
+                  value={data.message}
                   onChange={(value) => setData("message", value)}
                   error={errors?.message}
                   disabled={processing}

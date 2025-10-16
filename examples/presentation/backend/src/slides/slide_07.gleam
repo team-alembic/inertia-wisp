@@ -2,7 +2,7 @@
 ////
 //// How Inertia pages receive complete, validated data without loading states
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, CodeBlock, Heading, Paragraph, Slide, Spacer,
   Subheading,
 }

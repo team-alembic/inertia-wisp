@@ -2,7 +2,7 @@
 ////
 //// Showcasing Gleam and Wisp with their benefits
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, Heading, ImageData, ImageRow, Slide, Spacer,
 }
 

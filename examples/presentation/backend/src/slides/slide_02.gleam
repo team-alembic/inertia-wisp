@@ -2,7 +2,7 @@
 ////
 //// Acknowledging Alembic for supporting this work
 
-import shared/content.{type Slide, Heading, Image, Paragraph, Slide, Spacer}
+import schemas/content.{type Slide, Heading, Image, Paragraph, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(

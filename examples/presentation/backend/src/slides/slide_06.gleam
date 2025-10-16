@@ -2,7 +2,7 @@
 ////
 //// JavaScript and TypeScript as the dominant languages
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, CodeBlock, Columns, Heading, Image, Slide, Spacer,
 }
 

@@ -2,7 +2,7 @@
 ////
 //// Gleam code example showing clean routing
 
-import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer}
+import schemas/content.{type Slide, CodeBlock, Heading, Slide, Spacer}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step

@@ -4,21 +4,22 @@
 //// JSON serialization for all slide content.
 
 import gleam/json.{type Json}
-
-import shared/content
+import inertia_wisp/schema
+import schemas/content as content_schemas
 
 /// Prop types for slide pages
 pub type SlideProp {
-  SlideContent(content.Slide)
-  Navigation(content.SlideNavigation)
+  SlideContent(content_schemas.Slide)
+  Navigation(content_schemas.SlideNavigation)
   PresentationTitle(String)
 }
 
 /// Convert a SlideProp to JSON
 pub fn slide_prop_to_json(slide_prop: SlideProp) -> Json {
   case slide_prop {
-    SlideContent(slide) -> content.slide_to_json(slide)
-    Navigation(nav) -> content.slide_navigation_to_json(nav)
+    SlideContent(slide) -> schema.to_json(content_schemas.slide_schema(), slide)
+    Navigation(nav) ->
+      schema.to_json(content_schemas.slide_navigation_schema(), nav)
     PresentationTitle(title) -> json.string(title)
   }
 }

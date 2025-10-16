@@ -2,7 +2,7 @@
 ////
 //// React and TypeScript as the frontend foundation
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, CodeBlock, Columns, Heading, Image, Slide, Spacer,
 }
 

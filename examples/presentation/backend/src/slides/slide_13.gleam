@@ -2,7 +2,7 @@
 ////
 //// Shows property-based tests ensuring encoder/schema compatibility
 
-import shared/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
+import schemas/content.{type Slide, CodeBlock, Heading, Slide, Spacer, Subheading}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step

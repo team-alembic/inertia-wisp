@@ -4,13 +4,16 @@
 
 import gleam/dict.{type Dict}
 import gleam/dynamic
-import gleam/dynamic/decode
 import gleam/json
 import gleam/result
 import gleam/string
 import inertia_wisp/inertia
 import inertia_wisp/prop.{DefaultProp}
-import shared/forms.{type ContactFormData, ContactFormData, validate_name}
+import inertia_wisp/schema
+import schemas/contact_form.{
+  type ContactFormData, ContactFormData, contact_form_data_schema,
+}
+import shared/forms.{validate_name}
 import wisp.{type Request, type Response}
 
 // Prop types and JSON encoding
@@ -28,18 +31,11 @@ fn form_prop_to_json(prop: FormProp) -> json.Json {
   }
 }
 
-/// Decode form data from JSON
+/// Decode form data from JSON using schema
 fn decode_form_data(
   json_data: dynamic.Dynamic,
-) -> Result(ContactFormData, List(decode.DecodeError)) {
-  let decoder = {
-    use name <- decode.field("name", decode.string)
-    use email <- decode.field("email", decode.string)
-    use message <- decode.field("message", decode.string)
-    decode.success(ContactFormData(name, email, message))
-  }
-
-  decode.run(json_data, decoder)
+) -> Result(ContactFormData, String) {
+  schema.decode(contact_form_data_schema(), json_data)
 }
 
 /// Display the contact form page

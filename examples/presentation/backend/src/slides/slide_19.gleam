@@ -2,7 +2,7 @@
 ////
 //// Showing how different languages approach simplicity
 
-import shared/content.{type Slide, BulletList, Heading, Slide, Spacer}
+import schemas/content.{type Slide, BulletList, Heading, Slide, Spacer}
 
 pub fn slide() -> Slide {
   Slide(

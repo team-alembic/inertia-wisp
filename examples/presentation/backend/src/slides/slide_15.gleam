@@ -2,7 +2,7 @@
 ////
 //// Introduction to forms and validation with Inertia.js
 
-import shared/content.{
+import schemas/content.{
   type Slide, BulletList, Heading, LinkButton, Paragraph, Slide, Spacer,
   Subheading,
 }
