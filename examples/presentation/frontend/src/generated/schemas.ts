@@ -37,65 +37,87 @@ export const SlideNavigationSchema = z.object({
 
 export type SlideNavigation = z.infer<typeof SlideNavigationSchema>;
 
-const BulletListSchema = z.object({
+export const BulletListSchema = z.object({
   type: z.literal("bullet_list"),
   items: z.array(z.string()),
 });
 
-const CodeBlockSchema = z.object({
+export type BulletList = z.infer<typeof BulletListSchema>;
+
+export const CodeBlockSchema = z.object({
   type: z.literal("code_block"),
   code: z.string(),
   highlight_lines: z.array(z.number()),
   language: z.string(),
 });
 
-const HeadingSchema = z.object({
+export type CodeBlock = z.infer<typeof CodeBlockSchema>;
+
+export const HeadingSchema = z.object({
   type: z.literal("heading"),
   text: z.string(),
 });
 
-const ImageSchema = z.object({
+export type Heading = z.infer<typeof HeadingSchema>;
+
+export const ImageSchema = z.object({
   type: z.literal("image"),
   alt: z.string(),
   url: z.string(),
   width: z.number(),
 });
 
-const ImageRowSchema = z.object({
+export type Image = z.infer<typeof ImageSchema>;
+
+export const ImageRowSchema = z.object({
   type: z.literal("image_row"),
   images: z.array(ImageDataSchema),
 });
 
-const LinkButtonSchema = z.object({
+export type ImageRow = z.infer<typeof ImageRowSchema>;
+
+export const LinkButtonSchema = z.object({
   type: z.literal("link_button"),
   href: z.string(),
   text: z.string(),
 });
 
-const NumberedListSchema = z.object({
+export type LinkButton = z.infer<typeof LinkButtonSchema>;
+
+export const NumberedListSchema = z.object({
   type: z.literal("numbered_list"),
   items: z.array(z.string()),
 });
 
-const ParagraphSchema = z.object({
+export type NumberedList = z.infer<typeof NumberedListSchema>;
+
+export const ParagraphSchema = z.object({
   type: z.literal("paragraph"),
   text: z.string(),
 });
 
-const QuoteSchema = z.object({
+export type Paragraph = z.infer<typeof ParagraphSchema>;
+
+export const QuoteSchema = z.object({
   type: z.literal("quote"),
   author: z.string(),
   text: z.string(),
 });
 
-const SpacerSchema = z.object({
+export type Quote = z.infer<typeof QuoteSchema>;
+
+export const SpacerSchema = z.object({
   type: z.literal("spacer"),
 });
 
-const SubheadingSchema = z.object({
+export type Spacer = z.infer<typeof SpacerSchema>;
+
+export const SubheadingSchema = z.object({
   type: z.literal("subheading"),
   text: z.string(),
 });
+
+export type Subheading = z.infer<typeof SubheadingSchema>;
 
 type ContentBlockType =
   | z.infer<typeof BulletListSchema>

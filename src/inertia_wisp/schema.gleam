@@ -641,23 +641,35 @@ fn variant_to_zod_recursive(
 
           let type_literal = "  type: z.literal(\"" <> tag <> "\"),"
 
+          let type_name = record_schema.name
+
           case dict.size(record_schema.fields) {
             0 ->
-              "const "
+              "export const "
               <> case_schema_name
               <> " = z.object({\n"
               <> type_literal
               <> "\n"
-              <> "});\n"
+              <> "});\n\n"
+              <> "export type "
+              <> type_name
+              <> " = z.infer<typeof "
+              <> case_schema_name
+              <> ">;\n"
             _ ->
-              "const "
+              "export const "
               <> case_schema_name
               <> " = z.object({\n"
               <> type_literal
               <> "\n"
               <> fields
               <> "\n"
-              <> "});\n"
+              <> "});\n\n"
+              <> "export type "
+              <> type_name
+              <> " = z.infer<typeof "
+              <> case_schema_name
+              <> ">;\n"
           }
         }
       }
