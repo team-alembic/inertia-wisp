@@ -16,23 +16,18 @@ pub fn contact_form_data_schema() -> schema.RecordSchema {
     "ContactFormData",
     ContactFormData(name: "", email: "", message: ""),
   )
-  |> schema.field(
-    "name",
-    schema.StringType,
-    fn(f: ContactFormData) { f.name },
-    fn(f, name) { ContactFormData(..f, name: name) },
-  )
-  |> schema.field(
+  |> schema.string_field("name", fn(f: ContactFormData) { f.name }, fn(f, name) {
+    ContactFormData(..f, name:)
+  })
+  |> schema.string_field(
     "email",
-    schema.StringType,
     fn(f: ContactFormData) { f.email },
-    fn(f, email) { ContactFormData(..f, email: email) },
+    fn(f, email) { ContactFormData(..f, email:) },
   )
-  |> schema.field(
+  |> schema.string_field(
     "message",
-    schema.StringType,
     fn(f: ContactFormData) { f.message },
-    fn(f, message) { ContactFormData(..f, message: message) },
+    fn(f, message) { ContactFormData(..f, message:) },
   )
   |> schema.schema()
 }

@@ -15,24 +15,15 @@ pub type ImageData {
 /// Schema for ImageData type
 pub fn image_data_schema() -> schema.RecordSchema {
   schema.record_schema("ImageData", ImageData(url: "", alt: "", width: 0))
-  |> schema.field(
-    "url",
-    schema.StringType,
-    fn(img: ImageData) { img.url },
-    fn(img, url) { ImageData(..img, url: url) },
-  )
-  |> schema.field(
-    "alt",
-    schema.StringType,
-    fn(img: ImageData) { img.alt },
-    fn(img, alt) { ImageData(..img, alt: alt) },
-  )
-  |> schema.field(
-    "width",
-    schema.IntType,
-    fn(img: ImageData) { img.width },
-    fn(img, width) { ImageData(..img, width: width) },
-  )
+  |> schema.string_field("url", fn(img: ImageData) { img.url }, fn(img, url) {
+    ImageData(..img, url:)
+  })
+  |> schema.string_field("alt", fn(img: ImageData) { img.alt }, fn(img, alt) {
+    ImageData(..img, alt:)
+  })
+  |> schema.int_field("width", fn(img: ImageData) { img.width }, fn(img, width) {
+    ImageData(..img, width:)
+  })
   |> schema.schema()
 }
 
@@ -61,41 +52,35 @@ pub fn slide_navigation_schema() -> schema.RecordSchema {
       next_url: "",
     ),
   )
-  |> schema.field(
+  |> schema.int_field(
     "current",
-    schema.IntType,
     fn(nav: SlideNavigation) { nav.current },
-    fn(nav, current) { SlideNavigation(..nav, current: current) },
+    fn(nav, current) { SlideNavigation(..nav, current:) },
   )
-  |> schema.field(
+  |> schema.int_field(
     "total",
-    schema.IntType,
     fn(nav: SlideNavigation) { nav.total },
-    fn(nav, total) { SlideNavigation(..nav, total: total) },
+    fn(nav, total) { SlideNavigation(..nav, total:) },
   )
-  |> schema.field(
+  |> schema.bool_field(
     "has_previous",
-    schema.BoolType,
     fn(nav: SlideNavigation) { nav.has_previous },
-    fn(nav, has_previous) { SlideNavigation(..nav, has_previous: has_previous) },
+    fn(nav, has_previous) { SlideNavigation(..nav, has_previous:) },
   )
-  |> schema.field(
+  |> schema.bool_field(
     "has_next",
-    schema.BoolType,
     fn(nav: SlideNavigation) { nav.has_next },
-    fn(nav, has_next) { SlideNavigation(..nav, has_next: has_next) },
+    fn(nav, has_next) { SlideNavigation(..nav, has_next:) },
   )
-  |> schema.field(
+  |> schema.string_field(
     "previous_url",
-    schema.StringType,
     fn(nav: SlideNavigation) { nav.previous_url },
-    fn(nav, previous_url) { SlideNavigation(..nav, previous_url: previous_url) },
+    fn(nav, previous_url) { SlideNavigation(..nav, previous_url:) },
   )
-  |> schema.field(
+  |> schema.string_field(
     "next_url",
-    schema.StringType,
     fn(nav: SlideNavigation) { nav.next_url },
-    fn(nav, next_url) { SlideNavigation(..nav, next_url: next_url) },
+    fn(nav, next_url) { SlideNavigation(..nav, next_url:) },
   )
   |> schema.schema()
 }
@@ -160,42 +145,39 @@ fn content_block_tagger(block: ContentBlock) -> String {
 /// Helper schemas for each ContentBlock variant case
 fn heading_record_schema() -> schema.RecordSchema {
   schema.record_schema("Heading", Heading(text: ""))
-  |> schema.field(
+  |> schema.string_field(
     "text",
-    schema.StringType,
     fn(block) {
       let assert Heading(text) = block
       text
     },
-    fn(_block, text) { Heading(text: text) },
+    fn(_block, text) { Heading(text:) },
   )
   |> schema.schema()
 }
 
 fn subheading_record_schema() -> schema.RecordSchema {
   schema.record_schema("Subheading", Subheading(text: ""))
-  |> schema.field(
+  |> schema.string_field(
     "text",
-    schema.StringType,
     fn(block) {
       let assert Subheading(text) = block
       text
     },
-    fn(_block, text) { Subheading(text: text) },
+    fn(_block, text) { Subheading(text:) },
   )
   |> schema.schema()
 }
 
 fn paragraph_record_schema() -> schema.RecordSchema {
   schema.record_schema("Paragraph", Paragraph(text: ""))
-  |> schema.field(
+  |> schema.string_field(
     "text",
-    schema.StringType,
     fn(block) {
       let assert Paragraph(text) = block
       text
     },
-    fn(_block, text) { Paragraph(text: text) },
+    fn(_block, text) { Paragraph(text:) },
   )
   |> schema.schema()
 }
@@ -205,52 +187,38 @@ fn code_block_record_schema() -> schema.RecordSchema {
     "CodeBlock",
     CodeBlock(code: "", language: "", highlight_lines: []),
   )
-  |> schema.field(
+  |> schema.string_field(
     "code",
-    schema.StringType,
     fn(block) {
       let assert CodeBlock(code, _, _) = block
       code
     },
     fn(block, code) {
       let assert CodeBlock(_, language, highlight_lines) = block
-      CodeBlock(
-        code: code,
-        language: language,
-        highlight_lines: highlight_lines,
-      )
+      CodeBlock(code:, language:, highlight_lines:)
     },
   )
-  |> schema.field(
+  |> schema.string_field(
     "language",
-    schema.StringType,
     fn(block) {
       let assert CodeBlock(_, language, _) = block
       language
     },
     fn(block, language) {
       let assert CodeBlock(code, _, highlight_lines) = block
-      CodeBlock(
-        code: code,
-        language: language,
-        highlight_lines: highlight_lines,
-      )
+      CodeBlock(code:, language:, highlight_lines:)
     },
   )
-  |> schema.field(
+  |> schema.list_field(
     "highlight_lines",
-    schema.ListType(schema.IntType),
+    schema.IntType,
     fn(block) {
       let assert CodeBlock(_, _, highlight_lines) = block
       highlight_lines
     },
     fn(block, highlight_lines) {
       let assert CodeBlock(code, language, _) = block
-      CodeBlock(
-        code: code,
-        language: language,
-        highlight_lines: highlight_lines,
-      )
+      CodeBlock(code:, language:, highlight_lines:)
     },
   )
   |> schema.schema()
@@ -258,56 +226,54 @@ fn code_block_record_schema() -> schema.RecordSchema {
 
 fn bullet_list_record_schema() -> schema.RecordSchema {
   schema.record_schema("BulletList", BulletList(items: []))
-  |> schema.field(
+  |> schema.list_field(
     "items",
-    schema.ListType(schema.StringType),
+    schema.StringType,
     fn(block) {
       let assert BulletList(items) = block
       items
     },
-    fn(_block, items) { BulletList(items: items) },
+    fn(_block, items) { BulletList(items:) },
   )
   |> schema.schema()
 }
 
 fn numbered_list_record_schema() -> schema.RecordSchema {
   schema.record_schema("NumberedList", NumberedList(items: []))
-  |> schema.field(
+  |> schema.list_field(
     "items",
-    schema.ListType(schema.StringType),
+    schema.StringType,
     fn(block) {
       let assert NumberedList(items) = block
       items
     },
-    fn(_block, items) { NumberedList(items: items) },
+    fn(_block, items) { NumberedList(items:) },
   )
   |> schema.schema()
 }
 
 fn quote_record_schema() -> schema.RecordSchema {
   schema.record_schema("Quote", Quote(text: "", author: ""))
-  |> schema.field(
+  |> schema.string_field(
     "text",
-    schema.StringType,
     fn(block) {
       let assert Quote(text, _) = block
       text
     },
     fn(block, text) {
       let assert Quote(_, author) = block
-      Quote(text: text, author: author)
+      Quote(text:, author:)
     },
   )
-  |> schema.field(
+  |> schema.string_field(
     "author",
-    schema.StringType,
     fn(block) {
       let assert Quote(_, author) = block
       author
     },
     fn(block, author) {
       let assert Quote(text, _) = block
-      Quote(text: text, author: author)
+      Quote(text:, author:)
     },
   )
   |> schema.schema()
@@ -315,40 +281,37 @@ fn quote_record_schema() -> schema.RecordSchema {
 
 fn image_record_schema() -> schema.RecordSchema {
   schema.record_schema("Image", Image(url: "", alt: "", width: 0))
-  |> schema.field(
+  |> schema.string_field(
     "url",
-    schema.StringType,
     fn(block) {
       let assert Image(url, _, _) = block
       url
     },
     fn(block, url) {
       let assert Image(_, alt, width) = block
-      Image(url: url, alt: alt, width: width)
+      Image(url:, alt:, width:)
     },
   )
-  |> schema.field(
+  |> schema.string_field(
     "alt",
-    schema.StringType,
     fn(block) {
       let assert Image(_, alt, _) = block
       alt
     },
     fn(block, alt) {
       let assert Image(url, _, width) = block
-      Image(url: url, alt: alt, width: width)
+      Image(url:, alt:, width:)
     },
   )
-  |> schema.field(
+  |> schema.int_field(
     "width",
-    schema.IntType,
     fn(block) {
       let assert Image(_, _, width) = block
       width
     },
     fn(block, width) {
       let assert Image(url, alt, _) = block
-      Image(url: url, alt: alt, width: width)
+      Image(url:, alt:, width:)
     },
   )
   |> schema.schema()
@@ -356,42 +319,42 @@ fn image_record_schema() -> schema.RecordSchema {
 
 fn image_row_record_schema() -> schema.RecordSchema {
   schema.record_schema("ImageRow", ImageRow(images: []))
-  |> schema.field(
+  |> schema.list_field(
     "images",
-    schema.ListType(schema.RecordType(image_data_schema)),
+    schema.RecordType(image_data_schema),
     fn(block) {
       let assert ImageRow(images) = block
       images
     },
-    fn(_block, images) { ImageRow(images: images) },
+    fn(_block, images) { ImageRow(images:) },
   )
   |> schema.schema()
 }
 
 fn columns_record_schema() -> schema.RecordSchema {
   schema.record_schema("Columns", Columns(left: [], right: []))
-  |> schema.field(
+  |> schema.list_field(
     "left",
-    schema.ListType(schema.VariantType(content_block_schema)),
+    schema.VariantType(content_block_schema),
     fn(block) {
       let assert Columns(left, _) = block
       left
     },
     fn(block, left) {
       let assert Columns(_, right) = block
-      Columns(left: left, right: right)
+      Columns(left:, right:)
     },
   )
-  |> schema.field(
+  |> schema.list_field(
     "right",
-    schema.ListType(schema.VariantType(content_block_schema)),
+    schema.VariantType(content_block_schema),
     fn(block) {
       let assert Columns(_, right) = block
       right
     },
     fn(block, right) {
       let assert Columns(left, _) = block
-      Columns(left: left, right: right)
+      Columns(left:, right:)
     },
   )
   |> schema.schema()
@@ -399,28 +362,26 @@ fn columns_record_schema() -> schema.RecordSchema {
 
 fn link_button_record_schema() -> schema.RecordSchema {
   schema.record_schema("LinkButton", LinkButton(text: "", href: ""))
-  |> schema.field(
+  |> schema.string_field(
     "text",
-    schema.StringType,
     fn(block) {
       let assert LinkButton(text, _) = block
       text
     },
     fn(block, text) {
       let assert LinkButton(_, href) = block
-      LinkButton(text: text, href: href)
+      LinkButton(text:, href:)
     },
   )
-  |> schema.field(
+  |> schema.string_field(
     "href",
-    schema.StringType,
     fn(block) {
       let assert LinkButton(_, href) = block
       href
     },
     fn(block, href) {
       let assert LinkButton(text, _) = block
-      LinkButton(text: text, href: href)
+      LinkButton(text:, href:)
     },
   )
   |> schema.schema()
@@ -466,35 +427,25 @@ pub fn slide_schema() -> schema.RecordSchema {
     "Slide",
     Slide(number: 0, title: "", content: [], notes: "", max_steps: 1),
   )
-  |> schema.field(
-    "number",
-    schema.IntType,
-    fn(slide) { slide.number },
-    fn(slide, number) { Slide(..slide, number: number) },
-  )
-  |> schema.field(
-    "title",
-    schema.StringType,
-    fn(slide) { slide.title },
-    fn(slide, title) { Slide(..slide, title: title) },
-  )
-  |> schema.field(
+  |> schema.int_field("number", fn(slide) { slide.number }, fn(slide, number) {
+    Slide(..slide, number:)
+  })
+  |> schema.string_field("title", fn(slide) { slide.title }, fn(slide, title) {
+    Slide(..slide, title:)
+  })
+  |> schema.list_field(
     "content",
-    schema.ListType(schema.VariantType(content_block_schema)),
+    schema.VariantType(content_block_schema),
     fn(slide) { slide.content },
-    fn(slide, content) { Slide(..slide, content: content) },
+    fn(slide, content) { Slide(..slide, content:) },
   )
-  |> schema.field(
-    "notes",
-    schema.StringType,
-    fn(slide) { slide.notes },
-    fn(slide, notes) { Slide(..slide, notes: notes) },
-  )
-  |> schema.field(
+  |> schema.string_field("notes", fn(slide) { slide.notes }, fn(slide, notes) {
+    Slide(..slide, notes:)
+  })
+  |> schema.int_field(
     "max_steps",
-    schema.IntType,
     fn(slide) { slide.max_steps },
-    fn(slide, max_steps) { Slide(..slide, max_steps: max_steps) },
+    fn(slide, max_steps) { Slide(..slide, max_steps:) },
   )
   |> schema.schema()
 }

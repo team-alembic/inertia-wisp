@@ -131,6 +131,79 @@ pub fn field(
   RecordSchemaBuilder(schema: updated_schema)
 }
 
+/// Add a string field to a record schema
+pub fn string_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  get: fn(t) -> String,
+  set: fn(t, String) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, StringType, get, set)
+}
+
+/// Add an integer field to a record schema
+pub fn int_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  get: fn(t) -> Int,
+  set: fn(t, Int) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, IntType, get, set)
+}
+
+/// Add a boolean field to a record schema
+pub fn bool_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  get: fn(t) -> Bool,
+  set: fn(t, Bool) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, BoolType, get, set)
+}
+
+/// Add a float field to a record schema
+pub fn float_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  get: fn(t) -> Float,
+  set: fn(t, Float) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, FloatType, get, set)
+}
+
+/// Add a list field to a record schema
+pub fn list_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  inner: FieldType,
+  get: fn(t) -> List(a),
+  set: fn(t, List(a)) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, ListType(inner), get, set)
+}
+
+/// Add a nested record field to a record schema
+pub fn record_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  schema: fn() -> RecordSchema,
+  get: fn(t) -> a,
+  set: fn(t, a) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, RecordType(schema), get, set)
+}
+
+/// Add a variant field to a record schema
+pub fn variant_field(
+  sb: RecordSchemaBuilder(t),
+  name: String,
+  schema: fn() -> VariantSchema,
+  get: fn(t) -> a,
+  set: fn(t, a) -> t,
+) -> RecordSchemaBuilder(t) {
+  field(sb, name, VariantType(schema), get, set)
+}
+
 /// Add a case to a variant schema
 pub fn variant_case(
   sb: VariantSchemaBuilder(t),
