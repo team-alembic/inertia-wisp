@@ -4,6 +4,7 @@
 //// JSON serialization for all slide content.
 
 import gleam/json.{type Json}
+import inertia_wisp/page_schema
 import inertia_wisp/prop
 import inertia_wisp/schema
 import schemas/content as content_schemas
@@ -15,58 +16,16 @@ pub type SlideProp {
   PresentationTitle(String)
 }
 
-/// The complete props structure for a slide page
-pub type SlidePageProps {
-  SlidePageProps(
-    slide: content_schemas.Slide,
-    navigation: content_schemas.SlideNavigation,
-    presentation_title: String,
-  )
-}
-
-/// Schema for SlidePageProps
-pub fn slide_page_props_schema() -> schema.RecordSchema {
-  schema.record_schema(
-    "SlidePageProps",
-    SlidePageProps(
-      slide: content_schemas.Slide(
-        number: 0,
-        title: "",
-        content: [],
-        notes: "",
-        max_steps: 1,
-      ),
-      navigation: content_schemas.SlideNavigation(
-        current: 0,
-        total: 0,
-        has_previous: False,
-        has_next: False,
-        previous_url: "",
-        next_url: "",
-      ),
-      presentation_title: "",
-    ),
-  )
-  |> schema.record_field(
-    "slide",
-    content_schemas.slide_schema,
-    fn(props) { props.slide },
-    fn(props, slide) { SlidePageProps(..props, slide:) },
-  )
-  |> schema.record_field(
+/// Page schema for Slide page (for TypeScript generation)
+pub fn slide_page_schema() -> page_schema.PageSchema {
+  page_schema.page_schema("Slide")
+  |> page_schema.prop("slide", schema.RecordType(content_schemas.slide_schema))
+  |> page_schema.prop(
     "navigation",
-    content_schemas.slide_navigation_schema,
-    fn(props) { props.navigation },
-    fn(props, navigation) { SlidePageProps(..props, navigation:) },
+    schema.RecordType(content_schemas.slide_navigation_schema),
   )
-  |> schema.string_field(
-    "presentation_title",
-    fn(props) { props.presentation_title },
-    fn(props, presentation_title) {
-      SlidePageProps(..props, presentation_title:)
-    },
-  )
-  |> schema.schema()
+  |> page_schema.prop("presentation_title", schema.StringType)
+  |> page_schema.build()
 }
 
 // Factory functions for creating Prop(SlideProp) instances

@@ -4,6 +4,7 @@
 
 import gleam/io
 import gleam/string
+import inertia_wisp/page_schema
 import inertia_wisp/schema
 import props/slide_props
 import schemas/contact_form
@@ -29,7 +30,7 @@ pub fn main() {
     <> "\n\n"
     <> schema.to_zod_schema(content.slide_schema())
     <> "\n\n"
-    <> schema.to_zod_schema(slide_props.slide_page_props_schema())
+    <> page_schema.to_zod_schema(slide_props.slide_page_schema())
     <> "\n"
 
   let output_path = "../frontend/src/generated/schemas.ts"
