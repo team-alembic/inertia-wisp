@@ -2,7 +2,8 @@
 ////
 //// Gleam code example showing clean routing
 
-import schemas/content.{type Slide, CodeBlock, Heading, Slide, Spacer}
+import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/slide.{type Slide, Slide}
 
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step

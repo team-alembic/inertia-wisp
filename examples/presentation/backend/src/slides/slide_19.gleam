@@ -2,7 +2,11 @@
 ////
 //// Showing how different languages approach simplicity
 
-import schemas/content.{type Slide, BulletList, Heading, Slide, Spacer}
+import schemas/content_block.{
+  BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton,
+  NumberedList, Paragraph, Quote, Spacer, Subheading,
+}
+import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
@@ -11,7 +15,7 @@ pub fn slide() -> Slide {
     content: [
       Heading("Gleam's Simplicity"),
       Spacer,
-      content.Columns(
+      Columns(
         left: [
           BulletList([
             "Gleam programs are simple due to Gleam's constraints",
@@ -25,7 +29,7 @@ pub fn slide() -> Slide {
           ]),
         ],
         right: [
-          content.CodeBlock(
+          CodeBlock(
             code: "
 case req.method, wisp.path_segments(req) {
   Get, [] -> home.home_page(req)
@@ -41,7 +45,7 @@ case req.method, wisp.path_segments(req) {
             language: "gleam",
             highlight_lines: [],
           ),
-          content.Paragraph("Wisp router is a case expression"),
+          Paragraph("Wisp router is a case expression"),
         ],
       ),
     ],

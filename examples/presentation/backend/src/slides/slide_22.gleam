@@ -2,9 +2,8 @@
 ////
 //// Second trade-off: Generic abstractions need explicit dictionaries
 
-import schemas/content.{
-  type Slide, CodeBlock, Columns, Heading, Paragraph, Slide, Spacer, Subheading,
-}
+import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(

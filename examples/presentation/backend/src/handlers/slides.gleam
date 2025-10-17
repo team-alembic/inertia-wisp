@@ -4,11 +4,12 @@
 //// navigation information.
 
 import gleam/int
+import gleam/json
 import gleam/list
 import inertia_wisp/inertia
-import inertia_wisp/page_schema
 import props/slide_props
-import schemas/content as content_schemas
+import schemas/slide
+import schemas/slide_navigation
 import slides/slide_01
 import slides/slide_02
 import slides/slide_03
@@ -75,10 +76,7 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
 
   req
   |> inertia.response_builder("Slide")
-  |> inertia.props(
-    props,
-    page_schema.create_encoder(slide_props.slide_page_schema()),
-  )
+  |> inertia.props(props, fn(_x) { json.null() })
   |> inertia.response(200)
 }
 
@@ -88,7 +86,7 @@ pub fn index(_req: Request) -> Response {
 }
 
 /// Get slide content by number and step
-fn get_slide(number: Int, step: Int) -> content_schemas.Slide {
+fn get_slide(number: Int, step: Int) -> slide.Slide {
   case number {
     1 -> slide_01.slide()
     2 -> slide_02.slide()
@@ -122,7 +120,7 @@ fn navigation_with_steps(
   step: Int,
   total: Int,
   max_steps: Int,
-) -> content_schemas.SlideNavigation {
+) -> slide_navigation.SlideNavigation {
   let has_previous = current > 1 || step > 1
   let has_next = current < total || step < max_steps
 
@@ -152,7 +150,7 @@ fn navigation_with_steps(
       }
   }
 
-  content_schemas.SlideNavigation(
+  slide_navigation.SlideNavigation(
     current: current,
     total: total,
     has_previous: has_previous,

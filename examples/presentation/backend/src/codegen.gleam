@@ -8,7 +8,10 @@ import inertia_wisp/page_schema
 import inertia_wisp/schema
 import props/slide_props
 import schemas/contact_form
-import schemas/content
+import schemas/content_block
+import schemas/image_data
+import schemas/slide
+import schemas/slide_navigation
 import schemas/user
 import simplifile
 
@@ -22,13 +25,13 @@ pub fn main() {
     <> "\n\n"
     <> schema.to_zod_schema(contact_form.contact_form_data_schema())
     <> "\n\n"
-    <> schema.to_zod_schema(content.image_data_schema())
+    <> schema.to_zod_schema(image_data.image_data_schema())
     <> "\n\n"
-    <> schema.to_zod_schema(content.slide_navigation_schema())
+    <> schema.to_zod_schema(slide_navigation.slide_navigation_schema())
     <> "\n\n"
-    <> schema.variant_to_zod_schema(content.content_block_schema())
+    <> schema.variant_to_zod_schema(content_block.content_block_schema())
     <> "\n\n"
-    <> schema.to_zod_schema(content.slide_schema())
+    <> schema.to_zod_schema(slide.slide_schema())
     <> "\n\n"
     <> page_schema.to_zod_schema(slide_props.slide_page_schema())
     <> "\n"

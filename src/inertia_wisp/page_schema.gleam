@@ -17,30 +17,22 @@ import inertia_wisp/schema.{type FieldType}
 
 /// A schema for a page component's props
 pub type PageSchema {
-  PageSchema(
-    component: String,
-    props: Dict(String, PropDeclaration),
-    tagger: fn(dynamic.Dynamic) -> String,
-  )
+  PageSchema(component: String, props: Dict(String, PropDeclaration))
 }
 
 /// Behavior of a prop in Inertia.js
 pub type PropBehavior {
-  /// Included on initial page visit, excluded on subsequent visits
   DefaultProp
-  /// Always included on every request
-  AlwaysProp
-  /// Never included unless explicitly requested
   LazyProp
+  OptionalProp
+  AlwaysProp
+  DeferProp
+  Merge
 }
 
 /// Declaration of a single prop on a page
 pub type PropDeclaration {
-  PropDeclaration(
-    field_type: FieldType,
-    behavior: PropBehavior,
-    extractor: fn(dynamic.Dynamic) -> dynamic.Dynamic,
-  )
+  PropDeclaration(field_type: FieldType, behavior: PropBehavior)
 }
 
 /// Builder for constructing page schemas
@@ -50,11 +42,7 @@ pub type PageSchemaBuilder {
 
 /// Create a new page schema builder
 pub fn page_schema(component: String) -> PageSchemaBuilder {
-  PageSchemaBuilder(
-    schema: PageSchema(component: component, props: dict.new(), tagger: fn(_) {
-      ""
-    }),
-  )
+  PageSchemaBuilder(schema: PageSchema(component: component, props: dict.new()))
 }
 
 /// Add a required prop to the page schema
@@ -62,97 +50,16 @@ pub fn prop(
   builder: PageSchemaBuilder,
   name: String,
   field_type: FieldType,
-  extractor: fn(p) -> a,
 ) -> PageSchemaBuilder {
-  let prop_decl =
-    PropDeclaration(
-      field_type: field_type,
-      behavior: DefaultProp,
-      extractor: fn(value) {
-        schema.unsafe_cast(extractor(schema.unsafe_cast(value)))
-      },
-    )
+  let prop_decl = PropDeclaration(field_type: field_type, behavior: DefaultProp)
   let updated_props = dict.insert(builder.schema.props, name, prop_decl)
   let updated_schema = PageSchema(..builder.schema, props: updated_props)
-  PageSchemaBuilder(schema: updated_schema)
-}
-
-/// Add an always prop to the page schema (always included)
-pub fn always_prop(
-  builder: PageSchemaBuilder,
-  name: String,
-  field_type: FieldType,
-  extractor: fn(p) -> a,
-) -> PageSchemaBuilder {
-  let prop_decl =
-    PropDeclaration(
-      field_type: field_type,
-      behavior: AlwaysProp,
-      extractor: fn(value) {
-        schema.unsafe_cast(extractor(schema.unsafe_cast(value)))
-      },
-    )
-  let updated_props = dict.insert(builder.schema.props, name, prop_decl)
-  let updated_schema = PageSchema(..builder.schema, props: updated_props)
-  PageSchemaBuilder(schema: updated_schema)
-}
-
-/// Add a lazy prop to the page schema (only included when explicitly requested)
-pub fn lazy_prop(
-  builder: PageSchemaBuilder,
-  name: String,
-  field_type: FieldType,
-  extractor: fn(p) -> a,
-) -> PageSchemaBuilder {
-  let prop_decl =
-    PropDeclaration(
-      field_type: field_type,
-      behavior: LazyProp,
-      extractor: fn(value) {
-        schema.unsafe_cast(extractor(schema.unsafe_cast(value)))
-      },
-    )
-  let updated_props = dict.insert(builder.schema.props, name, prop_decl)
-  let updated_schema = PageSchema(..builder.schema, props: updated_props)
-  PageSchemaBuilder(schema: updated_schema)
-}
-
-/// Set the tagger function for the page schema
-/// The tagger identifies which prop a given value represents
-pub fn tagger(
-  builder: PageSchemaBuilder,
-  tagger_fn: fn(p) -> String,
-) -> PageSchemaBuilder {
-  let updated_schema =
-    PageSchema(..builder.schema, tagger: fn(value) {
-      tagger_fn(schema.unsafe_cast(value))
-    })
   PageSchemaBuilder(schema: updated_schema)
 }
 
 /// Finalize the page schema
 pub fn build(builder: PageSchemaBuilder) -> PageSchema {
   builder.schema
-}
-
-/// Create a JSON encoder function from a PageSchema
-/// This returns a function that can be passed to inertia.props()
-pub fn create_encoder(page_schema: PageSchema) -> fn(p) -> json.Json {
-  fn(prop: p) -> json.Json {
-    let dynamic_prop = schema.unsafe_cast(prop)
-    let prop_name = page_schema.tagger(dynamic_prop)
-
-    case dict.get(page_schema.props, prop_name) {
-      Ok(prop_decl) -> {
-        let value = prop_decl.extractor(dynamic_prop)
-        encode_prop(prop_decl.field_type, value)
-      }
-      Error(_) -> {
-        // Prop not declared in schema - this shouldn't happen
-        json.null()
-      }
-    }
-  }
 }
 
 /// Generate TypeScript/Zod schema from page schema
@@ -167,9 +74,8 @@ pub fn to_zod_schema(page_schema: PageSchema) -> String {
       let #(prop_name, prop_decl) = entry
       let zod_type = field_type_to_zod(prop_decl.field_type)
       let with_optional = case prop_decl.behavior {
-        LazyProp -> zod_type <> ".optional()"
-        DefaultProp -> zod_type
-        AlwaysProp -> zod_type
+        OptionalProp | DeferProp -> zod_type <> ".optional()"
+        _ -> zod_type
       }
       "  " <> prop_name <> ": " <> with_optional <> ","
     })

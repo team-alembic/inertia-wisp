@@ -2,9 +2,8 @@
 ////
 //// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
 
-import schemas/content.{
-  type Slide, BulletList, Columns, Heading, Image, Slide, Spacer, Subheading,
-}
+import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
