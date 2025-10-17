@@ -19,12 +19,33 @@ pub type SlideProp {
 /// Page schema for Slide page (for TypeScript generation)
 pub fn slide_page_schema() -> page_schema.PageSchema {
   page_schema.page_schema("Slide")
-  |> page_schema.prop("slide", schema.RecordType(content_schemas.slide_schema))
+  |> page_schema.prop(
+    "slide",
+    schema.RecordType(content_schemas.slide_schema),
+    fn(p: SlideProp) {
+      let assert SlideContent(slide) = p
+      slide
+    },
+  )
   |> page_schema.prop(
     "navigation",
     schema.RecordType(content_schemas.slide_navigation_schema),
+    fn(p: SlideProp) {
+      let assert Navigation(nav) = p
+      nav
+    },
   )
-  |> page_schema.prop("presentation_title", schema.StringType)
+  |> page_schema.prop("presentation_title", schema.StringType, fn(p: SlideProp) {
+    let assert PresentationTitle(title) = p
+    title
+  })
+  |> page_schema.tagger(fn(p: SlideProp) {
+    case p {
+      SlideContent(_) -> "slide"
+      Navigation(_) -> "navigation"
+      PresentationTitle(_) -> "presentation_title"
+    }
+  })
   |> page_schema.build()
 }
 
@@ -45,12 +66,8 @@ pub fn presentation_title(title: String) -> prop.Prop(SlideProp) {
   prop.AlwaysProp("presentation_title", PresentationTitle(title))
 }
 
-/// Convert a SlideProp to JSON
+/// Convert a SlideProp to JSON using the page schema
 pub fn slide_prop_to_json(slide_prop: SlideProp) -> Json {
-  case slide_prop {
-    SlideContent(slide) -> schema.to_json(content_schemas.slide_schema(), slide)
-    Navigation(nav) ->
-      schema.to_json(content_schemas.slide_navigation_schema(), nav)
-    PresentationTitle(title) -> json.string(title)
-  }
+  let encoder = page_schema.create_encoder(slide_page_schema())
+  encoder(slide_prop)
 }
