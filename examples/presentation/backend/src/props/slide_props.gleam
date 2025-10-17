@@ -15,52 +15,61 @@ pub type SlideProp {
   PresentationTitle(String)
 }
 
+// Prop name constants
+const slide_prop_name = "slide"
+
+const navigation_prop_name = "navigation"
+
+const presentation_title_prop_name = "presentation_title"
+
 /// Page schema for Slide page (for TypeScript generation)
 pub fn slide_page_schema() -> page_schema.PageSchema {
   page_schema.page_schema("Slide")
   |> page_schema.prop(
-    "slide",
+    slide_prop_name,
     schema.RecordType(content_schemas.slide_schema),
     fn(p: SlideProp) {
       let assert SlideContent(slide) = p
       slide
     },
   )
-  |> page_schema.prop(
-    "navigation",
+  |> page_schema.always_prop(
+    navigation_prop_name,
     schema.RecordType(content_schemas.slide_navigation_schema),
     fn(p: SlideProp) {
       let assert Navigation(nav) = p
       nav
     },
   )
-  |> page_schema.prop("presentation_title", schema.StringType, fn(p: SlideProp) {
-    let assert PresentationTitle(title) = p
-    title
-  })
+  |> page_schema.always_prop(
+    presentation_title_prop_name,
+    schema.StringType,
+    fn(p: SlideProp) {
+      let assert PresentationTitle(title) = p
+      title
+    },
+  )
   |> page_schema.tagger(fn(p: SlideProp) {
     case p {
-      SlideContent(_) -> "slide"
-      Navigation(_) -> "navigation"
-      PresentationTitle(_) -> "presentation_title"
+      SlideContent(_) -> slide_prop_name
+      Navigation(_) -> navigation_prop_name
+      PresentationTitle(_) -> presentation_title_prop_name
     }
   })
   |> page_schema.build()
 }
 
-// Factory functions for creating Prop(SlideProp) instances
-
 /// Create a slide content prop (DefaultProp)
 pub fn slide_content(slide: content_schemas.Slide) -> prop.Prop(SlideProp) {
-  prop.DefaultProp("slide", SlideContent(slide))
+  prop.DefaultProp(slide_prop_name, SlideContent(slide))
 }
 
 /// Create a navigation prop (AlwaysProp)
 pub fn navigation(nav: content_schemas.SlideNavigation) -> prop.Prop(SlideProp) {
-  prop.AlwaysProp("navigation", Navigation(nav))
+  prop.AlwaysProp(navigation_prop_name, Navigation(nav))
 }
 
 /// Create a presentation title prop (AlwaysProp)
 pub fn presentation_title(title: String) -> prop.Prop(SlideProp) {
-  prop.AlwaysProp("presentation_title", PresentationTitle(title))
+  prop.AlwaysProp(presentation_title_prop_name, PresentationTitle(title))
 }

@@ -24,11 +24,21 @@ pub type PageSchema {
   )
 }
 
+/// Behavior of a prop in Inertia.js
+pub type PropBehavior {
+  /// Included on initial page visit, excluded on subsequent visits
+  DefaultProp
+  /// Always included on every request
+  AlwaysProp
+  /// Never included unless explicitly requested
+  LazyProp
+}
+
 /// Declaration of a single prop on a page
 pub type PropDeclaration {
   PropDeclaration(
     field_type: FieldType,
-    optional: Bool,
+    behavior: PropBehavior,
     extractor: fn(dynamic.Dynamic) -> dynamic.Dynamic,
   )
 }
@@ -57,7 +67,7 @@ pub fn prop(
   let prop_decl =
     PropDeclaration(
       field_type: field_type,
-      optional: False,
+      behavior: DefaultProp,
       extractor: fn(value) {
         schema.unsafe_cast(extractor(schema.unsafe_cast(value)))
       },
@@ -67,8 +77,8 @@ pub fn prop(
   PageSchemaBuilder(schema: updated_schema)
 }
 
-/// Add an optional prop to the page schema (e.g., lazy props, deferred props)
-pub fn optional_prop(
+/// Add an always prop to the page schema (always included)
+pub fn always_prop(
   builder: PageSchemaBuilder,
   name: String,
   field_type: FieldType,
@@ -77,7 +87,27 @@ pub fn optional_prop(
   let prop_decl =
     PropDeclaration(
       field_type: field_type,
-      optional: True,
+      behavior: AlwaysProp,
+      extractor: fn(value) {
+        schema.unsafe_cast(extractor(schema.unsafe_cast(value)))
+      },
+    )
+  let updated_props = dict.insert(builder.schema.props, name, prop_decl)
+  let updated_schema = PageSchema(..builder.schema, props: updated_props)
+  PageSchemaBuilder(schema: updated_schema)
+}
+
+/// Add a lazy prop to the page schema (only included when explicitly requested)
+pub fn lazy_prop(
+  builder: PageSchemaBuilder,
+  name: String,
+  field_type: FieldType,
+  extractor: fn(p) -> a,
+) -> PageSchemaBuilder {
+  let prop_decl =
+    PropDeclaration(
+      field_type: field_type,
+      behavior: LazyProp,
       extractor: fn(value) {
         schema.unsafe_cast(extractor(schema.unsafe_cast(value)))
       },
@@ -136,9 +166,10 @@ pub fn to_zod_schema(page_schema: PageSchema) -> String {
     |> list.map(fn(entry) {
       let #(prop_name, prop_decl) = entry
       let zod_type = field_type_to_zod(prop_decl.field_type)
-      let with_optional = case prop_decl.optional {
-        True -> zod_type <> ".optional()"
-        False -> zod_type
+      let with_optional = case prop_decl.behavior {
+        LazyProp -> zod_type <> ".optional()"
+        DefaultProp -> zod_type
+        AlwaysProp -> zod_type
       }
       "  " <> prop_name <> ": " <> with_optional <> ","
     })
