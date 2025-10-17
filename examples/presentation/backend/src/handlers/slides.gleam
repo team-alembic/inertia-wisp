@@ -6,6 +6,7 @@
 import gleam/int
 import gleam/list
 import inertia_wisp/inertia
+import inertia_wisp/page_schema
 import props/slide_props
 import schemas/content as content_schemas
 import slides/slide_01
@@ -74,7 +75,10 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
 
   req
   |> inertia.response_builder("Slide")
-  |> inertia.props(props, slide_props.slide_prop_to_json)
+  |> inertia.props(
+    props,
+    page_schema.create_encoder(slide_props.slide_page_schema()),
+  )
   |> inertia.response(200)
 }
 

@@ -3,7 +3,6 @@
 //// This module defines props for rendering presentation slides and provides
 //// JSON serialization for all slide content.
 
-import gleam/json.{type Json}
 import inertia_wisp/page_schema
 import inertia_wisp/prop
 import inertia_wisp/schema
@@ -64,10 +63,4 @@ pub fn navigation(nav: content_schemas.SlideNavigation) -> prop.Prop(SlideProp) 
 /// Create a presentation title prop (AlwaysProp)
 pub fn presentation_title(title: String) -> prop.Prop(SlideProp) {
   prop.AlwaysProp("presentation_title", PresentationTitle(title))
-}
-
-/// Convert a SlideProp to JSON using the page schema
-pub fn slide_prop_to_json(slide_prop: SlideProp) -> Json {
-  let encoder = page_schema.create_encoder(slide_page_schema())
-  encoder(slide_prop)
 }
