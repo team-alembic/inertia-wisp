@@ -11,14 +11,10 @@ pub type User {
 }
 
 /// Schema for User type
-pub fn user_schema() -> schema.RecordSchema {
+pub fn user_schema() -> schema.RecordSchema(_) {
   schema.record_schema("User", User(id: 0, name: "", email: ""))
-  |> schema.int_field("id", fn(u: User) { u.id }, fn(u, id) { User(..u, id:) })
-  |> schema.string_field("name", fn(u: User) { u.name }, fn(u, name) {
-    User(..u, name:)
-  })
-  |> schema.string_field("email", fn(u: User) { u.email }, fn(u, email) {
-    User(..u, email:)
-  })
+  |> schema.int_field("id")
+  |> schema.string_field("name")
+  |> schema.string_field("email")
   |> schema.schema()
 }

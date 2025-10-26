@@ -9,15 +9,10 @@
 import gleam/dict.{type Dict}
 import gleam/list
 import gleam/option.{type Option}
-import inertia_wisp/schema.{type RecordSchema}
 
 /// Complete application specification
 pub type Spec {
-  Spec(
-    schemas: List(RecordSchema),
-    pages: List(PageDef),
-    routes: List(RouteDef),
-  )
+  Spec(pages: List(PageDef), routes: List(RouteDef))
 }
 
 /// Page definition - a frontend React component with typed props
@@ -84,12 +79,7 @@ pub type ParamType {
 
 /// Create a new empty specification
 pub fn new() -> Spec {
-  Spec(schemas: [], pages: [], routes: [])
-}
-
-/// Add schemas to the specification
-pub fn with_schemas(spec: Spec, schemas: List(RecordSchema)) -> Spec {
-  Spec(..spec, schemas: schemas)
+  Spec(pages: [], routes: [])
 }
 
 /// Add pages to the specification
@@ -100,12 +90,6 @@ pub fn with_pages(spec: Spec, pages: List(PageDef)) -> Spec {
 /// Add routes to the specification
 pub fn with_routes(spec: Spec, routes: List(RouteDef)) -> Spec {
   Spec(..spec, routes: routes)
-}
-
-/// Build a schema lookup by name
-pub fn schema_map(spec: Spec) -> Dict(String, RecordSchema) {
-  spec.schemas
-  |> list_to_dict(fn(s) { #(s.name, s) })
 }
 
 /// Build a page lookup by name

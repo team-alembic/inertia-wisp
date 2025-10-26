@@ -3,52 +3,25 @@
 //// Handles contact form display and submission with validation
 
 import gleam/dict.{type Dict}
-import gleam/dynamic
-import gleam/json
 import gleam/result
 import gleam/string
 import inertia_wisp/inertia
-import inertia_wisp/prop.{DefaultProp}
-import inertia_wisp/schema
-import schemas/contact_form.{
-  type ContactFormData, ContactFormData, contact_form_data_schema,
-}
+import props/contact_form_props
+import schemas/contact_form.{type ContactFormData, ContactFormData}
 import shared/forms.{validate_name}
 import wisp.{type Request, type Response}
-
-// Prop types and JSON encoding
-pub type FormProp {
-  NameProp(String)
-  EmailProp(String)
-  MessageProp(String)
-}
-
-fn form_prop_to_json(prop: FormProp) -> json.Json {
-  case prop {
-    NameProp(value) -> json.string(value)
-    EmailProp(value) -> json.string(value)
-    MessageProp(value) -> json.string(value)
-  }
-}
-
-/// Decode form data from JSON using schema
-fn decode_form_data(
-  json_data: dynamic.Dynamic,
-) -> Result(ContactFormData, String) {
-  schema.decode(contact_form_data_schema(), json_data)
-}
 
 /// Display the contact form page
 pub fn show_contact_form(req: Request) -> Response {
   let props = [
-    DefaultProp("name", NameProp("")),
-    DefaultProp("email", EmailProp("")),
-    DefaultProp("message", MessageProp("")),
+    contact_form_props.name(""),
+    contact_form_props.email(""),
+    contact_form_props.message(""),
   ]
 
   req
   |> inertia.response_builder("ContactForm")
-  |> inertia.props(props, form_prop_to_json)
+  |> inertia.props(props, contact_form_props.contact_form_prop_to_json)
   |> inertia.response(200)
 }
 
@@ -59,7 +32,7 @@ pub fn submit_contact_form(req: Request) -> Response {
   // Decode form data from JSON
   let ContactFormData(name:, email:, message:) =
     json_data
-    |> decode_form_data()
+    |> contact_form.decode()
     |> result.unwrap(ContactFormData("", "", ""))
 
   // Validate

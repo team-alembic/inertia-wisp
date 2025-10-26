@@ -2,7 +2,7 @@
 ////
 //// Shows property-based tests ensuring encoder/schema compatibility
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{CodeBlock, Heading, Spacer, Subheading}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide(step: Int) -> Slide {
@@ -20,7 +20,7 @@ pub fn slide(step: Int) -> Slide {
   }
 
   Slide(
-    number: 13,
+    number: 0,
     title: "With Type-Safe Integration",
     content: [
       Heading("With Type-Safe Integration"),

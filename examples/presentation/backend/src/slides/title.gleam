@@ -2,12 +2,12 @@
 ////
 //// Introduction to the presentation
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{Heading, Paragraph, Spacer, Subheading}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 1,
+    number: 0,
     title: "Gleam + TypeScript",
     content: [
       Heading("Gleam + TypeScript"),

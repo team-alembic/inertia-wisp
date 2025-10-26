@@ -1,9 +1,10 @@
-import { router } from "@inertiajs/react";
 import {
   UsersTablePagePropsSchema,
   type UsersTablePageProps,
-} from "../schemas";
+  type UsersTableQueryParams,
+} from "../generated/schemas";
 import { validateProps } from "../lib/validateProps";
+import { useTypedRouter } from "../lib/typedRouter";
 import {
   PageHeader,
   DeferredInfoBadge,
@@ -12,12 +13,25 @@ import {
   BackToPresentation,
 } from "../components";
 
-function UsersTable({users, page, total_pages, demo_info}: UsersTablePageProps) {
+function UsersTable({
+  users,
+  page,
+  total_pages,
+  demo_info,
+}: UsersTablePageProps) {
+  const router = useTypedRouter<UsersTablePageProps, UsersTableQueryParams>();
+
   const handlePrevious = () => {
-    router.reload({ data: { page: page - 1 }, only: ["users", "page"] });
+    router.reload({
+      data: { page: page - 1 },
+      only: ["users", "page"],
+    });
   };
   const handleNext = () => {
-    router.reload({ data: { page: page + 1 }, only: ["users", "page"] });
+    router.reload({
+      data: { page: page + 1 },
+      only: ["users", "page"],
+    });
   };
 
   return (

@@ -3,8 +3,8 @@ import { FormEvent } from "react";
 import {
   ContactFormPagePropsSchema,
   type ContactFormPageProps,
-} from "../schemas";
-import { type ContactFormData } from "../generated/schemas";
+  type ContactFormData,
+} from "../generated/schemas";
 import { validateProps } from "../lib/validateProps";
 import { FormCard } from "../components/FormCard";
 import { FormField } from "../components/FormField";

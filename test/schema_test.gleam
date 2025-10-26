@@ -1,30 +1,17 @@
 import gleam/dynamic/decode
 import gleam/json
 import gleam/string
-import gleeunit/should
 import inertia_wisp/schema
 
 pub type User {
   User(id: Int, name: String, email: String)
 }
 
-pub fn user_schema() -> schema.RecordSchema {
+pub fn user_schema() -> schema.RecordSchema(_) {
   schema.record_schema("User", User(id: 0, name: "", email: ""))
-  |> schema.field("id", schema.IntType, fn(u: User) { u.id }, fn(u, id) {
-    User(..u, id: id)
-  })
-  |> schema.field(
-    "name",
-    schema.StringType,
-    fn(u: User) { u.name },
-    fn(u, name) { User(..u, name: name) },
-  )
-  |> schema.field(
-    "email",
-    schema.StringType,
-    fn(u: User) { u.email },
-    fn(u, email) { User(..u, email: email) },
-  )
+  |> schema.field("id", schema.IntType)
+  |> schema.field("name", schema.StringType)
+  |> schema.field("email", schema.StringType)
   |> schema.schema()
 }
 
@@ -36,11 +23,9 @@ pub fn schema_encodes_to_json_test() {
   let json_string = json.to_string(result)
 
   // Verify JSON structure contains expected fields (order independent)
-  json_string |> string.contains("\"id\":42") |> should.be_true()
-  json_string |> string.contains("\"name\":\"Alice\"") |> should.be_true()
-  json_string
-  |> string.contains("\"email\":\"alice@example.com\"")
-  |> should.be_true()
+  assert string.contains(json_string, "\"id\":42")
+  assert string.contains(json_string, "\"name\":\"Alice\"")
+  assert string.contains(json_string, "\"email\":\"alice@example.com\"")
 }
 
 pub fn schema_decodes_from_dynamic_test() {
@@ -62,9 +47,9 @@ pub fn schema_decodes_from_dynamic_test() {
   let assert Ok(decoded_user) = schema.decode(s, parsed)
   let user: User = decoded_user
 
-  user.id |> should.equal(99)
-  user.name |> should.equal("Bob")
-  user.email |> should.equal("bob@example.com")
+  assert user.id == 99
+  assert user.name == "Bob"
+  assert user.email == "bob@example.com"
 }
 
 pub fn schema_round_trip_test() {
@@ -83,32 +68,20 @@ pub fn schema_round_trip_test() {
   let user: User = decoded
 
   // Should match original
-  user.id |> should.equal(original.id)
-  user.name |> should.equal(original.name)
-  user.email |> should.equal(original.email)
+  assert user.id == original.id
+  assert user.name == original.name
+  assert user.email == original.email
 }
 
 pub type UserWithTags {
   UserWithTags(id: Int, name: String, tags: List(String))
 }
 
-pub fn user_with_tags_schema() -> schema.RecordSchema {
+pub fn user_with_tags_schema() -> schema.RecordSchema(_) {
   schema.record_schema("UserWithTags", UserWithTags(id: 0, name: "", tags: []))
-  |> schema.field("id", schema.IntType, fn(u: UserWithTags) { u.id }, fn(u, id) {
-    UserWithTags(..u, id: id)
-  })
-  |> schema.field(
-    "name",
-    schema.StringType,
-    fn(u: UserWithTags) { u.name },
-    fn(u, name) { UserWithTags(..u, name: name) },
-  )
-  |> schema.field(
-    "tags",
-    schema.ListType(schema.StringType),
-    fn(u: UserWithTags) { u.tags },
-    fn(u, tags) { UserWithTags(..u, tags: tags) },
-  )
+  |> schema.field("id", schema.IntType)
+  |> schema.field("name", schema.StringType)
+  |> schema.field("tags", schema.ListType(schema.StringType))
   |> schema.schema()
 }
 
@@ -128,9 +101,9 @@ pub fn schema_decodes_list_of_strings_test() {
   let assert Ok(decoded) = schema.decode(s, parsed)
   let user: UserWithTags = decoded
 
-  user.id |> should.equal(1)
-  user.name |> should.equal("Alice")
-  user.tags |> should.equal(["rust", "gleam", "typescript"])
+  assert user.id == 1
+  assert user.name == "Alice"
+  assert user.tags == ["rust", "gleam", "typescript"]
 }
 
 pub fn schema_encodes_list_of_strings_test() {
@@ -140,24 +113,19 @@ pub fn schema_encodes_list_of_strings_test() {
   let json_data = schema.to_json(s, user)
   let json_string = json.to_string(json_data)
 
-  json_string |> string.contains("\"id\":1") |> should.be_true()
-  json_string |> string.contains("\"name\":\"Bob\"") |> should.be_true()
-  json_string |> string.contains("\"admin\"") |> should.be_true()
-  json_string |> string.contains("\"moderator\"") |> should.be_true()
+  assert string.contains(json_string, "\"id\":1")
+  assert string.contains(json_string, "\"name\":\"Bob\"")
+  assert string.contains(json_string, "\"admin\"")
+  assert string.contains(json_string, "\"moderator\"")
 }
 
 pub type NumberGrid {
   NumberGrid(rows: List(List(Int)))
 }
 
-pub fn number_grid_schema() -> schema.RecordSchema {
+pub fn number_grid_schema() -> schema.RecordSchema(_) {
   schema.record_schema("NumberGrid", NumberGrid(rows: []))
-  |> schema.field(
-    "rows",
-    schema.ListType(schema.ListType(schema.IntType)),
-    fn(g: NumberGrid) { g.rows },
-    fn(g, rows) { NumberGrid(rows: rows) },
-  )
+  |> schema.field("rows", schema.ListType(schema.ListType(schema.IntType)))
   |> schema.schema()
 }
 
@@ -185,7 +153,7 @@ pub fn schema_decodes_nested_lists_test() {
   let assert Ok(decoded) = schema.decode(s, parsed)
   let grid: NumberGrid = decoded
 
-  grid.rows |> should.equal([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+  assert grid.rows == [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 }
 
 pub fn schema_round_trip_nested_lists_test() {
@@ -199,5 +167,5 @@ pub fn schema_round_trip_nested_lists_test() {
   let assert Ok(decoded) = schema.decode(s, parsed)
   let grid: NumberGrid = decoded
 
-  grid.rows |> should.equal(original.rows)
+  assert grid.rows == original.rows
 }

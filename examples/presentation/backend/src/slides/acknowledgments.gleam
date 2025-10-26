@@ -2,12 +2,12 @@
 ////
 //// Acknowledging Alembic for supporting this work
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{Heading, Image, Paragraph, Spacer}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 2,
+    number: 0,
     title: "Acknowledgments",
     content: [
       Heading("Acknowledgments"),

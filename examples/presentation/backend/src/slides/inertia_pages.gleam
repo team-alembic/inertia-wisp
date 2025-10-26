@@ -2,12 +2,14 @@
 ////
 //// How Inertia pages receive complete, validated data without loading states
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{
+  BulletList, CodeBlock, Heading, Paragraph, Spacer, Subheading,
+}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 7,
+    number: 0,
     title: "Inertia Pages - Fully Formed Props",
     content: [
       Heading("Inertia Pages - Fully Formed Props"),

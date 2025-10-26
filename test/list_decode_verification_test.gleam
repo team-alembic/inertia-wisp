@@ -1,20 +1,14 @@
 import gleam/dynamic/decode
 import gleam/json
-import gleeunit/should
 import inertia_wisp/schema
 
 pub type TaggedItem {
   TaggedItem(tags: List(String))
 }
 
-pub fn tagged_item_schema() -> schema.RecordSchema {
+pub fn tagged_item_schema() -> schema.RecordSchema(TaggedItem) {
   schema.record_schema("TaggedItem", TaggedItem(tags: []))
-  |> schema.field(
-    "tags",
-    schema.ListType(schema.StringType),
-    fn(item: TaggedItem) { item.tags },
-    fn(item, tags) { TaggedItem(..item, tags: tags) },
-  )
+  |> schema.field("tags", schema.ListType(schema.StringType))
   |> schema.schema()
 }
 
@@ -32,21 +26,16 @@ pub fn list_of_strings_decodes_test() {
   let assert Ok(decoded) = schema.decode(s, parsed)
   let item: TaggedItem = decoded
 
-  item.tags |> should.equal(["a", "b", "c"])
+  assert item.tags == ["a", "b", "c"]
 }
 
 pub type Grid {
   Grid(data: List(List(Int)))
 }
 
-pub fn grid_schema() -> schema.RecordSchema {
+pub fn grid_schema() -> schema.RecordSchema(Grid) {
   schema.record_schema("Grid", Grid(data: []))
-  |> schema.field(
-    "data",
-    schema.ListType(schema.ListType(schema.IntType)),
-    fn(g: Grid) { g.data },
-    fn(g, data) { Grid(data: data) },
-  )
+  |> schema.field("data", schema.ListType(schema.ListType(schema.IntType)))
   |> schema.schema()
 }
 
@@ -73,5 +62,5 @@ pub fn nested_list_decodes_test() {
   let assert Ok(decoded) = schema.decode(s, parsed)
   let grid: Grid = decoded
 
-  grid.data |> should.equal([[1, 2], [3, 4]])
+  assert grid.data == [[1, 2], [3, 4]]
 }

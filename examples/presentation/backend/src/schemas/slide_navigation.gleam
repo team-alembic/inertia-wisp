@@ -37,7 +37,7 @@ pub fn navigation(current: Int, total: Int) -> SlideNavigation {
 }
 
 /// Schema for SlideNavigation type
-pub fn slide_navigation_schema() -> schema.RecordSchema {
+pub fn slide_navigation_schema() -> schema.RecordSchema(_) {
   schema.record_schema(
     "SlideNavigation",
     SlideNavigation(
@@ -49,36 +49,12 @@ pub fn slide_navigation_schema() -> schema.RecordSchema {
       next_url: "",
     ),
   )
-  |> schema.int_field(
-    "current",
-    fn(nav: SlideNavigation) { nav.current },
-    fn(nav, current) { SlideNavigation(..nav, current:) },
-  )
-  |> schema.int_field(
-    "total",
-    fn(nav: SlideNavigation) { nav.total },
-    fn(nav, total) { SlideNavigation(..nav, total:) },
-  )
-  |> schema.bool_field(
-    "has_previous",
-    fn(nav: SlideNavigation) { nav.has_previous },
-    fn(nav, has_previous) { SlideNavigation(..nav, has_previous:) },
-  )
-  |> schema.bool_field(
-    "has_next",
-    fn(nav: SlideNavigation) { nav.has_next },
-    fn(nav, has_next) { SlideNavigation(..nav, has_next:) },
-  )
-  |> schema.string_field(
-    "previous_url",
-    fn(nav: SlideNavigation) { nav.previous_url },
-    fn(nav, previous_url) { SlideNavigation(..nav, previous_url:) },
-  )
-  |> schema.string_field(
-    "next_url",
-    fn(nav: SlideNavigation) { nav.next_url },
-    fn(nav, next_url) { SlideNavigation(..nav, next_url:) },
-  )
+  |> schema.int_field("current")
+  |> schema.int_field("total")
+  |> schema.bool_field("has_previous")
+  |> schema.bool_field("has_next")
+  |> schema.string_field("previous_url")
+  |> schema.string_field("next_url")
   |> schema.schema()
 }
 

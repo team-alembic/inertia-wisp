@@ -2,12 +2,14 @@
 ////
 //// Introduction to forms and validation with Inertia.js
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{
+  BulletList, Heading, LinkButton, Paragraph, Spacer, Subheading,
+}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 15,
+    number: 0,
     title: "Forms & Validation",
     content: [
       Heading("Forms & Validation"),

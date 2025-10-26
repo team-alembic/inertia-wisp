@@ -41,257 +41,92 @@ fn content_block_tagger(block: ContentBlock) -> String {
 }
 
 /// Helper schemas for each ContentBlock variant case
-fn heading_record_schema() -> schema.RecordSchema {
+fn heading_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Heading", Heading(text: ""))
-  |> schema.string_field(
-    "text",
-    fn(block) {
-      let assert Heading(text) = block
-      text
-    },
-    fn(_block, text) { Heading(text:) },
-  )
+  |> schema.string_field("text")
   |> schema.schema()
 }
 
-fn subheading_record_schema() -> schema.RecordSchema {
+fn subheading_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Subheading", Subheading(text: ""))
-  |> schema.string_field(
-    "text",
-    fn(block) {
-      let assert Subheading(text) = block
-      text
-    },
-    fn(_block, text) { Subheading(text:) },
-  )
+  |> schema.string_field("text")
   |> schema.schema()
 }
 
-fn paragraph_record_schema() -> schema.RecordSchema {
+fn paragraph_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Paragraph", Paragraph(text: ""))
-  |> schema.string_field(
-    "text",
-    fn(block) {
-      let assert Paragraph(text) = block
-      text
-    },
-    fn(_block, text) { Paragraph(text:) },
-  )
+  |> schema.string_field("text")
   |> schema.schema()
 }
 
-fn code_block_record_schema() -> schema.RecordSchema {
+fn code_block_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema(
     "CodeBlock",
     CodeBlock(code: "", language: "", highlight_lines: []),
   )
-  |> schema.string_field(
-    "code",
-    fn(block) {
-      let assert CodeBlock(code, _, _) = block
-      code
-    },
-    fn(block, code) {
-      let assert CodeBlock(_, language, highlight_lines) = block
-      CodeBlock(code:, language:, highlight_lines:)
-    },
-  )
-  |> schema.string_field(
-    "language",
-    fn(block) {
-      let assert CodeBlock(_, language, _) = block
-      language
-    },
-    fn(block, language) {
-      let assert CodeBlock(code, _, highlight_lines) = block
-      CodeBlock(code:, language:, highlight_lines:)
-    },
-  )
-  |> schema.list_field(
-    "highlight_lines",
-    schema.IntType,
-    fn(block) {
-      let assert CodeBlock(_, _, highlight_lines) = block
-      highlight_lines
-    },
-    fn(block, highlight_lines) {
-      let assert CodeBlock(code, language, _) = block
-      CodeBlock(code:, language:, highlight_lines:)
-    },
-  )
+  |> schema.string_field("code")
+  |> schema.string_field("language")
+  |> schema.list_field("highlight_lines", schema.IntType)
   |> schema.schema()
 }
 
-fn bullet_list_record_schema() -> schema.RecordSchema {
+fn bullet_list_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("BulletList", BulletList(items: []))
-  |> schema.list_field(
-    "items",
-    schema.StringType,
-    fn(block) {
-      let assert BulletList(items) = block
-      items
-    },
-    fn(_block, items) { BulletList(items:) },
-  )
+  |> schema.list_field("items", schema.StringType)
   |> schema.schema()
 }
 
-fn numbered_list_record_schema() -> schema.RecordSchema {
+fn numbered_list_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("NumberedList", NumberedList(items: []))
-  |> schema.list_field(
-    "items",
-    schema.StringType,
-    fn(block) {
-      let assert NumberedList(items) = block
-      items
-    },
-    fn(_block, items) { NumberedList(items:) },
-  )
+  |> schema.list_field("items", schema.StringType)
   |> schema.schema()
 }
 
-fn quote_record_schema() -> schema.RecordSchema {
+fn quote_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Quote", Quote(text: "", author: ""))
-  |> schema.string_field(
-    "text",
-    fn(block) {
-      let assert Quote(text, _) = block
-      text
-    },
-    fn(block, text) {
-      let assert Quote(_, author) = block
-      Quote(text:, author:)
-    },
-  )
-  |> schema.string_field(
-    "author",
-    fn(block) {
-      let assert Quote(_, author) = block
-      author
-    },
-    fn(block, author) {
-      let assert Quote(text, _) = block
-      Quote(text:, author:)
-    },
-  )
+  |> schema.string_field("text")
+  |> schema.string_field("author")
   |> schema.schema()
 }
 
-fn image_record_schema() -> schema.RecordSchema {
+fn image_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Image", Image(url: "", alt: "", width: 0))
-  |> schema.string_field(
-    "url",
-    fn(block) {
-      let assert Image(url, _, _) = block
-      url
-    },
-    fn(block, url) {
-      let assert Image(_, alt, width) = block
-      Image(url:, alt:, width:)
-    },
-  )
-  |> schema.string_field(
-    "alt",
-    fn(block) {
-      let assert Image(_, alt, _) = block
-      alt
-    },
-    fn(block, alt) {
-      let assert Image(url, _, width) = block
-      Image(url:, alt:, width:)
-    },
-  )
-  |> schema.int_field(
-    "width",
-    fn(block) {
-      let assert Image(_, _, width) = block
-      width
-    },
-    fn(block, width) {
-      let assert Image(url, alt, _) = block
-      Image(url:, alt:, width:)
-    },
-  )
+  |> schema.string_field("url")
+  |> schema.string_field("alt")
+  |> schema.int_field("width")
   |> schema.schema()
 }
 
-fn image_row_record_schema() -> schema.RecordSchema {
+fn image_row_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("ImageRow", ImageRow(images: []))
   |> schema.list_field(
     "images",
     schema.RecordType(image_data.image_data_schema),
-    fn(block) {
-      let assert ImageRow(images) = block
-      images
-    },
-    fn(_block, images) { ImageRow(images:) },
   )
   |> schema.schema()
 }
 
-fn columns_record_schema() -> schema.RecordSchema {
+fn columns_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Columns", Columns(left: [], right: []))
-  |> schema.list_field(
-    "left",
-    schema.VariantType(content_block_schema),
-    fn(block) {
-      let assert Columns(left, _) = block
-      left
-    },
-    fn(block, left) {
-      let assert Columns(_, right) = block
-      Columns(left:, right:)
-    },
-  )
-  |> schema.list_field(
-    "right",
-    schema.VariantType(content_block_schema),
-    fn(block) {
-      let assert Columns(_, right) = block
-      right
-    },
-    fn(block, right) {
-      let assert Columns(left, _) = block
-      Columns(left:, right:)
-    },
-  )
+  |> schema.list_field("left", schema.VariantType(content_block_schema))
+  |> schema.list_field("right", schema.VariantType(content_block_schema))
   |> schema.schema()
 }
 
-fn link_button_record_schema() -> schema.RecordSchema {
+fn link_button_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("LinkButton", LinkButton(text: "", href: ""))
-  |> schema.string_field(
-    "text",
-    fn(block) {
-      let assert LinkButton(text, _) = block
-      text
-    },
-    fn(block, text) {
-      let assert LinkButton(_, href) = block
-      LinkButton(text:, href:)
-    },
-  )
-  |> schema.string_field(
-    "href",
-    fn(block) {
-      let assert LinkButton(_, href) = block
-      href
-    },
-    fn(block, href) {
-      let assert LinkButton(text, _) = block
-      LinkButton(text:, href:)
-    },
-  )
+  |> schema.string_field("text")
+  |> schema.string_field("href")
   |> schema.schema()
 }
 
-fn spacer_record_schema() -> schema.RecordSchema {
+fn spacer_record_schema() -> schema.RecordSchema(_) {
   schema.record_schema("Spacer", Spacer)
   |> schema.schema()
 }
 
 /// Schema for ContentBlock variant type
-pub fn content_block_schema() -> schema.VariantSchema {
+pub fn content_block_schema() -> schema.VariantSchema(_) {
   schema.variant_schema("ContentBlock", content_block_tagger)
   |> schema.variant_case("heading", heading_record_schema())
   |> schema.variant_case("subheading", subheading_record_schema())
@@ -306,44 +141,4 @@ pub fn content_block_schema() -> schema.VariantSchema {
   |> schema.variant_case("link_button", link_button_record_schema())
   |> schema.variant_case("spacer", spacer_record_schema())
   |> schema.variant_schema_done()
-}
-
-/// Complete slide definition with all content
-pub type Slide {
-  Slide(
-    number: Int,
-    title: String,
-    content: List(ContentBlock),
-    notes: String,
-    max_steps: Int,
-  )
-}
-
-/// Schema for Slide type
-pub fn slide_schema() -> schema.RecordSchema {
-  schema.record_schema(
-    "Slide",
-    Slide(number: 0, title: "", content: [], notes: "", max_steps: 1),
-  )
-  |> schema.int_field("number", fn(slide) { slide.number }, fn(slide, number) {
-    Slide(..slide, number:)
-  })
-  |> schema.string_field("title", fn(slide) { slide.title }, fn(slide, title) {
-    Slide(..slide, title:)
-  })
-  |> schema.list_field(
-    "content",
-    schema.VariantType(content_block_schema),
-    fn(slide) { slide.content },
-    fn(slide, content) { Slide(..slide, content:) },
-  )
-  |> schema.string_field("notes", fn(slide) { slide.notes }, fn(slide, notes) {
-    Slide(..slide, notes:)
-  })
-  |> schema.int_field(
-    "max_steps",
-    fn(slide) { slide.max_steps },
-    fn(slide, max_steps) { Slide(..slide, max_steps:) },
-  )
-  |> schema.schema()
 }

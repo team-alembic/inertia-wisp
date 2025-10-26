@@ -6,7 +6,9 @@ import gleam/io
 import gleam/string
 import inertia_wisp/page_schema
 import inertia_wisp/schema
+import props/contact_form_props
 import props/slide_props
+import props/users_table_props
 import schemas/contact_form
 import schemas/content_block
 import schemas/image_data
@@ -34,6 +36,12 @@ pub fn main() {
     <> schema.to_zod_schema(slide.slide_schema())
     <> "\n\n"
     <> page_schema.to_zod_schema(slide_props.slide_page_schema())
+    <> "\n\n"
+    <> page_schema.to_zod_schema(contact_form_props.contact_form_page_schema())
+    <> "\n\n"
+    <> page_schema.to_zod_schema(users_table_props.users_table_page_schema())
+    <> "\n\n"
+    <> schema.to_zod_schema(users_table_props.users_table_query_params_schema())
     <> "\n"
 
   let output_path = "../frontend/src/generated/schemas.ts"
@@ -49,6 +57,9 @@ pub fn main() {
       io.println("  - ContentBlock (variant)")
       io.println("  - Slide")
       io.println("  - SlidePageProps")
+      io.println("  - ContactFormPageProps")
+      io.println("  - UsersTablePageProps")
+      io.println("  - UsersTableQueryParams")
     }
     Error(err) -> {
       io.println("✗ Failed to write file: " <> string.inspect(err))

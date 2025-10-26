@@ -3,14 +3,13 @@
 //// Showing how different languages approach simplicity
 
 import schemas/content_block.{
-  BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton,
-  NumberedList, Paragraph, Quote, Spacer, Subheading,
+  BulletList, CodeBlock, Columns, Heading, Paragraph, Spacer,
 }
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 19,
+    number: 0,
     title: "Gleam's Simplicity",
     content: [
       Heading("Gleam's Simplicity"),

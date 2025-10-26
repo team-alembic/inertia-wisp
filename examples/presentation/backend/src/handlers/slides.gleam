@@ -4,34 +4,33 @@
 //// navigation information.
 
 import gleam/int
-import gleam/json
 import gleam/list
 import inertia_wisp/inertia
 import props/slide_props
 import schemas/slide
 import schemas/slide_navigation
-import slides/slide_01
-import slides/slide_02
-import slides/slide_03
-import slides/slide_04
-import slides/slide_05
-import slides/slide_06
-import slides/slide_07
-import slides/slide_08
-import slides/slide_09
-import slides/slide_10
-import slides/slide_11
-import slides/slide_12
-import slides/slide_13
-import slides/slide_14
-import slides/slide_15
-import slides/slide_16
-import slides/slide_17
-import slides/slide_18
-import slides/slide_19
-import slides/slide_20
-import slides/slide_21
-import slides/slide_22
+import slides/about_me
+import slides/acknowledgments
+import slides/backend_code_example
+import slides/backend_overview
+import slides/form_success
+import slides/forms_validation
+import slides/frontend_languages
+import slides/frontend_overview
+import slides/generated_typescript
+import slides/gleam_simplicity
+import slides/inertia_pages
+import slides/one_handler_four_cases
+import slides/pagination
+import slides/pitch
+import slides/property_based_tests
+import slides/react_component
+import slides/title
+import slides/tradeoffs_abstractions
+import slides/tradeoffs_dsls
+import slides/type_safe_integration
+import slides/typescript_zod_schema
+import slides/why_now
 import wisp.{type Request, type Response}
 
 /// Total number of slides in the presentation
@@ -76,7 +75,7 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
 
   req
   |> inertia.response_builder("Slide")
-  |> inertia.props(props, fn(_x) { json.null() })
+  |> inertia.props(props, slide_props.slide_prop_to_json)
   |> inertia.response(200)
 }
 
@@ -85,33 +84,39 @@ pub fn index(_req: Request) -> Response {
   wisp.redirect("/slides/1")
 }
 
-/// Get slide content by number and step
+/// Get slide content by number and step, setting the correct slide number
+///
+/// To reorder slides in the presentation, simply reorder the case branches below.
+/// Each slide module is referenced by its logical name, making it easy to
+/// understand the presentation flow.
 fn get_slide(number: Int, step: Int) -> slide.Slide {
-  case number {
-    1 -> slide_01.slide()
-    2 -> slide_02.slide()
-    3 -> slide_03.slide()
-    4 -> slide_04.slide()
-    5 -> slide_05.slide()
-    6 -> slide_06.slide()
-    7 -> slide_07.slide()
-    8 -> slide_08.slide()
-    9 -> slide_09.slide(step)
-    10 -> slide_10.slide(step)
-    11 -> slide_11.slide(step)
-    12 -> slide_12.slide(step)
-    13 -> slide_13.slide(step)
-    14 -> slide_14.slide(step)
-    15 -> slide_15.slide()
-    16 -> slide_16.slide()
-    17 -> slide_17.slide()
-    18 -> slide_18.slide()
-    19 -> slide_19.slide()
-    20 -> slide_20.slide()
-    21 -> slide_21.slide()
-    22 -> slide_22.slide()
+  let content = case number {
+    1 -> title.slide()
+    2 -> acknowledgments.slide()
+    3 -> about_me.slide()
+    4 -> pitch.slide()
+    5 -> frontend_overview.slide()
+    6 -> frontend_languages.slide()
+    7 -> inertia_pages.slide()
+    8 -> backend_overview.slide()
+    9 -> backend_code_example.slide(step)
+    10 -> type_safe_integration.slide(step)
+    11 -> generated_typescript.slide(step)
+    12 -> typescript_zod_schema.slide(step)
+    13 -> property_based_tests.slide(step)
+    14 -> react_component.slide(step)
+    15 -> forms_validation.slide()
+    16 -> form_success.slide()
+    17 -> pagination.slide()
+    18 -> one_handler_four_cases.slide()
+    19 -> gleam_simplicity.slide()
+    20 -> why_now.slide()
+    21 -> tradeoffs_dsls.slide()
+    22 -> tradeoffs_abstractions.slide()
     _ -> panic as "Invalid slide number - should be caught by validation"
   }
+
+  slide.set_number(content, number)
 }
 
 /// Create navigation with step support

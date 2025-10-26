@@ -9,15 +9,43 @@ import gleam/string
 @external(erlang, "gleam_erlang_ffi", "identity")
 pub fn unsafe_cast(a: a) -> b
 
+@external(erlang, "erlang", "element")
+fn element(index: Int, record: a) -> dynamic.Dynamic
+
+@external(erlang, "erlang", "setelement")
+fn setelement(index: Int, record: a, value: dynamic.Dynamic) -> a
+
+/// A phantom type for type erasure
+///
+/// This type has no runtime representation and is used to erase type parameters
+/// while maintaining structural type information (e.g., FieldType(Erased) is still
+/// a FieldType, but the specific type parameter is erased).
+pub type Erased
+
+/// Erase the type parameter from a Field(t) to Field(Erased)
+pub fn erase_field(field: Field(t)) -> Field(Erased) {
+  unsafe_cast(field)
+}
+
+/// Erase the type parameter from a FieldType(t) to FieldType(Erased)
+pub fn erase_field_type(field_type: FieldType(t)) -> FieldType(Erased) {
+  unsafe_cast(field_type)
+}
+
 /// Field type information for code generation
-pub type FieldType {
+///
+/// The type parameter `t` represents the type of this field.
+/// For nested schemas (RecordType/VariantType), `t` is the type that schema decodes to.
+/// This allows us to track nested schema types while maintaining type erasure
+/// where needed (in the Field/dict storage).
+pub type FieldType(t) {
   StringType
   IntType
   FloatType
   BoolType
-  ListType(inner: FieldType)
-  RecordType(schema: fn() -> RecordSchema)
-  VariantType(schema: fn() -> VariantSchema)
+  ListType(inner: FieldType(t))
+  RecordType(schema: fn() -> RecordSchema(t))
+  VariantType(schema: fn() -> VariantSchema(t))
 }
 
 /// Validation rules for fields
@@ -29,53 +57,57 @@ pub type Validation {
   Required
 }
 
-/// A field definition with type information, getter, setter, and validations
-pub type Field {
-  Field(
-    field_type: FieldType,
-    get: fn(dynamic.Dynamic) -> dynamic.Dynamic,
-    set: fn(dynamic.Dynamic, dynamic.Dynamic) -> dynamic.Dynamic,
-    optional: Bool,
-    validations: List(Validation),
-  )
+/// A field definition with type information, record index, and validations
+///
+/// The type parameter `t` represents the type of this field.
+pub type Field(t) {
+  Field(field_type: FieldType(t), index: Int, validations: List(Validation))
 }
 
 /// A schema for a record type
-pub type RecordSchema {
+///
+/// The phantom type parameter `t` represents the type this schema decodes to.
+/// This provides type safety and prevents accidentally using the wrong schema
+/// for decoding.
+///
+/// Note: Fields are stored as Field(Erased) to allow heterogeneous field types
+/// within a single record. Each Field(u) is erased to Field(Erased) when stored.
+pub type RecordSchema(t) {
   RecordSchema(
     name: String,
-    fields: dict.Dict(String, Field),
-    default: dynamic.Dynamic,
+    fields: dict.Dict(String, Field(Erased)),
+    default: t,
   )
 }
 
 /// A schema for a variant type (discriminated union)
-pub type VariantSchema {
+///
+/// The phantom type parameter `t` represents the type this schema decodes to.
+pub type VariantSchema(t) {
   VariantSchema(
     name: String,
-    cases: dict.Dict(String, RecordSchema),
+    cases: dict.Dict(String, RecordSchema(t)),
     tagger: fn(dynamic.Dynamic) -> String,
   )
 }
 
 /// Builder for constructing record schemas
 pub type RecordSchemaBuilder(t) {
-  RecordSchemaBuilder(schema: RecordSchema)
+  RecordSchemaBuilder(schema: RecordSchema(t), next_index: Int)
 }
 
 /// Builder for constructing variant schemas
 pub type VariantSchemaBuilder(t) {
-  VariantSchemaBuilder(schema: VariantSchema)
+  VariantSchemaBuilder(schema: VariantSchema(t))
 }
 
 /// Create a new schema builder for a record type
 /// The default value is used as a starting point for decoding
 pub fn record_schema(name: String, default: t) -> RecordSchemaBuilder(t) {
-  RecordSchemaBuilder(schema: RecordSchema(
-    name: name,
-    fields: dict.new(),
-    default: unsafe_cast(default),
-  ))
+  RecordSchemaBuilder(
+    schema: RecordSchema(name: name, fields: dict.new(), default: default),
+    next_index: 2,
+  )
 }
 
 /// Create a new schema builder for a variant type
@@ -94,12 +126,12 @@ pub fn variant_schema(
 }
 
 /// Extract the RecordSchema from a builder
-pub fn schema(sb: RecordSchemaBuilder(t)) -> RecordSchema {
+pub fn schema(sb: RecordSchemaBuilder(t)) -> RecordSchema(t) {
   sb.schema
 }
 
 /// Extract the VariantSchema from a builder
-pub fn variant_schema_done(sb: VariantSchemaBuilder(t)) -> VariantSchema {
+pub fn variant_schema_done(sb: VariantSchemaBuilder(t)) -> VariantSchema(t) {
   sb.schema
 }
 
@@ -107,108 +139,84 @@ pub fn variant_schema_done(sb: VariantSchemaBuilder(t)) -> VariantSchema {
 pub fn field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  field_type: FieldType,
-  getter: fn(t) -> s,
-  setter: fn(t, s) -> t,
+  field_type: FieldType(u),
 ) -> RecordSchemaBuilder(t) {
   let field =
-    Field(
-      field_type: field_type,
-      get: fn(r: dynamic.Dynamic) { getter(unsafe_cast(r)) |> unsafe_cast },
-      set: fn(r: dynamic.Dynamic, v: dynamic.Dynamic) {
-        setter(unsafe_cast(r), unsafe_cast(v)) |> unsafe_cast
-      },
-      optional: False,
-      validations: [],
-    )
+    Field(field_type: field_type, index: sb.next_index, validations: [])
 
   let updated_schema =
     RecordSchema(
       ..sb.schema,
-      fields: dict.insert(sb.schema.fields, name, field),
+      fields: dict.insert(sb.schema.fields, name, erase_field(field)),
     )
 
-  RecordSchemaBuilder(schema: updated_schema)
+  RecordSchemaBuilder(schema: updated_schema, next_index: field.index + 1)
 }
 
 /// Add a string field to a record schema
 pub fn string_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  get: fn(t) -> String,
-  set: fn(t, String) -> t,
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, StringType, get, set)
+  field(sb, name, StringType)
 }
 
 /// Add an integer field to a record schema
 pub fn int_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  get: fn(t) -> Int,
-  set: fn(t, Int) -> t,
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, IntType, get, set)
+  field(sb, name, IntType)
 }
 
 /// Add a boolean field to a record schema
 pub fn bool_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  get: fn(t) -> Bool,
-  set: fn(t, Bool) -> t,
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, BoolType, get, set)
+  field(sb, name, BoolType)
 }
 
 /// Add a float field to a record schema
 pub fn float_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  get: fn(t) -> Float,
-  set: fn(t, Float) -> t,
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, FloatType, get, set)
+  field(sb, name, FloatType)
 }
 
 /// Add a list field to a record schema
 pub fn list_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  inner: FieldType,
-  get: fn(t) -> List(a),
-  set: fn(t, List(a)) -> t,
+  inner: FieldType(u),
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, ListType(inner), get, set)
+  field(sb, name, ListType(inner))
 }
 
 /// Add a nested record field to a record schema
 pub fn record_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  schema: fn() -> RecordSchema,
-  get: fn(t) -> a,
-  set: fn(t, a) -> t,
+  schema: fn() -> RecordSchema(u),
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, RecordType(schema), get, set)
+  field(sb, name, RecordType(schema))
 }
 
 /// Add a variant field to a record schema
 pub fn variant_field(
   sb: RecordSchemaBuilder(t),
   name: String,
-  schema: fn() -> VariantSchema,
-  get: fn(t) -> a,
-  set: fn(t, a) -> t,
+  schema: fn() -> VariantSchema(u),
 ) -> RecordSchemaBuilder(t) {
-  field(sb, name, VariantType(schema), get, set)
+  field(sb, name, VariantType(schema))
 }
 
 /// Add a case to a variant schema
 pub fn variant_case(
   sb: VariantSchemaBuilder(t),
   tag: String,
-  record: RecordSchema,
+  record: RecordSchema(t),
 ) -> VariantSchemaBuilder(t) {
   let updated_cases = dict.insert(sb.schema.cases, tag, record)
   let updated_schema = VariantSchema(..sb.schema, cases: updated_cases)
@@ -225,29 +233,29 @@ pub fn validate(
 }
 
 /// Encode a value to JSON using a record schema
-pub fn to_json(schema: RecordSchema, value: t) -> json.Json {
+pub fn to_json(schema: RecordSchema(t), value: t) -> json.Json {
   encode_record(schema, value)
 }
 
 /// Encode a value to JSON using a variant schema
-pub fn variant_to_json(schema: VariantSchema, value: t) -> json.Json {
+pub fn variant_to_json(schema: VariantSchema(t), value: t) -> json.Json {
   encode_variant(schema, value)
 }
 
-fn encode_record(schema: RecordSchema, value: t) -> json.Json {
+fn encode_record(schema: RecordSchema(t), value: t) -> json.Json {
   let dynamic_value = unsafe_cast(value)
 
   schema.fields
   |> dict.to_list()
   |> list.map(fn(entry) {
     let #(name, field) = entry
-    let field_value = field.get(dynamic_value)
+    let field_value = element(field.index, dynamic_value)
     #(name, encode_field(field.field_type, field_value))
   })
   |> json.object()
 }
 
-fn encode_variant(schema: VariantSchema, value: t) -> json.Json {
+fn encode_variant(schema: VariantSchema(t), value: t) -> json.Json {
   let dynamic_value = unsafe_cast(value)
 
   // Use tagger to get the tag for this value
@@ -262,7 +270,7 @@ fn encode_variant(schema: VariantSchema, value: t) -> json.Json {
         |> dict.to_list()
         |> list.map(fn(entry) {
           let #(name, field) = entry
-          let field_value = field.get(dynamic_value)
+          let field_value = element(field.index, dynamic_value)
           #(name, encode_field(field.field_type, field_value))
         })
 
@@ -280,7 +288,7 @@ fn encode_variant(schema: VariantSchema, value: t) -> json.Json {
   }
 }
 
-fn encode_field(field_type: FieldType, value: dynamic.Dynamic) -> json.Json {
+fn encode_field(field_type: FieldType(t), value: dynamic.Dynamic) -> json.Json {
   case field_type {
     StringType -> {
       let assert Ok(str_value) = decode.run(value, decode.string)
@@ -318,20 +326,29 @@ fn encode_field(field_type: FieldType, value: dynamic.Dynamic) -> json.Json {
 }
 
 /// Decode a dynamic value using a record schema
-pub fn decode(schema: RecordSchema, value: dynamic.Dynamic) -> Result(t, String) {
+///
+/// The phantom type parameter ensures type safety - you can only decode
+/// into the type that the schema was created for.
+pub fn decode(
+  schema: RecordSchema(t),
+  value: dynamic.Dynamic,
+) -> Result(t, String) {
   decode_record(schema, value)
 }
 
 /// Decode a dynamic value using a variant schema
+///
+/// The phantom type parameter ensures type safety - you can only decode
+/// into the type that the schema was created for.
 pub fn variant_decode(
-  schema: VariantSchema,
+  schema: VariantSchema(t),
   value: dynamic.Dynamic,
 ) -> Result(t, String) {
   decode_variant(schema, value)
 }
 
 fn decode_record(
-  schema: RecordSchema,
+  schema: RecordSchema(t),
   value: dynamic.Dynamic,
 ) -> Result(t, String) {
   // Start with default value
@@ -351,13 +368,12 @@ fn decode_record(
     ))
 
     // Use setter to update the record
-    Ok(field.set(acc, field_value))
+    Ok(setelement(field.index, unsafe_cast(acc), field_value))
   })
-  |> result.map(unsafe_cast)
 }
 
 fn decode_variant(
-  schema: VariantSchema,
+  schema: VariantSchema(t),
   value: dynamic.Dynamic,
 ) -> Result(t, String) {
   // Extract the "type" field to determine which variant
@@ -383,7 +399,7 @@ fn decode_variant(
 }
 
 fn decode_field(
-  field_type: FieldType,
+  field_type: FieldType(t),
   field_name: String,
   value: dynamic.Dynamic,
 ) -> Result(dynamic.Dynamic, String) {
@@ -458,7 +474,9 @@ fn decode_field(
   }
 }
 
-fn field_type_decoder(field_type: FieldType) -> decode.Decoder(dynamic.Dynamic) {
+fn field_type_decoder(
+  field_type: FieldType(t),
+) -> decode.Decoder(dynamic.Dynamic) {
   case field_type {
     StringType -> decode.string |> decode.map(unsafe_cast)
     IntType -> decode.int |> decode.map(unsafe_cast)
@@ -490,16 +508,16 @@ fn string_from_decode_errors(errors: List(decode.DecodeError)) -> String {
 }
 
 /// Generate a Zod schema string for TypeScript from a record schema
-pub fn to_zod_schema(schema: RecordSchema) -> String {
+pub fn to_zod_schema(schema: RecordSchema(t)) -> String {
   record_to_zod(schema)
 }
 
 /// Generate a Zod schema string for TypeScript from a variant schema
-pub fn variant_to_zod_schema(schema: VariantSchema) -> String {
+pub fn variant_to_zod_schema(schema: VariantSchema(t)) -> String {
   variant_to_zod(schema)
 }
 
-fn record_to_zod(schema: RecordSchema) -> String {
+fn record_to_zod(schema: RecordSchema(t)) -> String {
   let schema_name = schema.name <> "Schema"
   let type_name = schema.name
 
@@ -527,7 +545,7 @@ fn record_to_zod(schema: RecordSchema) -> String {
   schema_def <> type_def
 }
 
-fn variant_to_zod(schema: VariantSchema) -> String {
+fn variant_to_zod(schema: VariantSchema(t)) -> String {
   let schema_name = schema.name <> "Schema"
   let type_name = schema.name
 
@@ -557,7 +575,7 @@ fn variant_to_zod(schema: VariantSchema) -> String {
 }
 
 fn variant_to_zod_simple(
-  schema: VariantSchema,
+  schema: VariantSchema(t),
   schema_name: String,
   type_name: String,
 ) -> String {
@@ -601,7 +619,7 @@ fn variant_to_zod_simple(
 }
 
 fn variant_to_zod_recursive(
-  schema: VariantSchema,
+  schema: VariantSchema(t),
   schema_name: String,
   type_name: String,
 ) -> String {
@@ -781,7 +799,10 @@ fn variant_to_zod_recursive(
   case_schemas <> "\n" <> union_type_def <> schema_def <> type_export
 }
 
-fn field_type_to_ts_type(field_type: FieldType, variant_name: String) -> String {
+fn field_type_to_ts_type(
+  field_type: FieldType(t),
+  variant_name: String,
+) -> String {
   case field_type {
     StringType -> "string"
     IntType -> "number"
@@ -796,7 +817,7 @@ fn field_type_to_ts_type(field_type: FieldType, variant_name: String) -> String 
   }
 }
 
-fn field_type_to_zod(field_type: FieldType) -> String {
+fn field_type_to_zod(field_type: FieldType(t)) -> String {
   case field_type {
     StringType -> "z.string()"
     IntType -> "z.number()"

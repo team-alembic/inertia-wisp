@@ -8,16 +8,16 @@
 //// PageSchema is output-only since we never parse props from the frontend.
 
 import gleam/dict.{type Dict}
-import gleam/dynamic
-import gleam/dynamic/decode
-import gleam/json
 import gleam/list
 import gleam/string
-import inertia_wisp/schema.{type FieldType}
+import inertia_wisp/schema.{type Erased, type FieldType, unsafe_cast}
 
 /// A schema for a page component's props
+///
+/// Note: Props are stored as PropDeclaration(Erased) to allow heterogeneous prop types.
+/// Each PropDeclaration(t) is erased to PropDeclaration(Erased) when stored.
 pub type PageSchema {
-  PageSchema(component: String, props: Dict(String, PropDeclaration))
+  PageSchema(component: String, props: Dict(String, PropDeclaration(Erased)))
 }
 
 /// Behavior of a prop in Inertia.js
@@ -27,12 +27,14 @@ pub type PropBehavior {
   OptionalProp
   AlwaysProp
   DeferProp
-  Merge
+  MergeProp
 }
 
 /// Declaration of a single prop on a page
-pub type PropDeclaration {
-  PropDeclaration(field_type: FieldType, behavior: PropBehavior)
+///
+/// The type parameter `t` represents the type of this prop field.
+pub type PropDeclaration(t) {
+  PropDeclaration(field_type: FieldType(t), behavior: PropBehavior)
 }
 
 /// Builder for constructing page schemas
@@ -40,19 +42,53 @@ pub type PageSchemaBuilder {
   PageSchemaBuilder(schema: PageSchema)
 }
 
+/// Erase the type parameter from PropDeclaration(t) to PropDeclaration(Erased)
+fn erase_prop_decl(prop: PropDeclaration(t)) -> PropDeclaration(Erased) {
+  unsafe_cast(prop)
+}
+
 /// Create a new page schema builder
 pub fn page_schema(component: String) -> PageSchemaBuilder {
   PageSchemaBuilder(schema: PageSchema(component: component, props: dict.new()))
 }
 
-/// Add a required prop to the page schema
+/// Add a default prop to the page schema
 pub fn prop(
   builder: PageSchemaBuilder,
   name: String,
-  field_type: FieldType,
+  field_type: FieldType(t),
 ) -> PageSchemaBuilder {
-  let prop_decl = PropDeclaration(field_type: field_type, behavior: DefaultProp)
-  let updated_props = dict.insert(builder.schema.props, name, prop_decl)
+  prop_with_behavior(builder, name, field_type, DefaultProp)
+}
+
+/// Add a deferred prop to the page schema (loaded lazily, optional in TypeScript)
+pub fn deferred_prop(
+  builder: PageSchemaBuilder,
+  name: String,
+  field_type: FieldType(t),
+) -> PageSchemaBuilder {
+  prop_with_behavior(builder, name, field_type, DeferProp)
+}
+
+/// Add an optional prop to the page schema
+pub fn optional_prop(
+  builder: PageSchemaBuilder,
+  name: String,
+  field_type: FieldType(t),
+) -> PageSchemaBuilder {
+  prop_with_behavior(builder, name, field_type, OptionalProp)
+}
+
+/// Add a prop with a specific behavior
+fn prop_with_behavior(
+  builder: PageSchemaBuilder,
+  name: String,
+  field_type: FieldType(t),
+  behavior: PropBehavior,
+) -> PageSchemaBuilder {
+  let prop_decl = PropDeclaration(field_type: field_type, behavior: behavior)
+  let updated_props =
+    dict.insert(builder.schema.props, name, erase_prop_decl(prop_decl))
   let updated_schema = PageSchema(..builder.schema, props: updated_props)
   PageSchemaBuilder(schema: updated_schema)
 }
@@ -95,42 +131,8 @@ pub fn to_zod_schema(page_schema: PageSchema) -> String {
   schema_def <> type_def
 }
 
-/// Encode a prop value to JSON based on its FieldType
-fn encode_prop(field_type: FieldType, value: dynamic.Dynamic) -> json.Json {
-  case field_type {
-    schema.StringType -> {
-      let assert Ok(str_value) = decode.run(value, decode.string)
-      json.string(str_value)
-    }
-    schema.IntType -> {
-      let assert Ok(int_value) = decode.run(value, decode.int)
-      json.int(int_value)
-    }
-    schema.FloatType -> {
-      let assert Ok(float_value) = decode.run(value, decode.float)
-      json.float(float_value)
-    }
-    schema.BoolType -> {
-      let assert Ok(bool_value) = decode.run(value, decode.bool)
-      json.bool(bool_value)
-    }
-    schema.ListType(inner) -> {
-      let assert Ok(list_value) = decode.run(value, decode.list(decode.dynamic))
-      json.array(list_value, fn(item) { encode_prop(inner, item) })
-    }
-    schema.RecordType(get_schema) -> {
-      let record_schema = get_schema()
-      schema.to_json(record_schema, schema.unsafe_cast(value))
-    }
-    schema.VariantType(get_schema) -> {
-      let variant_schema = get_schema()
-      schema.variant_to_json(variant_schema, schema.unsafe_cast(value))
-    }
-  }
-}
-
 // Helper function to convert FieldType to Zod type string
-fn field_type_to_zod(field_type: FieldType) -> String {
+fn field_type_to_zod(field_type: FieldType(t)) -> String {
   case field_type {
     schema.StringType -> "z.string()"
     schema.IntType -> "z.number()"

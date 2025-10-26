@@ -2,12 +2,14 @@
 ////
 //// Highlighting AI tools adoption and Gleam's fit for AI-assisted development
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{
+  BulletList, Columns, Heading, Image, Spacer, Subheading,
+}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 20,
+    number: 0,
     title: "Why This Matters Now",
     content: [
       Heading("Why This Matters Now"),

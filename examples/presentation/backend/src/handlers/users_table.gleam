@@ -4,82 +4,46 @@
 
 import gleam/erlang/process
 import gleam/int
-import gleam/json
 import gleam/list
-import gleam/option
 import gleam/result
-import gleam/uri
 import inertia_wisp/inertia
-import inertia_wisp/prop.{DefaultProp, DeferProp}
-import inertia_wisp/schema
-import schemas/user.{type User, User, user_schema}
+import inertia_wisp/query_params
+import props/users_table_props.{UsersTableQueryParams}
+import schemas/user.{type User, User}
 import wisp.{type Request, type Response}
-
-// Prop types and JSON encoding
-pub type UsersProp {
-  UsersProp(List(User))
-  PageProp(Int)
-  TotalPagesProp(Int)
-  DemoInfoProp(String)
-}
-
-fn users_prop_to_json(prop: UsersProp) -> json.Json {
-  case prop {
-    UsersProp(users) -> {
-      json.array(users, fn(user) { schema.to_json(user_schema(), user) })
-    }
-    PageProp(page) -> json.int(page)
-    TotalPagesProp(total) -> json.int(total)
-    DemoInfoProp(info) -> json.string(info)
-  }
-}
 
 /// Display the paginated users table
 pub fn show_users_table(req: Request) -> Response {
-  let page = parse_query_param(req, "page", int.parse, 1)
+  // Decode query parameters using schema
+  let UsersTableQueryParams(page:) =
+    query_params.decode_from_request(
+      users_table_props.users_table_query_params_schema(),
+      req,
+    )
+    |> result.unwrap(UsersTableQueryParams(page: 1))
 
-  let all_users = generate_users(100)
   let per_page = 10
-  let paginated_users = paginate(all_users, page, per_page)
   let total_pages = { 100 + per_page - 1 } / per_page
 
+  // Compute paginated users (LazyProp means this only evaluates when needed)
+  let all_users = generate_users(100)
+  let paginated_users = paginate(all_users, page, per_page)
+
   let props = [
-    DefaultProp("users", UsersProp(paginated_users)),
-    DefaultProp("page", PageProp(page)),
-    DefaultProp("total_pages", TotalPagesProp(total_pages)),
-    DeferProp("demo_info", option.None, fn() {
+    users_table_props.users(paginated_users),
+    users_table_props.page(page),
+    users_table_props.total_pages(total_pages),
+    users_table_props.demo_info(fn() {
       // Artificial delay to demonstrate deferred loading
       process.sleep(2000)
-      Ok(DemoInfoProp("🎉 This DeferProp loaded after 2 seconds!"))
+      Ok("🎉 This DeferProp loaded after 2 seconds!")
     }),
   ]
 
   req
   |> inertia.response_builder("UsersTable")
-  |> inertia.props(props, users_prop_to_json)
+  |> inertia.props(props, users_table_props.users_table_prop_to_json)
   |> inertia.response(200)
-}
-
-/// Parse a query parameter from the request
-///
-/// Accepts a parameter name, a parser function, and a default value.
-/// Returns the parsed value or the default if parsing fails.
-fn parse_query_param(
-  req: Request,
-  param_name: String,
-  parser: fn(String) -> Result(a, Nil),
-  default: a,
-) -> a {
-  case req.query {
-    option.Some(query_string) -> {
-      uri.parse_query(query_string)
-      |> result.unwrap([])
-      |> list.key_find(param_name)
-      |> result.try(parser)
-      |> result.unwrap(default)
-    }
-    option.None -> default
-  }
 }
 
 /// Generate sample users for demonstration

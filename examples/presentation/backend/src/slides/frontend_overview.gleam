@@ -2,12 +2,14 @@
 ////
 //// React and TypeScript as the frontend foundation
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{
+  BulletList, CodeBlock, Columns, Heading, Image, Spacer,
+}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 5,
+    number: 0,
     title: "The Frontend You Know",
     content: [
       Heading("The Frontend You Know"),

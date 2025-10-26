@@ -2,16 +2,13 @@
 ////
 //// Showcasing Gleam and Wisp with their benefits
 
-import schemas/content_block.{
-  BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton,
-  NumberedList, Paragraph, Quote, Spacer, Subheading,
-}
+import schemas/content_block.{BulletList, Heading, ImageRow, Spacer}
 import schemas/image_data.{ImageData}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 8,
+    number: 0,
     title: "The Backend You'll Love",
     content: [
       Heading("The Backend You'll Love"),

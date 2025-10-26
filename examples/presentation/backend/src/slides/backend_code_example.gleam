@@ -2,7 +2,7 @@
 ////
 //// Gleam code example showing clean routing
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{CodeBlock, Heading, Spacer}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide(step: Int) -> Slide {
@@ -16,7 +16,7 @@ pub fn slide(step: Int) -> Slide {
   }
 
   Slide(
-    number: 9,
+    number: 0,
     title: "The Backend You'll Love",
     content: [
       Heading("The Backend You'll Love"),

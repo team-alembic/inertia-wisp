@@ -2,12 +2,14 @@
 ////
 //// First trade-off: Embedded DSLs aren't really possible
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{
+  CodeBlock, Columns, Heading, Paragraph, Spacer, Subheading,
+}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 21,
+    number: 0,
     title: "The Trade-offs",
     content: [
       Heading("The Trade-offs"),

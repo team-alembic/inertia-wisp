@@ -2,12 +2,14 @@
 ////
 //// Introduction to pagination with partial reload optimization
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{
+  BulletList, Heading, LinkButton, Paragraph, Spacer, Subheading,
+}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 17,
+    number: 0,
     title: "Pagination & Partial Reloads",
     content: [
       Heading("Pagination & Deferred Props"),

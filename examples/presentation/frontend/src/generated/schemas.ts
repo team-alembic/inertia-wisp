@@ -177,3 +177,26 @@ export const SlidePagePropsSchema = z.object({
 }).strict();
 
 export type SlidePageProps = z.infer<typeof SlidePagePropsSchema>;
+
+export const ContactFormPagePropsSchema = z.object({
+  email: z.string(),
+  message: z.string(),
+  name: z.string(),
+}).strict();
+
+export type ContactFormPageProps = z.infer<typeof ContactFormPagePropsSchema>;
+
+export const UsersTablePagePropsSchema = z.object({
+  demo_info: z.string().optional(),
+  page: z.number(),
+  total_pages: z.number(),
+  users: z.array(UserSchema),
+}).strict();
+
+export type UsersTablePageProps = z.infer<typeof UsersTablePagePropsSchema>;
+
+export const UsersTableQueryParamsSchema = z.object({
+  page: z.number(),
+}).strict();
+
+export type UsersTableQueryParams = z.infer<typeof UsersTableQueryParamsSchema>;

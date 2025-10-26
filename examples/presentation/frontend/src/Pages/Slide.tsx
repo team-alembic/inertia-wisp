@@ -1,5 +1,8 @@
 import { Head, Link } from "@inertiajs/react";
-import { SlidePagePropsSchema, type SlidePageProps } from "../schemas";
+import {
+  SlidePagePropsSchema,
+  type SlidePageProps,
+} from "../generated/schemas";
 import { validateProps } from "../lib/validateProps";
 import { highlightCode } from "../lib/prism";
 import { SlideNavigation } from "../components/SlideNavigation";

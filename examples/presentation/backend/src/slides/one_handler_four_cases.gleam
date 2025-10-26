@@ -2,12 +2,12 @@
 ////
 //// How a single Inertia handler automatically handles multiple scenarios
 
-import schemas/content_block.{BulletList, CodeBlock, Columns, Heading, Image, ImageRow, LinkButton, NumberedList, Paragraph, Quote, Spacer, Subheading}
+import schemas/content_block.{BulletList, CodeBlock, Heading, Spacer}
 import schemas/slide.{type Slide, Slide}
 
 pub fn slide() -> Slide {
   Slide(
-    number: 18,
+    number: 0,
     title: "One Handler, Four Use Cases",
     content: [
       Heading("One Handler, Four Use Cases"),
