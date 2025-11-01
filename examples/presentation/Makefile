@@ -45,7 +45,8 @@ build: codegen frontend-build
 	cd backend && gleam build
 
 # Typecheck and build everything
-check: frontend-typecheck build
+check: codegen frontend-typecheck
+	cd backend && gleam build
 
 # Run backend tests
 backend-test:
