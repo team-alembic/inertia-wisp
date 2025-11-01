@@ -435,11 +435,12 @@ fn filter_fields(
         }
       })
     }
-    // Standard visit: exclude optional fields
+    // Standard visit: exclude optional and deferred fields
     option.None -> {
       dict.filter(props_dict, fn(key, _value) {
         case dict.get(behaviors, key) {
           Ok(OptionalBehavior) -> False
+          Ok(DeferBehavior(_, _)) -> False
           _ -> True
         }
       })
