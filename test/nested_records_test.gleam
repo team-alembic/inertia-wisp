@@ -13,7 +13,8 @@ pub type Person {
 }
 
 pub fn address_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Address", Address(street: "", city: "", zip: ""))
+  schema.record_schema("Address")
+  |> schema.decode_into(Address(street: "", city: "", zip: ""))
   |> schema.field("street", schema.StringType)
   |> schema.field("city", schema.StringType)
   |> schema.field("zip", schema.StringType)
@@ -21,10 +22,12 @@ pub fn address_schema() -> schema.RecordSchema(_) {
 }
 
 pub fn person_schema() -> schema.RecordSchema(_) {
-  schema.record_schema(
-    "Person",
-    Person(name: "", age: 0, address: Address(street: "", city: "", zip: "")),
-  )
+  schema.record_schema("Person")
+  |> schema.decode_into(Person(
+    name: "",
+    age: 0,
+    address: Address(street: "", city: "", zip: ""),
+  ))
   |> schema.field("name", schema.StringType)
   |> schema.field("age", schema.IntType)
   |> schema.field("address", schema.RecordType(address_schema))
@@ -118,7 +121,8 @@ pub type Company {
 }
 
 pub fn company_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Company", Company(name: "", employees: []))
+  schema.record_schema("Company")
+  |> schema.decode_into(Company(name: "", employees: []))
   |> schema.field("name", schema.StringType)
   |> schema.field(
     "employees",

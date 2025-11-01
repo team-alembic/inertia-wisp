@@ -3,11 +3,19 @@ import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
+import gleam/option
 import gleam/result
 import gleam/string
 
 @external(erlang, "gleam_erlang_ffi", "identity")
-pub fn unsafe_cast(a: a) -> b
+fn unsafe_cast(a: a) -> b
+
+/// Convert any value to Dynamic
+///
+/// This is a wrapper around unsafe_cast for converting values to Dynamic.
+pub fn to_dynamic(value: t) -> dynamic.Dynamic {
+  unsafe_cast(value)
+}
 
 @external(erlang, "erlang", "element")
 fn element(index: Int, record: a) -> dynamic.Dynamic
@@ -23,13 +31,8 @@ fn setelement(index: Int, record: a, value: dynamic.Dynamic) -> a
 pub type Erased
 
 /// Erase the type parameter from a Field(t) to Field(Erased)
-pub fn erase_field(field: Field(t)) -> Field(Erased) {
+fn erase_field(field: Field(t)) -> Field(Erased) {
   unsafe_cast(field)
-}
-
-/// Erase the type parameter from a FieldType(t) to FieldType(Erased)
-pub fn erase_field_type(field_type: FieldType(t)) -> FieldType(Erased) {
-  unsafe_cast(field_type)
 }
 
 /// Field type information for code generation
@@ -38,12 +41,16 @@ pub fn erase_field_type(field_type: FieldType(t)) -> FieldType(Erased) {
 /// For nested schemas (RecordType/VariantType), `t` is the type that schema decodes to.
 /// This allows us to track nested schema types while maintaining type erasure
 /// where needed (in the Field/dict storage).
+///
+/// The OptionalType wrapper indicates fields that may not be present, which generates
+/// `.optional()` in TypeScript/Zod schemas and expects `Option(t)` in Gleam.
 pub type FieldType(t) {
   StringType
   IntType
   FloatType
   BoolType
   ListType(inner: FieldType(t))
+  OptionalType(inner: FieldType(t))
   RecordType(schema: fn() -> RecordSchema(t))
   VariantType(schema: fn() -> VariantSchema(t))
 }
@@ -70,13 +77,17 @@ pub type Field(t) {
 /// This provides type safety and prevents accidentally using the wrong schema
 /// for decoding.
 ///
+/// The `default` field is optional - it's only needed if you plan to decode
+/// in Gleam. For page props that are only decoded on the frontend via Zod,
+/// you can pass `None` to avoid creating unnecessary default values.
+///
 /// Note: Fields are stored as Field(Erased) to allow heterogeneous field types
 /// within a single record. Each Field(u) is erased to Field(Erased) when stored.
 pub type RecordSchema(t) {
   RecordSchema(
     name: String,
     fields: dict.Dict(String, Field(Erased)),
-    default: t,
+    default: option.Option(t),
   )
 }
 
@@ -102,11 +113,30 @@ pub type VariantSchemaBuilder(t) {
 }
 
 /// Create a new schema builder for a record type
-/// The default value is used as a starting point for decoding
-pub fn record_schema(name: String, default: t) -> RecordSchemaBuilder(t) {
+///
+/// By default, schemas have no default value and can only be used for encoding
+/// and TypeScript generation. If you need to decode in Gleam, use `decode_into()`
+/// to provide a default value after building the schema.
+pub fn record_schema(name: String) -> RecordSchemaBuilder(t) {
   RecordSchemaBuilder(
-    schema: RecordSchema(name: name, fields: dict.new(), default: default),
+    schema: RecordSchema(name: name, fields: dict.new(), default: option.None),
     next_index: 2,
+  )
+}
+
+/// Set a default value on a schema to enable decoding
+///
+/// The default value is used as a starting point when decoding - field values
+/// from the input override the default. This is only needed if you plan to
+/// decode values in Gleam; schemas used only for encoding/TypeScript generation
+/// don't need a default.
+pub fn decode_into(
+  builder: RecordSchemaBuilder(t),
+  default: t,
+) -> RecordSchemaBuilder(t) {
+  RecordSchemaBuilder(
+    ..builder,
+    schema: RecordSchema(..builder.schema, default: option.Some(default)),
   )
 }
 
@@ -234,32 +264,63 @@ pub fn validate(
 
 /// Encode a value to JSON using a record schema
 pub fn to_json(schema: RecordSchema(t), value: t) -> json.Json {
-  encode_record(schema, value)
+  encode_record(schema, to_dynamic(value))
+}
+
+/// Encode a value to a Dict(String, Json) using a record schema
+///
+/// This is useful for building response encoders where you need to conditionally
+/// include/exclude fields or combine multiple records.
+///
+/// ## Example
+///
+/// ```gleam
+/// fn encode_user_props(props: UserProps) -> dict.Dict(String, json.Json) {
+///   // Start with base fields from schema
+///   let base = schema.to_json_dict(user_schema(), props.user)
+///
+///   // Conditionally add optional fields
+///   case props.avatar {
+///     Some(avatar) -> dict.insert(base, "avatar", json.string(avatar))
+///     None -> base
+///   }
+/// }
+/// ```
+pub fn to_json_dict(
+  schema: RecordSchema(t),
+  value: t,
+) -> dict.Dict(String, json.Json) {
+  encode_record_to_dict(schema, to_dynamic(value))
 }
 
 /// Encode a value to JSON using a variant schema
 pub fn variant_to_json(schema: VariantSchema(t), value: t) -> json.Json {
-  encode_variant(schema, value)
+  encode_variant(schema, to_dynamic(value))
 }
 
-fn encode_record(schema: RecordSchema(t), value: t) -> json.Json {
-  let dynamic_value = unsafe_cast(value)
+fn encode_record(schema: RecordSchema(t), value: dynamic.Dynamic) -> json.Json {
+  encode_record_to_dict(schema, value)
+  |> dict.to_list()
+  |> json.object()
+}
 
+fn encode_record_to_dict(
+  schema: RecordSchema(t),
+  value: dynamic.Dynamic,
+) -> dict.Dict(String, json.Json) {
   schema.fields
   |> dict.to_list()
   |> list.map(fn(entry) {
     let #(name, field) = entry
-    let field_value = element(field.index, dynamic_value)
+    let field_value = element(field.index, value)
     #(name, encode_field(field.field_type, field_value))
   })
-  |> json.object()
+  |> dict.from_list()
 }
 
-fn encode_variant(schema: VariantSchema(t), value: t) -> json.Json {
-  let dynamic_value = unsafe_cast(value)
-
+fn encode_variant(schema: VariantSchema(t), value: dynamic.Dynamic) -> json.Json {
   // Use tagger to get the tag for this value
-  let tag = schema.tagger(dynamic_value)
+  let tag = schema.tagger(value)
 
   // Find the record schema for this tag
   case dict.get(schema.cases, tag) {
@@ -270,7 +331,7 @@ fn encode_variant(schema: VariantSchema(t), value: t) -> json.Json {
         |> dict.to_list()
         |> list.map(fn(entry) {
           let #(name, field) = entry
-          let field_value = element(field.index, dynamic_value)
+          let field_value = element(field.index, value)
           #(name, encode_field(field.field_type, field_value))
         })
 
@@ -312,15 +373,24 @@ fn encode_field(field_type: FieldType(t), value: dynamic.Dynamic) -> json.Json {
       let assert Ok(list_value) = decode.run(value, decode.list(decode.dynamic))
       json.array(list_value, fn(item) { encode_field(inner, item) })
     }
+    OptionalType(inner) -> {
+      // Encode Option(t) - Some(value) encodes the inner value, None encodes null
+      // The value is already an Option - it was extracted directly from the record
+      let option_value = unsafe_cast(value)
+      case option_value {
+        option.Some(inner_value) -> encode_field(inner, to_dynamic(inner_value))
+        option.None -> json.null()
+      }
+    }
     RecordType(get_schema) -> {
       // Recursively encode nested records
       let nested_schema = get_schema()
-      encode_record(nested_schema, unsafe_cast(value))
+      encode_record(nested_schema, value)
     }
     VariantType(get_schema) -> {
       // Recursively encode nested variants
       let nested_schema = get_schema()
-      encode_variant(nested_schema, unsafe_cast(value))
+      encode_variant(nested_schema, value)
     }
   }
 }
@@ -351,25 +421,36 @@ fn decode_record(
   schema: RecordSchema(t),
   value: dynamic.Dynamic,
 ) -> Result(t, String) {
-  // Start with default value
-  let result = schema.default
+  // Check if we have a default value for decoding
+  case schema.default {
+    option.None ->
+      Error(
+        "Cannot decode schema '"
+        <> schema.name
+        <> "' - no default value provided. Use option.Some(default_value) when creating the schema if you need to decode it.",
+      )
+    option.Some(default_value) -> {
+      // Start with default value
+      let result = default_value
 
-  // For each field, decode and apply setter
-  schema.fields
-  |> dict.to_list()
-  |> list.try_fold(result, fn(acc, entry) {
-    let #(field_name, field) = entry
+      // For each field, decode and apply setter
+      schema.fields
+      |> dict.to_list()
+      |> list.try_fold(result, fn(acc, entry) {
+        let #(field_name, field) = entry
 
-    // Decode the field value from the dynamic input
-    use field_value <- result.try(decode_field(
-      field.field_type,
-      field_name,
-      value,
-    ))
+        // Decode the field value from the dynamic input
+        use field_value <- result.try(decode_field(
+          field.field_type,
+          field_name,
+          value,
+        ))
 
-    // Use setter to update the record
-    Ok(setelement(field.index, unsafe_cast(acc), field_value))
-  })
+        // Use setter to update the record
+        Ok(setelement(field.index, acc, field_value))
+      })
+    }
+  }
 }
 
 fn decode_variant(
@@ -403,8 +484,25 @@ fn decode_field(
   field_name: String,
   value: dynamic.Dynamic,
 ) -> Result(dynamic.Dynamic, String) {
-  // Special case for RecordType and ListType(RecordType) - decode recursively
+  // Special case for RecordType, OptionalType, and ListType(RecordType) - decode recursively
   case field_type {
+    OptionalType(inner) -> {
+      // For optional fields, decode and validate with decode.optional wrapper
+      let decoder = field_type_decoder(inner)
+      let field_decoder = {
+        use field_value <- decode.field(field_name, decode.optional(decoder))
+        decode.success(field_value)
+      }
+
+      decode.run(value, field_decoder)
+      |> result.map(to_dynamic)
+      |> result.map_error(fn(errors) {
+        "Failed to decode optional field: "
+        <> field_name
+        <> " - "
+        <> string_from_decode_errors(errors)
+      })
+    }
     RecordType(get_schema) -> {
       // First extract the field as dynamic
       let field_decoder = {
@@ -425,7 +523,7 @@ fn decode_field(
       // Now recursively decode using the nested schema
       let nested_schema = get_schema()
       decode_record(nested_schema, field_value)
-      |> result.map(unsafe_cast)
+      |> result.map(to_dynamic)
     }
     ListType(RecordType(get_schema)) -> {
       // Special case: list of records
@@ -451,19 +549,17 @@ fn decode_field(
         decode_record(nested_schema, item)
         |> result.map_error(fn(err) { "List item decode error: " <> err })
       })
-      |> result.map(unsafe_cast)
+      |> result.map(to_dynamic)
     }
     _ -> {
-      // Standard decoding for other types
+      // Standard decoding for other types - validate the type
       let decoder = field_type_decoder(field_type)
-
       let field_decoder = {
         use field_value <- decode.field(field_name, decoder)
         decode.success(field_value)
       }
 
       decode.run(value, field_decoder)
-      |> result.map(unsafe_cast)
       |> result.map_error(fn(errors) {
         "Failed to decode field: "
         <> field_name
@@ -474,27 +570,32 @@ fn decode_field(
   }
 }
 
+/// Create a decoder that validates a Dynamic value has the correct type,
+/// then converts it back to Dynamic for storage in a record.
+///
+/// This round-trip is necessary because:
+/// 1. We need to validate the incoming data has the correct type
+/// 2. We need to store it as Dynamic for use with setelement()
 fn field_type_decoder(
   field_type: FieldType(t),
 ) -> decode.Decoder(dynamic.Dynamic) {
   case field_type {
-    StringType -> decode.string |> decode.map(unsafe_cast)
-    IntType -> decode.int |> decode.map(unsafe_cast)
-    FloatType -> decode.float |> decode.map(unsafe_cast)
-    BoolType -> decode.bool |> decode.map(unsafe_cast)
+    StringType -> decode.string |> decode.map(dynamic.string)
+    IntType -> decode.int |> decode.map(dynamic.int)
+    FloatType -> decode.float |> decode.map(dynamic.float)
+    BoolType -> decode.bool |> decode.map(dynamic.bool)
     ListType(inner) -> {
-      // Recursively decode inner elements based on inner type
+      // Recursively validate inner elements
       let inner_decoder = field_type_decoder(inner)
-      decode.list(inner_decoder) |> decode.map(unsafe_cast)
+      decode.list(inner_decoder) |> decode.map(dynamic.list)
     }
-    RecordType(_) -> {
-      // RecordType is handled specially in decode_field
-      // This case should not be reached for record types at top level
-      decode.dynamic
+    OptionalType(inner) -> {
+      // Validate the inner type if present
+      let inner_decoder = field_type_decoder(inner)
+      decode.optional(inner_decoder) |> decode.map(to_dynamic)
     }
-    VariantType(_) -> {
-      // VariantType is handled specially in decode_field
-      // This case should not be reached for variant types at top level
+    RecordType(_) | VariantType(_) -> {
+      // RecordType and VariantType are handled specially in decode_field
       decode.dynamic
     }
   }
@@ -521,15 +622,7 @@ fn record_to_zod(schema: RecordSchema(t)) -> String {
   let schema_name = schema.name <> "Schema"
   let type_name = schema.name
 
-  let fields_code =
-    schema.fields
-    |> dict.to_list()
-    |> list.map(fn(entry) {
-      let #(field_name, field) = entry
-      let zod_type = field_type_to_zod(field.field_type)
-      "  " <> field_name <> ": " <> zod_type <> ","
-    })
-    |> string.join("\n")
+  let fields_code = fields_to_zod_lines(schema.fields, "  ")
 
   let schema_def =
     "export const "
@@ -539,8 +632,46 @@ fn record_to_zod(schema: RecordSchema(t)) -> String {
     <> "\n"
     <> "}).strict();\n\n"
 
-  let type_def =
-    "export type " <> type_name <> " = z.infer<typeof " <> schema_name <> ">;"
+  let type_def = type_infer_definition(type_name, schema_name)
+
+  schema_def <> type_def
+}
+
+/// Generate a TypeScript/Zod schema for an Inertia.js page
+///
+/// This takes a RecordSchema and generates TypeScript with page-specific conventions:
+/// - Adds `errors: z.record(z.string(), z.string()).optional()` automatically
+/// - Detects OptionalType fields and marks them as optional in the TypeScript schema
+/// - Uses `.strict()` mode for validation
+///
+/// ## Parameters
+///
+/// - `schema`: The RecordSchema defining the props structure
+///
+/// ## Example
+///
+/// ```gleam
+/// // With schema name "DashboardPageProps"
+/// schema.to_page_props_zod_schema(dashboard_props_schema())
+/// // Generates: DashboardPagePropsSchema and DashboardPageProps type
+/// ```
+pub fn to_page_props_zod_schema(schema schema: RecordSchema(t)) -> String {
+  let schema_name = schema.name <> "Schema"
+  let type_name = schema.name
+
+  let fields_code =
+    fields_to_zod_lines(schema.fields, "  ")
+    <> "\n  errors: z.record(z.string(), z.string()).optional(),"
+
+  let schema_def =
+    "export const "
+    <> schema_name
+    <> " = z.object({\n"
+    <> fields_code
+    <> "\n"
+    <> "}).strict();\n\n"
+
+  let type_def = type_infer_definition(type_name, schema_name)
 
   schema_def <> type_def
 }
@@ -560,9 +691,8 @@ fn variant_to_zod(schema: VariantSchema(t)) -> String {
         case field.field_type {
           VariantType(_) -> True
           ListType(VariantType(_)) -> True
-          RecordType(_) -> False
-          ListType(RecordType(_)) -> False
-          ListType(ListType(RecordType(_))) -> False
+          OptionalType(VariantType(_)) -> True
+          OptionalType(ListType(VariantType(_))) -> True
           _ -> False
         }
       })
@@ -585,15 +715,7 @@ fn variant_to_zod_simple(
     |> dict.to_list()
     |> list.map(fn(case_entry) {
       let #(tag, record_schema) = case_entry
-      let fields =
-        record_schema.fields
-        |> dict.to_list()
-        |> list.map(fn(field_entry) {
-          let #(field_name, field) = field_entry
-          let zod_type = field_type_to_zod(field.field_type)
-          "    " <> field_name <> ": " <> zod_type <> ","
-        })
-        |> string.join("\n")
+      let fields = fields_to_zod_lines(record_schema.fields, "    ")
 
       let type_literal = "    type: z.literal(\"" <> tag <> "\"),"
 
@@ -612,8 +734,7 @@ fn variant_to_zod_simple(
     <> ",\n"
     <> "]);\n\n"
 
-  let type_def =
-    "export type " <> type_name <> " = z.infer<typeof " <> schema_name <> ">;"
+  let type_def = type_infer_definition(type_name, schema_name)
 
   schema_def <> type_def
 }
@@ -639,6 +760,8 @@ fn variant_to_zod_recursive(
           case field.field_type {
             VariantType(_) -> True
             ListType(VariantType(_)) -> True
+            OptionalType(VariantType(_)) -> True
+            OptionalType(ListType(VariantType(_))) -> True
             _ -> False
           }
         })
@@ -647,19 +770,11 @@ fn variant_to_zod_recursive(
         True -> ""
         // Don't generate const for recursive cases
         False -> {
-          let fields =
-            record_schema.fields
-            |> dict.to_list()
-            |> list.map(fn(field_entry) {
-              let #(field_name, field) = field_entry
-              let zod_type = field_type_to_zod(field.field_type)
-              "  " <> field_name <> ": " <> zod_type <> ","
-            })
-            |> string.join("\n")
+          let fields = fields_to_zod_lines(record_schema.fields, "  ")
 
           let type_literal = "  type: z.literal(\"" <> tag <> "\"),"
 
-          let type_name = record_schema.name
+          let case_type_name = record_schema.name
 
           case dict.size(record_schema.fields) {
             0 ->
@@ -669,11 +784,8 @@ fn variant_to_zod_recursive(
               <> type_literal
               <> "\n"
               <> "});\n\n"
-              <> "export type "
-              <> type_name
-              <> " = z.infer<typeof "
-              <> case_schema_name
-              <> ">;\n"
+              <> type_infer_definition(case_type_name, case_schema_name)
+              <> "\n"
             _ ->
               "export const "
               <> case_schema_name
@@ -683,11 +795,8 @@ fn variant_to_zod_recursive(
               <> fields
               <> "\n"
               <> "});\n\n"
-              <> "export type "
-              <> type_name
-              <> " = z.infer<typeof "
-              <> case_schema_name
-              <> ">;\n"
+              <> type_infer_definition(case_type_name, case_schema_name)
+              <> "\n"
           }
         }
       }
@@ -711,6 +820,8 @@ fn variant_to_zod_recursive(
           case field.field_type {
             VariantType(_) -> True
             ListType(VariantType(_)) -> True
+            OptionalType(VariantType(_)) -> True
+            OptionalType(ListType(VariantType(_))) -> True
             _ -> False
           }
         })
@@ -753,6 +864,8 @@ fn variant_to_zod_recursive(
           case field.field_type {
             VariantType(_) -> True
             ListType(VariantType(_)) -> True
+            OptionalType(VariantType(_)) -> True
+            OptionalType(ListType(VariantType(_))) -> True
             _ -> False
           }
         })
@@ -760,15 +873,7 @@ fn variant_to_zod_recursive(
       case has_recursive {
         True -> {
           // Generate inline object for recursive cases
-          let fields =
-            record_schema.fields
-            |> dict.to_list()
-            |> list.map(fn(field_entry) {
-              let #(field_name, field) = field_entry
-              let zod_type = field_type_to_zod(field.field_type)
-              "    " <> field_name <> ": " <> zod_type <> ","
-            })
-            |> string.join("\n")
+          let fields = fields_to_zod_lines(record_schema.fields, "    ")
 
           "  z.object({\n    type: z.literal(\""
           <> tag
@@ -799,6 +904,32 @@ fn variant_to_zod_recursive(
   case_schemas <> "\n" <> union_type_def <> schema_def <> type_export
 }
 
+// ============================================================================
+// Code Generation Helpers
+// ============================================================================
+
+/// Generate Zod field declarations from a record schema's fields
+/// Returns lines like "  field_name: z.string(),"
+fn fields_to_zod_lines(
+  fields: dict.Dict(String, Field(t)),
+  indent: String,
+) -> String {
+  fields
+  |> dict.to_list()
+  |> list.map(fn(entry) {
+    let #(field_name, field) = entry
+    let zod_type = field_type_to_zod(field.field_type)
+    indent <> field_name <> ": " <> zod_type <> ","
+  })
+  |> string.join("\n")
+}
+
+/// Generate a TypeScript type definition from a schema name
+/// Returns: "export type TypeName = z.infer<typeof TypeNameSchema>;"
+fn type_infer_definition(type_name: String, schema_name: String) -> String {
+  "export type " <> type_name <> " = z.infer<typeof " <> schema_name <> ">;"
+}
+
 fn field_type_to_ts_type(
   field_type: FieldType(t),
   variant_name: String,
@@ -809,6 +940,8 @@ fn field_type_to_ts_type(
     FloatType -> "number"
     BoolType -> "boolean"
     ListType(inner) -> field_type_to_ts_type(inner, variant_name) <> "[]"
+    OptionalType(inner) ->
+      field_type_to_ts_type(inner, variant_name) <> " | undefined"
     RecordType(get_schema) -> {
       let nested_schema = get_schema()
       nested_schema.name
@@ -817,7 +950,7 @@ fn field_type_to_ts_type(
   }
 }
 
-fn field_type_to_zod(field_type: FieldType(t)) -> String {
+pub fn field_type_to_zod(field_type: FieldType(t)) -> String {
   case field_type {
     StringType -> "z.string()"
     IntType -> "z.number()"
@@ -826,6 +959,10 @@ fn field_type_to_zod(field_type: FieldType(t)) -> String {
     ListType(inner) -> {
       let inner_zod = field_type_to_zod(inner)
       "z.array(" <> inner_zod <> ")"
+    }
+    OptionalType(inner) -> {
+      let inner_zod = field_type_to_zod(inner)
+      inner_zod <> ".optional()"
     }
     RecordType(get_schema) -> {
       // Get the schema to extract its name

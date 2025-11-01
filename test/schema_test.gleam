@@ -8,7 +8,8 @@ pub type User {
 }
 
 pub fn user_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("User", User(id: 0, name: "", email: ""))
+  schema.record_schema("User")
+  |> schema.decode_into(User(id: 0, name: "", email: ""))
   |> schema.field("id", schema.IntType)
   |> schema.field("name", schema.StringType)
   |> schema.field("email", schema.StringType)
@@ -78,7 +79,8 @@ pub type UserWithTags {
 }
 
 pub fn user_with_tags_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("UserWithTags", UserWithTags(id: 0, name: "", tags: []))
+  schema.record_schema("UserWithTags")
+  |> schema.decode_into(UserWithTags(id: 0, name: "", tags: []))
   |> schema.field("id", schema.IntType)
   |> schema.field("name", schema.StringType)
   |> schema.field("tags", schema.ListType(schema.StringType))
@@ -124,7 +126,8 @@ pub type NumberGrid {
 }
 
 pub fn number_grid_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("NumberGrid", NumberGrid(rows: []))
+  schema.record_schema("NumberGrid")
+  |> schema.decode_into(NumberGrid(rows: []))
   |> schema.field("rows", schema.ListType(schema.ListType(schema.IntType)))
   |> schema.schema()
 }

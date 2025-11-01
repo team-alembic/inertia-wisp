@@ -7,7 +7,8 @@ pub type TaggedItem {
 }
 
 pub fn tagged_item_schema() -> schema.RecordSchema(TaggedItem) {
-  schema.record_schema("TaggedItem", TaggedItem(tags: []))
+  schema.record_schema("TaggedItem")
+  |> schema.decode_into(TaggedItem(tags: []))
   |> schema.field("tags", schema.ListType(schema.StringType))
   |> schema.schema()
 }
@@ -34,7 +35,8 @@ pub type Grid {
 }
 
 pub fn grid_schema() -> schema.RecordSchema(Grid) {
-  schema.record_schema("Grid", Grid(data: []))
+  schema.record_schema("Grid")
+  |> schema.decode_into(Grid(data: []))
   |> schema.field("data", schema.ListType(schema.ListType(schema.IntType)))
   |> schema.schema()
 }

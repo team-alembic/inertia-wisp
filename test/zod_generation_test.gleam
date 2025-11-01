@@ -6,7 +6,7 @@ pub type User {
 }
 
 pub fn user_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("User", User(id: 0, name: "", email: ""))
+  schema.record_schema("User")
   |> schema.field("id", schema.IntType)
   |> schema.field("name", schema.StringType)
   |> schema.field("email", schema.StringType)
@@ -40,7 +40,8 @@ pub type TaggedItem {
 }
 
 pub fn tagged_item_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("TaggedItem", TaggedItem(id: 0, tags: [], scores: []))
+  schema.record_schema("TaggedItem")
+  |> schema.decode_into(TaggedItem(id: 0, tags: [], scores: []))
   |> schema.field("id", schema.IntType)
   |> schema.field("tags", schema.ListType(schema.StringType))
   |> schema.field("scores", schema.ListType(schema.IntType))
@@ -66,17 +67,15 @@ pub type Person {
 }
 
 pub fn address_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Address", Address(street: "", city: ""))
+  schema.record_schema("Address")
   |> schema.field("street", schema.StringType)
   |> schema.field("city", schema.StringType)
   |> schema.schema()
 }
 
 pub fn person_schema() -> schema.RecordSchema(_) {
-  schema.record_schema(
-    "Person",
-    Person(name: "", address: Address(street: "", city: "")),
-  )
+  schema.record_schema("Person")
+  |> schema.decode_into(Person(name: "", address: Address(street: "", city: "")))
   |> schema.field("name", schema.StringType)
   |> schema.field("address", schema.RecordType(address_schema))
   |> schema.schema()
@@ -96,7 +95,7 @@ pub type Team {
 }
 
 pub fn team_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Team", Team(name: "", members: []))
+  schema.record_schema("Team")
   |> schema.field("name", schema.StringType)
   |> schema.field("members", schema.ListType(schema.RecordType(person_schema)))
   |> schema.schema()
@@ -116,7 +115,7 @@ pub type Grid {
 }
 
 pub fn grid_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Grid", Grid(data: []))
+  schema.record_schema("Grid")
   |> schema.field("data", schema.ListType(schema.ListType(schema.IntType)))
   |> schema.schema()
 }
