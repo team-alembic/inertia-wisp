@@ -1,6 +1,6 @@
 //// Inertia.js adapter for the Gleam Wisp web framework.
 ////
-//// This module provides a type-safe API for building Inertia.js responses. 
+//// This module provides a type-safe API for building Inertia.js responses.
 ////
 //// ## Quick Example
 ////
@@ -39,11 +39,11 @@ import gleam/dict
 import gleam/json
 import gleam/option.{type Option}
 import inertia_wisp/prop_behavior
-import inertia_wisp/response_builder_v2
+import inertia_wisp/response_builder
 import wisp.{type Request, type Response}
 
 pub type InertiaResponseBuilder(props) =
-  response_builder_v2.InertiaResponseBuilder(props)
+  response_builder.InertiaResponseBuilder(props)
 
 /// Options for merge prop behavior, controlling how data is merged on the client.
 pub type MergeOptions =
@@ -66,7 +66,7 @@ pub fn response_builder(
   req: Request,
   component: String,
 ) -> InertiaResponseBuilder(Nil) {
-  response_builder_v2.response_builder(req, component)
+  response_builder.response_builder(req, component)
 }
 
 /// Set the props data and encoder for this response.
@@ -92,7 +92,7 @@ pub fn props(
   props: props,
   encode: fn(props) -> dict.Dict(String, json.Json),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.props(builder, props, encode)
+  response_builder.props(builder, props, encode)
 }
 
 /// Configure a prop to be lazy-evaluated.
@@ -112,7 +112,7 @@ pub fn lazy(
   field_name: String,
   resolver: fn(props) -> Result(props, dict.Dict(String, String)),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.lazy(builder, field_name, resolver)
+  response_builder.lazy(builder, field_name, resolver)
 }
 
 /// Configure a prop to be optional (excluded by default).
@@ -123,7 +123,7 @@ pub fn optional(
   builder: InertiaResponseBuilder(props),
   field_name: String,
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.optional(builder, field_name)
+  response_builder.optional(builder, field_name)
 }
 
 /// Configure a prop to always be included, even in partial reloads.
@@ -140,7 +140,7 @@ pub fn always(
   builder: InertiaResponseBuilder(props),
   field_name: String,
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.always(builder, field_name)
+  response_builder.always(builder, field_name)
 }
 
 /// Configure a prop to be deferred (loaded after initial page render).
@@ -162,7 +162,7 @@ pub fn defer(
   field_name: String,
   resolver: fn(props) -> Result(props, dict.Dict(String, String)),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.defer(builder, field_name, resolver)
+  response_builder.defer(builder, field_name, resolver)
 }
 
 /// Configure a deferred prop with a specific group name.
@@ -175,7 +175,7 @@ pub fn defer_in_group(
   group: String,
   resolver: fn(props) -> Result(props, dict.Dict(String, String)),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.defer_in_group(builder, field_name, group, resolver)
+  response_builder.defer_in_group(builder, field_name, group, resolver)
 }
 
 /// Configure a prop to use client-side merging behavior.
@@ -199,7 +199,7 @@ pub fn merge(
   match_on: Option(List(String)),
   deep: Bool,
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.merge(builder, field_name, match_on, deep)
+  response_builder.merge(builder, field_name, match_on, deep)
 }
 
 /// Add validation errors to the response.
@@ -223,7 +223,7 @@ pub fn errors(
   builder: InertiaResponseBuilder(props),
   errors: dict.Dict(String, String),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.errors(builder, errors)
+  response_builder.errors(builder, errors)
 }
 
 /// Create a redirect response (303 See Other).
@@ -239,7 +239,7 @@ pub fn errors(
 /// |> inertia.redirect("/users")
 /// ```
 pub fn redirect(builder: InertiaResponseBuilder(props), url: String) -> Response {
-  response_builder_v2.redirect(builder, url)
+  response_builder.redirect(builder, url)
 }
 
 /// Set a custom error component to render on error.
@@ -250,7 +250,7 @@ pub fn on_error(
   builder: InertiaResponseBuilder(props),
   error_component: String,
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.on_error(builder, error_component)
+  response_builder.on_error(builder, error_component)
 }
 
 /// Clear the browser history state after this response.
@@ -259,7 +259,7 @@ pub fn on_error(
 pub fn clear_history(
   builder: InertiaResponseBuilder(props),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.clear_history(builder)
+  response_builder.clear_history(builder)
 }
 
 /// Encrypt the history entry for this page.
@@ -268,7 +268,7 @@ pub fn clear_history(
 pub fn encrypt_history(
   builder: InertiaResponseBuilder(props),
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.encrypt_history(builder)
+  response_builder.encrypt_history(builder)
 }
 
 /// Set an asset version for cache busting.
@@ -285,7 +285,7 @@ pub fn version(
   builder: InertiaResponseBuilder(props),
   version: String,
 ) -> InertiaResponseBuilder(props) {
-  response_builder_v2.version(builder, version)
+  response_builder.version(builder, version)
 }
 
 /// Build the final HTTP response with the given status code.
@@ -301,5 +301,5 @@ pub fn version(
 /// |> inertia.response(201)  // Created
 /// ```
 pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response {
-  response_builder_v2.response(builder, status)
+  response_builder.response(builder, status)
 }

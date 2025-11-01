@@ -1,7 +1,5 @@
 import gleam/dict
-
-import gleam/dynamic/decode
-import gleam/http/request
+import gleam/http
 import gleam/http/response
 import gleam/json
 import gleam/list
@@ -9,879 +7,782 @@ import gleam/option
 import gleam/result
 import gleam/string
 import gleeunit
-import gleeunit/should
-import inertia_wisp/prop.{
-  AlwaysProp, DefaultProp, DeferProp, LazyProp, MergeProp, OptionalProp,
-}
 import inertia_wisp/response_builder
-import inertia_wisp/testing
+import wisp/simulate
 
 pub fn main() {
   gleeunit.main()
 }
 
-// Test data types for prop encoding
-pub type TestProp {
-  UserData(name: String, email: String)
-  CountData(count: Int)
+// Simple props type for testing
+type SimpleProps {
+  SimpleProps(message: String, count: Int)
 }
 
-pub fn encode_test_prop(prop: TestProp) -> json.Json {
-  case prop {
-    UserData(name, email) ->
-      json.object([#("name", json.string(name)), #("email", json.string(email))])
-    CountData(count) -> json.int(count)
+fn encode_simple_props(props: SimpleProps) -> dict.Dict(String, json.Json) {
+  dict.from_list([
+    #("message", json.string(props.message)),
+    #("count", json.int(props.count)),
+  ])
+}
+
+// Test: Builder with props produces a response with correct component and props
+pub fn builder_produces_response_with_props_test() {
+  let req =
+    simulate.request(http.Get, "/test")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "TestComponent")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.response(200)
+
+  // Response should be 200 OK
+  assert response.status == 200
+
+  // Response body should contain component name
+  let body = simulate.read_body(response)
+  assert body |> string.contains("TestComponent")
+
+  // Response body should contain prop data
+  assert body |> string.contains("Hello")
+  assert body |> string.contains("42")
+}
+
+// Props type with optional field for lazy evaluation
+type LazyProps {
+  LazyProps(user: String, expensive_data: option.Option(String))
+}
+
+fn encode_lazy_props(props: LazyProps) -> dict.Dict(String, json.Json) {
+  let base = dict.from_list([#("user", json.string(props.user))])
+
+  case props.expensive_data {
+    option.Some(data) -> dict.insert(base, "expensive_data", json.string(data))
+    option.None -> base
   }
 }
 
-// Basic builder creation tests
-pub fn response_builder_creates_empty_builder_test() {
-  let req = testing.inertia_request()
+// Test: Lazy prop is evaluated and included in response
+pub fn lazy_prop_is_evaluated_test() {
+  let req =
+    simulate.request(http.Get, "/test")
+    |> simulate.header("x-inertia", "true")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
   let response =
-    req
-    |> response_builder.response_builder("TestComponent")
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.lazy("expensive_data", fn(props) {
+      // Resolver receives current props and returns updated props
+      Ok(LazyProps(..props, expensive_data: option.Some("computed-value")))
+    })
     |> response_builder.response(200)
 
-  // Should create valid response with component name
-  let assert Ok("TestComponent") = testing.component(response)
+  // Response should contain the user prop
+  let body = simulate.read_body(response)
+  assert body |> string.contains("Alice")
+
+  // Response should contain the evaluated lazy prop
+  assert body |> string.contains("computed-value")
 }
 
-pub fn component_sets_component_name_test() {
-  let req = testing.inertia_request()
+// Test: Optional prop is excluded from standard visits
+pub fn optional_prop_excluded_from_standard_visit_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
   let response =
-    req
-    |> response_builder.response_builder("Users/Show")
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.optional("count")
     |> response_builder.response(200)
 
-  // Should set component name correctly
-  let assert Ok("Users/Show") = testing.component(response)
+  let body = simulate.read_body(response)
+
+  // Message should be included (not marked as optional)
+  assert body |> string.contains("Hello")
+
+  // Count should NOT be included (marked as optional, not requested)
+  assert !string.contains(body, "42")
 }
 
-// Props handling tests
-pub fn props_with_single_prop_test() {
-  let req = testing.inertia_request()
-  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
+// Test: Partial reload only includes requested fields
+pub fn partial_reload_filters_to_requested_fields_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "message")
+
+  let props = SimpleProps(message: "Hello", count: 42)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
     |> response_builder.response(200)
 
-  // Should include the prop in the response
-  let assert Ok("John") =
-    testing.prop(response, "user", decode.at(["name"], decode.string))
+  let body = simulate.read_body(response)
+
+  // Message should be included (it was requested)
+  assert body |> string.contains("Hello")
+
+  // Count should NOT be included (not requested in partial reload)
+  assert !string.contains(body, "42")
 }
 
-pub fn props_with_multiple_props_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DefaultProp("count", CountData(42)),
-  ]
+// Test: Always fields are included even in partial reloads
+pub fn always_fields_included_in_partial_reload_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "message")
+
+  let props = SimpleProps(message: "Hello", count: 42)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props(props, encode_test_prop)
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.always("count")
     |> response_builder.response(200)
 
-  // Should include both props in the response
-  let assert Ok("John") =
-    testing.prop(response, "user", decode.at(["name"], decode.string))
-  let assert Ok(42) = testing.prop(response, "count", decode.int)
+  let body = simulate.read_body(response)
+
+  // Message should be included (it was requested)
+  assert body |> string.contains("Hello")
+
+  // Count should be included even though not requested (marked as always)
+  assert body |> string.contains("42")
 }
 
-// Error handling tests
-pub fn errors_sets_validation_errors_test() {
-  let req = testing.inertia_request()
-  let errors =
-    dict.from_list([
-      #("name", "Name is required"),
-      #("email", "Email is invalid"),
-    ])
+// Test: Deferred props generate metadata in response
+pub fn deferred_props_generate_metadata_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.errors(errors)
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.defer("expensive_data", fn(props) {
+      Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
+    })
     |> response_builder.response(200)
 
-  // Should include errors in the response
-  let assert Ok("Name is required") =
-    testing.prop(response, "errors", decode.at(["name"], decode.string))
-  let assert Ok("Email is invalid") =
-    testing.prop(response, "errors", decode.at(["email"], decode.string))
+  let body = simulate.read_body(response)
+
+  // User should be included (not deferred)
+  assert body |> string.contains("Alice")
+
+  // Expensive data should NOT be included (deferred)
+  assert !string.contains(body, "deferred-value")
+
+  // Response should contain deferredProps metadata
+  assert body |> string.contains("deferredProps")
+  assert body |> string.contains("expensive_data")
 }
 
-pub fn redirect_sets_redirect_url_test() {
-  let req = testing.inertia_request()
+// Test: Merge props generate metadata with deep option
+pub fn merge_props_generate_metadata_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.redirect("/users/create")
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.merge("message", match_on: option.None, deep: False)
+    |> response_builder.merge("count", match_on: option.None, deep: True)
+    |> response_builder.response(200)
 
-  // Should be an HTTP redirect response with 303 status
+  let body = simulate.read_body(response)
+
+  // Props should be included
+  assert body |> string.contains("Hello")
+  assert body |> string.contains("42")
+
+  // Response should contain mergeProps metadata (shallow merge)
+  assert body |> string.contains("mergeProps")
+  assert body |> string.contains("message")
+
+  // Response should contain deepMergeProps metadata (deep merge)
+  assert body |> string.contains("deepMergeProps")
+  assert body |> string.contains("count")
+}
+
+// Test: Merge props with match_on option generates matchPropsOn metadata
+pub fn merge_props_with_match_on_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.merge(
+      "message",
+      match_on: option.Some(["id", "slug"]),
+      deep: False,
+    )
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Props should be included
+  assert body |> string.contains("Hello")
+
+  // Response should contain matchPropsOn metadata
+  assert body |> string.contains("matchPropsOn")
+
+  // Should contain the match keys in dot notation (message.id, message.slug)
+  assert body |> string.contains("message.id")
+  assert body |> string.contains("message.slug")
+}
+
+// Test: Redirect returns 303 status with Location header
+pub fn redirect_returns_303_with_location_header_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.redirect("/home")
+
+  // Should return 303 status
   assert response.status == 303
-  let assert Ok("/users/create") = response.get_header(response, "location")
+
+  // Should have Location header
+  let assert Ok("/home") = response.get_header(response, "location")
 }
 
-// Metadata tests
-pub fn clear_history_sets_flag_test() {
-  let req = testing.inertia_request()
+// Test: Redirect with errors stores errors in cookie
+pub fn redirect_with_errors_stores_in_cookie_test() {
+  let req =
+    simulate.request(http.Get, "/login")
+    |> simulate.header("x-inertia", "true")
+
+  let errors =
+    dict.from_list([#("email", "Email is required"), #("password", "Too short")])
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Show")
+    response_builder.response_builder(req, "Login")
+    |> response_builder.errors(errors)
+    |> response_builder.redirect("/login")
+
+  // Should return 303 status
+  assert response.status == 303
+
+  // Should have set-cookie header with errors
+  let assert Ok(cookie_header) = response.get_header(response, "set-cookie")
+  assert cookie_header |> string.contains("inertia_errors")
+}
+
+// Test: Partial reload component matching - filters when component matches
+pub fn partial_reload_component_match_filters_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "message")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Message should be included (requested)
+  assert body |> string.contains("Hello")
+
+  // Count should NOT be included (component matches, so filtering applies)
+  assert !string.contains(body, "42")
+}
+
+// Test: Partial reload component mismatch - no filtering when component differs
+pub fn partial_reload_component_mismatch_no_filter_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "OtherComponent")
+    |> simulate.header("x-inertia-partial-data", "message")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Both props should be included (component mismatch = no filtering)
+  assert body |> string.contains("Hello")
+  assert body |> string.contains("42")
+}
+
+// Test: URL includes query parameters
+pub fn url_includes_query_parameters_test() {
+  let req =
+    simulate.request(http.Get, "/users?page=2&sort=name")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Users/Index")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // URL should include query parameters
+  assert body |> string.contains("/users?page=2&sort=name")
+}
+
+// Test: URL without query parameters
+pub fn url_without_query_parameters_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // URL should be just the path
+  assert body |> string.contains("\"/dashboard\"")
+}
+
+// Test: Lazy prop resolver error handling
+pub fn lazy_prop_error_handling_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.lazy("expensive_data", fn(_props) {
+      // Resolver returns an error
+      Error(dict.from_list([#("expensive_data", "Failed to load data")]))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // User should still be included
+  assert body |> string.contains("Alice")
+
+  // When resolver fails, the prop remains as its initial value (None)
+  // So expensive_data won't be in the response
+  assert !string.contains(body, "expensive_data")
+}
+
+// Test: Deferred prop resolver error handling
+pub fn deferred_prop_error_handling_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "expensive_data")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.defer("expensive_data", fn(_props) {
+      // Resolver returns an error
+      Error(
+        dict.from_list([#("expensive_data", "Failed to load deferred data")]),
+      )
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // When deferred prop is explicitly requested but resolver fails,
+  // the prop remains as its initial value (None) so won't be in response
+  assert !string.contains(body, "expensive_data")
+}
+
+// Test: clear_history flag appears in response
+pub fn clear_history_flag_in_response_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
     |> response_builder.clear_history()
     |> response_builder.response(200)
 
-  // Should set clear_history flag to true
-  let assert Ok(True) = testing.clear_history(response)
+  let body = simulate.read_body(response)
+
+  // Should contain clearHistory: true
+  assert body |> string.contains("\"clearHistory\":true")
 }
 
-pub fn encrypt_history_sets_flag_test() {
-  let req = testing.inertia_request()
+// Test: encrypt_history flag appears in response
+pub fn encrypt_history_flag_in_response_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let props = SimpleProps(message: "Hello", count: 42)
 
   let response =
-    req
-    |> response_builder.response_builder("SecurePage")
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
     |> response_builder.encrypt_history()
     |> response_builder.response(200)
 
-  // Should set encrypt_history flag to true
-  let assert Ok(True) = testing.encrypt_history(response)
+  let body = simulate.read_body(response)
+
+  // Should contain encryptHistory: true
+  assert body |> string.contains("\"encryptHistory\":true")
 }
 
-pub fn version_sets_version_string_test() {
-  let req = testing.inertia_request()
-
-  let response =
-    req
-    |> response_builder.response_builder("HomePage")
-    |> response_builder.version("2.1.0")
-    |> response_builder.response(200)
-
-  // Should set version string correctly
-  let assert Ok("2.1.0") = testing.version(response)
-}
-
-// Complete response building tests
-pub fn response_builds_basic_response_test() {
-  let req = testing.inertia_request()
-  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
-
-  let response =
-    req
-    |> response_builder.response_builder("HomePage")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should build a valid response
-  response
-  |> response.get_header("content-type")
-  |> should.equal(Ok("application/json; charset=utf-8"))
-}
-
-pub fn response_builds_error_only_response_test() {
-  let req = testing.inertia_request()
-  let errors = dict.from_list([#("email", "Email is required")])
-
-  let response =
-    req
-    |> response_builder.response_builder("FormPage")
-    |> response_builder.errors(errors)
-    |> response_builder.redirect("/form")
-
-  // Should be a redirect response with errors stored in cookie
-  assert response.status == 303
-  let assert Ok("/form") = response.get_header(response, "location")
-
-  // Should have set-cookie header with errors
-  let assert Ok(_cookie) = response.get_header(response, "set-cookie")
-}
-
-pub fn response_includes_props_in_json_test() {
-  let req = testing.inertia_request()
-  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should include props in JSON response
-  response
-  |> testing.component()
-  |> should.equal(Ok("Users/Show"))
-}
-
-pub fn response_includes_errors_in_json_test() {
-  let req = testing.inertia_request()
-  let errors = dict.from_list([#("email", "Email is required")])
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.errors(errors)
-    |> response_builder.response(200)
-
-  // Should include errors in JSON response
-  let assert Ok("application/json; charset=utf-8") =
-    response.get_header(response, "content-type")
-
-  // Should include the actual errors in the JSON
-  let assert Ok("Email is required") =
-    testing.prop(response, "errors", decode.at(["email"], decode.string))
-}
-
-// Deferred props tests
-pub fn deferred_props_not_evaluated_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DeferProp("expensive", option.None, fn() {
-      // This should NOT be called during response building
-      panic as "Should not be evaluated"
-    }),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should succeed without panic - deferred prop not evaluated
-  let assert Ok("Users/Show") = testing.component(response)
-}
-
-pub fn deferred_props_included_in_json_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    DeferProp("analytics", option.Some("custom"), fn() {
-      Ok(CountData(100))
-    }),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should include deferred props metadata in JSON (at top level, not in props)
-  let assert Ok(["expensive"]) =
-    testing.deferred_props(response, "default", decode.list(decode.string))
-  let assert Ok(["analytics"]) =
-    testing.deferred_props(response, "custom", decode.list(decode.string))
-}
-
-pub fn merge_props_metadata_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    MergeProp(
-      DefaultProp("posts", CountData(5)),
-      option.None,
-      False,
-    ),
-    MergeProp(
-      DefaultProp("comments", CountData(10)),
-      option.None,
-      False,
-    ),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should include merge props metadata (at top level, not in props)
-  let assert Ok(["posts", "comments"]) =
-    testing.merge_props(response, decode.list(decode.string))
-}
-
-pub fn deep_merge_props_metadata_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    MergeProp(
-      DefaultProp("nested", CountData(5)),
-      option.None,
-      True,
-    ),
-    MergeProp(DefaultProp("deep", CountData(10)), option.None, True),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should include deep merge props metadata (at top level, not in props)
-  let assert Ok(["nested", "deep"]) =
-    testing.deep_merge_props(response, decode.list(decode.string))
-}
-
-pub fn match_props_on_metadata_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    MergeProp(
-      DefaultProp("posts", CountData(5)),
-      option.Some(["id", "slug"]),
-      False,
-    ),
-    MergeProp(
-      DefaultProp("comments", CountData(10)),
-      option.Some(["user_id"]),
-      True,
-    ),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should include match props on metadata (at top level, not in props)
-  let assert Ok(["posts.slug", "posts.id", "comments.user_id"]) =
-    testing.match_props_on(response, decode.list(decode.string))
-}
-
-pub fn mixed_advanced_props_test() {
-  let req = testing.inertia_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    MergeProp(
-      DeferProp("analytics", option.Some("custom"), fn() {
-        Ok(CountData(100))
-      }),
-      option.None,
-      False,
-    ),
-    MergeProp(
-      DefaultProp("nested", CountData(5)),
-      option.Some(["id"]),
-      deep: True,
-    ),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Dashboard")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should handle mixed deferred and merge props correctly (at top level, not in props)
-  let assert Ok(["expensive"]) =
-    testing.deferred_props(response, "default", decode.list(decode.string))
-  let assert Ok(["analytics"]) =
-    testing.deferred_props(response, "custom", decode.list(decode.string))
-
-  // Should NOT include deferred prop in mergeProps initially
-  assert result.is_error(testing.merge_props(
-    response,
-    decode.list(decode.string),
-  ))
-
-  let assert Ok(["nested"]) =
-    testing.deep_merge_props(response, decode.list(decode.string))
-  let assert Ok(["nested.id"]) =
-    testing.match_props_on(response, decode.list(decode.string))
-}
-
-// Partial reload tests
-pub fn partial_reload_component_match_test() {
+// Test: version string appears in response
+pub fn version_string_in_response_test() {
   let req =
-    testing.inertia_request()
-    |> testing.partial_data(["user"])
-    |> testing.partial_component("Users/Show")
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
 
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DefaultProp("message", CountData(42)),
-    AlwaysProp("count", CountData(100)),
-  ]
+  let props = SimpleProps(message: "Hello", count: 42)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.version("abc123")
     |> response_builder.response(200)
 
-  // Component match should respect partial reload
-  // Should include: user (requested) + count (AlwaysProp) = 2 props
-  let assert Ok("John") =
-    testing.prop(response, "user", decode.at(["name"], decode.string))
-  let assert Ok(100) = testing.prop(response, "count", decode.int)
+  let body = simulate.read_body(response)
 
-  // Should NOT include message (not requested, not AlwaysProp)
-  assert result.is_error(testing.prop(response, "message", decode.int))
+  // Should contain version: "abc123"
+  assert body |> string.contains("\"version\":\"abc123\"")
 }
 
-pub fn partial_reload_component_mismatch_test() {
+// Test: Partial reload with deferred props - evaluates when explicitly requested
+pub fn partial_reload_evaluates_deferred_props_test() {
   let req =
-    testing.inertia_request()
-    |> testing.partial_data(["user"])
-    |> testing.partial_component("DifferentComponent")
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "expensive_data")
 
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DefaultProp("message", CountData(42)),
-    AlwaysProp("count", CountData(100)),
-  ]
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.defer("expensive_data", fn(props) {
+      Ok(LazyProps(..props, expensive_data: option.Some("deferred-computed")))
+    })
     |> response_builder.response(200)
 
-  // Component mismatch should ignore partial reload and include all non-optional props
-  let assert Ok("John") =
-    testing.prop(response, "user", decode.at(["name"], decode.string))
-  let assert Ok(42) = testing.prop(response, "message", decode.int)
-  let assert Ok(100) = testing.prop(response, "count", decode.int)
+  let body = simulate.read_body(response)
+
+  // User should NOT be included (not requested in partial reload)
+  assert !string.contains(body, "Alice")
+
+  // Expensive data SHOULD be included (explicitly requested, so deferred prop is evaluated)
+  assert body |> string.contains("deferred-computed")
+
+  // Should NOT include deferredProps metadata (since it was explicitly requested)
+  assert !string.contains(body, "deferredProps")
 }
 
-pub fn partial_reload_always_props_included_test() {
+// Test: Initial page load returns HTML response
+pub fn initial_page_load_returns_html_test() {
+  let req = simulate.request(http.Get, "/dashboard")
+  // No x-inertia header = initial page load
+
+  let props = SimpleProps(message: "Hello", count: 42)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
+    |> response_builder.response(200)
+
+  // Should return 200 status
+  assert response.status == 200
+
+  // Should have HTML content-type
+  let assert Ok(content_type) = response.get_header(response, "content-type")
+  assert content_type |> string.contains("text/html")
+
+  // Response body should be HTML with embedded JSON
+  let body = simulate.read_body(response)
+  assert body |> string.contains("<!DOCTYPE html>")
+  assert body |> string.contains("<div id=\"app\"")
+  assert body |> string.contains("data-page=")
+
+  // Should include the component and props in embedded JSON
+  assert body |> string.contains("Dashboard")
+  assert body |> string.contains("Hello")
+}
+
+// Test: Initial page load with deferred props includes metadata
+pub fn initial_page_load_with_deferred_props_test() {
+  let req = simulate.request(http.Get, "/dashboard")
+  // No x-inertia header = initial page load
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.defer("expensive_data", fn(props) {
+      Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Should be HTML response
+  assert body |> string.contains("<!DOCTYPE html>")
+
+  // User should be included in embedded JSON
+  assert body |> string.contains("Alice")
+
+  // Expensive data should NOT be evaluated (it's deferred)
+  assert !string.contains(body, "deferred-value")
+
+  // Should include deferredProps metadata in embedded JSON
+  assert body |> string.contains("deferredProps")
+  assert body |> string.contains("expensive_data")
+}
+
+// Test: Inertia request returns JSON (not HTML)
+pub fn inertia_request_returns_json_test() {
   let req =
-    testing.inertia_request()
-    |> testing.partial_data(["specific"])
-    |> testing.partial_component("Users/Index")
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
 
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DefaultProp("specific", CountData(42)),
-    AlwaysProp("always1", CountData(100)),
-    AlwaysProp("always2", CountData(200)),
-  ]
+  let props = SimpleProps(message: "Hello", count: 42)
 
   let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props(props, encode_test_prop)
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(props, encode_simple_props)
     |> response_builder.response(200)
 
-  // Should include requested prop + all AlwaysProps
-  let assert Ok(42) = testing.prop(response, "specific", decode.int)
-  let assert Ok(100) = testing.prop(response, "always1", decode.int)
-  let assert Ok(200) = testing.prop(response, "always2", decode.int)
+  // Should have JSON content-type
+  let assert Ok(content_type) = response.get_header(response, "content-type")
+  assert content_type |> string.contains("application/json")
 
-  // Should NOT include non-requested DefaultProp
-  assert result.is_error(testing.prop(
-    response,
-    "user",
-    decode.at(["name"], decode.string),
-  ))
+  // Response body should be JSON (not HTML)
+  let body = simulate.read_body(response)
+  assert !string.contains(body, "<!DOCTYPE html>")
+  assert !string.contains(body, "<div id=\"app\"")
+
+  // Should have Inertia headers
+  let assert Ok(inertia_header) = response.get_header(response, "x-inertia")
+  assert inertia_header == "true"
 }
 
-pub fn partial_reload_optional_props_test() {
-  let req =
-    testing.inertia_request()
-    |> testing.partial_data(["optional"])
-    |> testing.partial_component("Users/Index")
-
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    OptionalProp("optional", fn() { Ok(CountData(42)) }),
-    AlwaysProp("always", CountData(100)),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should include requested OptionalProp + AlwaysProp
-  // Should include requested OptionalProp + AlwaysProps, exclude others
-  let assert Ok(42) = testing.prop(response, "optional", decode.int)
-  let assert Ok(100) = testing.prop(response, "always", decode.int)
-
-  // Should NOT include non-requested DefaultProp
-  assert result.is_error(testing.prop(
-    response,
-    "user",
-    decode.at(["name"], decode.string),
-  ))
-}
-
-pub fn partial_reload_no_component_header_test() {
-  let req =
-    testing.inertia_request()
-    |> testing.partial_data(["user", "settings"])
-  // No partial_component header
-
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DefaultProp("message", CountData(42)),
-    AlwaysProp("count", CountData(100)),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // No component header means no partial reload - should include all non-optional props
-  let assert Ok("John") =
-    testing.prop(response, "user", decode.at(["name"], decode.string))
-  let assert Ok(42) = testing.prop(response, "message", decode.int)
-  let assert Ok(100) = testing.prop(response, "count", decode.int)
-}
-
-pub fn partial_reload_deferred_props_test() {
-  let req =
-    testing.inertia_request()
-    |> testing.partial_data(["expensive"])
-    |> testing.partial_component("Users/Show")
-
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    AlwaysProp("always", CountData(100)),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should evaluate and return the requested deferred prop as a regular prop
-  let assert Ok(42) = testing.prop(response, "expensive", decode.int)
-
-  // Should include AlwaysProp
-  let assert Ok(100) = testing.prop(response, "always", decode.int)
-
-  // Should NOT include non-requested DefaultProp
-  assert result.is_error(testing.prop(
-    response,
-    "user",
-    decode.at(["name"], decode.string),
-  ))
-
-  // Should NOT include deferred prop in deferredProps metadata when it's been evaluated
-  assert result.is_error(testing.deferred_props(
-    response,
-    "default",
-    decode.list(decode.string),
-  ))
-}
-
-pub fn initial_page_load_deferred_props_test() {
-  let req = testing.regular_request()
-  let props = [
-    DefaultProp("user", UserData("John", "john@example.com")),
-    DeferProp("expensive", option.None, fn() { Ok(CountData(42)) }),
-    DeferProp("analytics", option.Some("custom"), fn() {
-      Ok(CountData(100))
-    }),
-  ]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Show")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // Should be HTML response for initial page load
-  let assert Ok("text/html; charset=utf-8") =
-    response.get_header(response, "content-type")
-
-  // Should include deferred props metadata in embedded JSON
-  let assert Ok(["expensive"]) =
-    testing.deferred_props(response, "default", decode.list(decode.string))
-  let assert Ok(["analytics"]) =
-    testing.deferred_props(response, "custom", decode.list(decode.string))
-
-  // Should include regular props in embedded JSON
-  let assert Ok("John") =
-    testing.prop(response, "user", decode.at(["name"], decode.string))
-}
-
-// Fluent API chaining tests
-pub fn fluent_api_chaining_test() {
-  let req = testing.inertia_request()
-  let props = [DefaultProp("user", UserData("John", "john@example.com"))]
-  let errors = dict.from_list([#("name", "Name is too short")])
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Edit")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.errors(errors)
-    |> response_builder.version("1.0.0")
-    |> response_builder.clear_history()
-    |> response_builder.response(200)
-
-  // Should successfully chain all builder methods
-  let assert Ok("application/json; charset=utf-8") =
-    response.get_header(response, "content-type")
-}
-
-pub fn test_lazy_prop_error_handling() {
-  let req = testing.inertia_request()
-  let error_dict = dict.from_list([#("database", "Connection failed")])
-  let failing_prop = LazyProp("user_count", fn() { Error(error_dict) })
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props([failing_prop], encode_test_prop)
-    |> response_builder.on_error("Error")
-    |> response_builder.response(200)
-
-  // Test that the response contains the error in the props
-  let assert Ok(errors) =
-    testing.prop(response, "errors", decode.dict(decode.string, decode.string))
-  assert dict.has_key(errors, "database")
-  let assert Ok(error_message) = dict.get(errors, "database")
-  assert error_message == "Connection failed"
-}
-
-pub fn test_optional_prop_error_handling() {
-  let req =
-    testing.inertia_request()
-    |> testing.partial_data(["user_analytics"])
-    |> testing.partial_component("Users/Index")
-  let error_dict = dict.from_list([#("analytics", "Service unavailable")])
-  let failing_prop =
-    OptionalProp("user_analytics", fn() { Error(error_dict) })
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props([failing_prop], encode_test_prop)
-    |> response_builder.on_error("Error")
-    |> response_builder.response(200)
-
-  // Test that the response contains the error in the props
-  let assert Ok(errors) =
-    testing.prop(response, "errors", decode.dict(decode.string, decode.string))
-  assert dict.has_key(errors, "analytics")
-  let assert Ok(error_message) = dict.get(errors, "analytics")
-  assert error_message == "Service unavailable"
-}
-
-pub fn test_defer_prop_error_handling() {
-  let req =
-    testing.inertia_request()
-    |> testing.partial_data(["external_data"])
-    |> testing.partial_component("Users/Index")
-  let error_dict = dict.from_list([#("external_api", "Timeout")])
-  let failing_prop =
-    DeferProp("external_data", option.None, fn() { Error(error_dict) })
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props([failing_prop], encode_test_prop)
-    |> response_builder.on_error("Error")
-    |> response_builder.response(200)
-
-  // Test that the response contains the error in the props
-  let assert Ok(errors) =
-    testing.prop(response, "errors", decode.dict(decode.string, decode.string))
-  assert dict.has_key(errors, "external_api")
-  let assert Ok(error_message) = dict.get(errors, "external_api")
-  assert error_message == "Timeout"
-}
-
-pub fn url_without_query_params_test() {
-  let req = testing.inertia_request_to("/dashboard")
-  let props = [DefaultProp("user_count", CountData(42))]
-
-  let response =
-    req
-    |> response_builder.response_builder("Dashboard/Index")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // URL should be just the path without query parameters
-  let assert Ok(url) = testing.url(response)
-  assert url == "/dashboard"
-}
-
-pub fn url_with_query_params_test() {
-  let req = testing.inertia_request_to("/dashboard?delay=5000")
-  let props = [DefaultProp("user_count", CountData(42))]
-
-  let response =
-    req
-    |> response_builder.response_builder("Dashboard/Index")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // URL should include the query parameters
-  let assert Ok(url) = testing.url(response)
-  assert url == "/dashboard?delay=5000"
-}
-
-pub fn url_with_multiple_query_params_test() {
-  let req = testing.inertia_request_to("/users?search=test&page=2&sort=name")
-  let props = [DefaultProp("user_count", CountData(42))]
-
-  let response =
-    req
-    |> response_builder.response_builder("Users/Index")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // URL should include all query parameters
-  let assert Ok(url) = testing.url(response)
-  assert url == "/users?search=test&page=2&sort=name"
-}
-
-pub fn url_with_empty_query_string_test() {
-  let req = testing.inertia_request_to("/dashboard?")
-  let props = [DefaultProp("user_count", CountData(42))]
-
-  let response =
-    req
-    |> response_builder.response_builder("Dashboard/Index")
-    |> response_builder.props(props, encode_test_prop)
-    |> response_builder.response(200)
-
-  // URL should not include empty query string
-  let assert Ok(url) = testing.url(response)
-  assert url == "/dashboard"
-}
-
-// Session errors integration tests
-
-pub fn redirect_with_errors_then_form_display_test() {
-  let req = testing.inertia_request()
+// Test: Complete session error flow - redirect, store, retrieve, clear
+pub fn session_error_flow_complete_test() {
   let validation_errors =
     dict.from_list([#("first_name", "is required"), #("email", "is invalid")])
 
   // Step 1: Redirect with errors stores them in cookie
+  let req1 =
+    simulate.request(http.Get, "/users/create")
+    |> simulate.header("x-inertia", "true")
+
   let redirect_response =
-    req
-    |> response_builder.response_builder("Users/Create")
+    response_builder.response_builder(req1, "Users/Create")
     |> response_builder.errors(validation_errors)
     |> response_builder.redirect("/users/new")
 
-  // Should be a redirect response with cookie containing errors
+  // Should be a redirect with cookie
   assert redirect_response.status == 303
-  let assert Ok("/users/new") =
-    response.get_header(redirect_response, "location")
   let assert Ok(cookie_header) =
     response.get_header(redirect_response, "set-cookie")
-  assert string.contains(cookie_header, "inertia_errors=")
+  assert cookie_header |> string.contains("inertia_errors=")
 
-  // Step 2: Next request should automatically retrieve errors from cookie
-  // Create new request with the cookie (simulating browser sending cookie back)
+  // Step 2: Extract cookie value to simulate browser sending it back
   let cookie_value =
     string.replace(cookie_header, "inertia_errors=", "")
     |> string.split(";")
     |> list.first()
     |> result.unwrap("")
 
-  let form_request =
-    testing.inertia_request()
-    |> request.set_header("cookie", "inertia_errors=" <> cookie_value)
+  let req2 =
+    simulate.request(http.Get, "/users/new")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("cookie", "inertia_errors=" <> cookie_value)
 
+  // Step 3: Form display should automatically include errors from cookie
   let form_response =
-    form_request
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.response(200)
-
-  // Should automatically include errors from cookie in JSON response
-  let assert Ok("application/json; charset=utf-8") =
-    response.get_header(form_response, "content-type")
-  let assert Ok("is required") =
-    testing.prop(
-      form_response,
-      "errors",
-      decode.at(["first_name"], decode.string),
+    response_builder.response_builder(req2, "Users/Create")
+    |> response_builder.props(
+      SimpleProps(message: "Form", count: 1),
+      encode_simple_props,
     )
-  let assert Ok("is invalid") =
-    testing.prop(form_response, "errors", decode.at(["email"], decode.string))
-}
-
-pub fn session_errors_with_error_bag_test() {
-  // Test that X-Inertia-Error-Bag header causes proper error nesting
-  let req =
-    testing.inertia_request()
-    |> request.set_header("x-inertia-error-bag", "createUser")
-
-  let validation_errors = dict.from_list([#("name", "is required")])
-
-  // Form display should nest errors under bag name
-  let response =
-    req
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.errors(validation_errors)
     |> response_builder.response(200)
 
-  // Errors should be nested under createUser bag
-  let assert Ok("is required") =
-    testing.prop(
-      response,
-      "errors",
-      decode.at(["createUser", "name"], decode.string),
-    )
-}
+  let body = simulate.read_body(form_response)
 
-pub fn cookie_cleared_after_consuming_errors_test() {
-  // Step 1: Create a redirect response with errors to get a properly signed cookie
-  let redirect_response =
-    testing.inertia_request()
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.errors(dict.from_list([#("field", "error")]))
-    |> response_builder.redirect("/users/new")
-
-  // Extract the actual signed cookie value from the redirect response
-  let assert Ok(cookie_header) =
-    response.get_header(redirect_response, "set-cookie")
-  let cookie_value =
-    string.replace(cookie_header, "inertia_errors=", "")
-    |> string.split(";")
-    |> list.first()
-    |> result.unwrap("")
-
-  // Step 2: Create a request with the properly signed cookie (simulating browser sending cookie back)
-  let req =
-    testing.inertia_request()
-    |> request.set_header("cookie", "inertia_errors=" <> cookie_value)
-
-  // Build a regular 200 response (non-redirect) - should consume and clear cookie
-  let response =
-    req
-    |> response_builder.response_builder("Users/Create")
-    |> response_builder.response(200)
+  // Should include errors from cookie
+  assert body |> string.contains("is required")
+  assert body |> string.contains("is invalid")
+  assert body |> string.contains("\"errors\"")
 
   // Should have set-cookie header that clears the cookie (Max-Age=0)
   let assert Ok(clear_cookie_header) =
-    response.get_header(response, "set-cookie")
-  assert string.contains(clear_cookie_header, "inertia_errors=")
-  assert string.contains(clear_cookie_header, "Max-Age=0")
+    response.get_header(form_response, "set-cookie")
+  assert clear_cookie_header |> string.contains("inertia_errors=")
+  assert clear_cookie_header |> string.contains("Max-Age=0")
 }
 
-pub fn no_cookie_clearing_when_no_cookie_present_test() {
-  // Create a request with no inertia_errors cookie
-  let req = testing.inertia_request()
+// Test: Cookie is cleared after consumption on non-redirect responses
+pub fn cookie_cleared_after_consuming_errors_test() {
+  // Step 1: Create redirect with errors to get signed cookie
+  let req1 =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
 
-  // Build a regular 200 response - should NOT set any cookie clearing header
+  let redirect_response =
+    response_builder.response_builder(req1, "Form")
+    |> response_builder.errors(dict.from_list([#("field", "error")]))
+    |> response_builder.redirect("/form")
+
+  let assert Ok(cookie_header) =
+    response.get_header(redirect_response, "set-cookie")
+  let cookie_value =
+    string.replace(cookie_header, "inertia_errors=", "")
+    |> string.split(";")
+    |> list.first()
+    |> result.unwrap("")
+
+  // Step 2: Create request with cookie
+  let req2 =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("cookie", "inertia_errors=" <> cookie_value)
+
+  // Step 3: Regular 200 response should consume and clear cookie
   let response =
-    req
-    |> response_builder.response_builder("Users/Create")
+    response_builder.response_builder(req2, "Form")
+    |> response_builder.props(
+      SimpleProps(message: "Hi", count: 1),
+      encode_simple_props,
+    )
+    |> response_builder.response(200)
+
+  // Should have set-cookie header that clears the cookie
+  let assert Ok(clear_cookie_header) =
+    response.get_header(response, "set-cookie")
+  assert clear_cookie_header |> string.contains("inertia_errors=")
+  assert clear_cookie_header |> string.contains("Max-Age=0")
+}
+
+// Test: No cookie clearing when no cookie present
+pub fn no_cookie_clearing_when_no_cookie_present_test() {
+  let req =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+
+  let response =
+    response_builder.response_builder(req, "Form")
+    |> response_builder.props(
+      SimpleProps(message: "Hi", count: 1),
+      encode_simple_props,
+    )
     |> response_builder.response(200)
 
   // Should not have any set-cookie header
   let assert Error(_) = response.get_header(response, "set-cookie")
+}
+
+// Test: Errors in response include validation errors
+pub fn errors_included_in_response_test() {
+  let req =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+
+  let validation_errors =
+    dict.from_list([#("email", "is required"), #("password", "too short")])
+
+  let response =
+    response_builder.response_builder(req, "Form")
+    |> response_builder.props(
+      SimpleProps(message: "Hi", count: 1),
+      encode_simple_props,
+    )
+    |> response_builder.errors(validation_errors)
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Should include errors in props
+  assert body |> string.contains("\"errors\"")
+  assert body |> string.contains("is required")
+  assert body |> string.contains("too short")
+}
+
+// Test: Deferred props NOT re-advertised on partial reload (e.g., pagination)
+pub fn deferred_props_not_readvertised_on_partial_reload_test() {
+  // Simulate pagination request - partial reload for only "message" and "count"
+  let req =
+    simulate.request(http.Get, "/dashboard?page=2")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "message,count")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.lazy("user", fn(props) {
+      Ok(LazyProps(..props, user: "Bob"))
+    })
+    |> response_builder.defer("expensive_data", fn(props) {
+      Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // User should NOT be included (not requested in partial reload, even though lazy)
+  assert !string.contains(body, "Alice")
+  assert !string.contains(body, "Bob")
+
+  // Expensive data should NOT be included (it's deferred and not requested)
+  assert !string.contains(body, "deferred-value")
+
+  // CRITICAL: deferredProps metadata should NOT be included
+  // On partial reloads (pagination), we should NOT re-advertise deferred props
+  assert !string.contains(body, "deferredProps")
+  assert !string.contains(body, "expensive_data")
 }

@@ -1,154 +1,195 @@
-//// Response builder API for creating Inertia.js responses.
+//// Response builder API v2 for creating Inertia.js responses with generic props.
 ////
-//// This module provides a fluent, composable API for building Inertia responses
-//// that addresses limitations of the eval-based approach, including better error
-//// handling, metadata control, and the ability to create error-only responses.
-//// proper form processing with validation errors in Inertia.js.
+//// This module provides a type-safe, fluent API for building Inertia responses
+//// using record-based props with generic type parameter for complete type safety.
 
 import gleam/dict.{type Dict}
 import gleam/dynamic/decode
+import gleam/http/request
 import gleam/json
 import gleam/list
 import gleam/option.{type Option}
 import gleam/result
 import gleam/string
-
 import inertia_wisp/internal/middleware
-import inertia_wisp/prop.{
-  type Prop, AlwaysProp, DefaultProp, DeferProp, LazyProp, MergeProp,
-  OptionalProp,
+import inertia_wisp/prop_behavior.{
+  type MergeOptions, type PropBehavior, AlwaysBehavior, DeferBehavior,
+  LazyBehavior, OptionalBehavior,
 }
 import wisp.{type Request, type Response}
 
-/// Result of processing a single prop
-type PropEval {
-  Evaluated(name: String, value: json.Json, merge_opts: MergeOpts)
-  Deferred(name: String, group: String)
-  PropError(name: String, errors: Dict(String, String))
-}
-
-/// Merge options for props
-type MergeOpts {
-  NoMerge
-  Merge(match_on: option.Option(List(String)), deep: Bool)
-}
-
-/// Builder for constructing Inertia responses step by step
-pub opaque type InertiaResponseBuilder {
+/// Generic builder for constructing Inertia responses
+/// Type parameter ensures all operations work with the same props type
+pub opaque type InertiaResponseBuilder(props) {
   InertiaResponseBuilder(
     request: Request,
-    component: Option(String),
-    props: Dict(String, json.Json),
+    component: String,
+    prop_data: props,
+    json_encoder: fn(props) -> Dict(String, json.Json),
+    prop_behaviors: Dict(String, PropBehavior(props)),
+    merge_metadata: Dict(String, MergeOptions),
     errors: Dict(String, String),
     redirect_url: Option(String),
     clear_history: Bool,
     encrypt_history: Bool,
     version: Option(String),
-    deferred_props: Dict(String, List(String)),
-    merge_props: List(String),
-    deep_merge_props: List(String),
-    match_props_on: List(String),
     error_component: Option(String),
-    status: Option(Int),
   )
 }
 
-//
-// Public API Functions
-//
-
-/// Start building an Inertia response
+/// Start building an Inertia response without props
+/// Returns a builder with Nil type parameter that must be set via props()
 pub fn response_builder(
   req: Request,
-  component_name: String,
-) -> InertiaResponseBuilder {
+  component: String,
+) -> InertiaResponseBuilder(Nil) {
   InertiaResponseBuilder(
     request: req,
-    component: option.Some(component_name),
-    props: dict.new(),
+    component: component,
+    prop_data: Nil,
+    json_encoder: fn(_) { dict.new() },
+    prop_behaviors: dict.new(),
+    merge_metadata: dict.new(),
     errors: dict.new(),
     redirect_url: option.None,
     clear_history: False,
     encrypt_history: False,
     version: option.None,
-    deferred_props: dict.new(),
-    merge_props: [],
-    deep_merge_props: [],
-    match_props_on: [],
     error_component: option.None,
-    status: option.None,
   )
 }
 
-/// Set the component name for the response (deprecated - use response_builder with component_name)
-pub fn component(
-  builder: InertiaResponseBuilder,
-  name: String,
-) -> InertiaResponseBuilder {
-  InertiaResponseBuilder(..builder, component: option.Some(name))
+/// Set the props for this response
+/// Changes the type parameter from any type to the specific props type
+pub fn props(
+  builder: InertiaResponseBuilder(_),
+  initial_props: props,
+  encoder: fn(props) -> Dict(String, json.Json),
+) -> InertiaResponseBuilder(props) {
+  InertiaResponseBuilder(
+    request: builder.request,
+    component: builder.component,
+    prop_data: initial_props,
+    json_encoder: encoder,
+    prop_behaviors: dict.new(),
+    merge_metadata: dict.new(),
+    errors: builder.errors,
+    redirect_url: builder.redirect_url,
+    clear_history: builder.clear_history,
+    encrypt_history: builder.encrypt_history,
+    version: builder.version,
+    error_component: builder.error_component,
+  )
 }
 
-/// Add props to the response (handles evaluation and JSON encoding internally)
-pub fn props(
-  builder: InertiaResponseBuilder,
-  props: List(Prop(p)),
-  encode_prop: fn(p) -> json.Json,
-) -> InertiaResponseBuilder {
-  // Check for partial reload headers and validate component match
-  let partial_component = middleware.get_partial_component(builder.request)
-
-  // For partial reloads, only proceed if component matches
-  let partial_data = case builder.component {
-    option.Some(component_name)
-      if option.Some(component_name) == partial_component
-    -> {
-      let requested_props = middleware.get_partial_data(builder.request)
-      option.Some(requested_props)
-    }
-    _ -> option.None
-  }
-
-  // Filter props based on partial reload logic
-  let filtered_props = filter_props_for_request(props, partial_data)
-
-  let #(
-    evaluated_props,
-    deferred_props,
-    merge_props,
-    deep_merge_props,
-    match_props_on,
-    prop_errors,
-  ) = process_props(filtered_props, encode_prop, partial_data)
-
-  let combined_props = dict.merge(builder.props, evaluated_props)
-  let combined_deferred = dict.merge(builder.deferred_props, deferred_props)
-  let combined_merge = list.append(builder.merge_props, merge_props)
-  let combined_deep_merge =
-    list.append(builder.deep_merge_props, deep_merge_props)
-  let combined_match_on = list.append(builder.match_props_on, match_props_on)
-  let combined_errors = dict.merge(builder.errors, prop_errors)
-
+/// Configure a prop to be lazily evaluated
+/// Resolver receives current props and returns updated props
+pub fn lazy(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  resolver: fn(props) -> Result(props, Dict(String, String)),
+) -> InertiaResponseBuilder(props) {
   InertiaResponseBuilder(
     ..builder,
-    props: combined_props,
-    deferred_props: combined_deferred,
-    merge_props: combined_merge,
-    deep_merge_props: combined_deep_merge,
-    match_props_on: combined_match_on,
-    errors: combined_errors,
+    prop_behaviors: dict.insert(
+      builder.prop_behaviors,
+      field_name,
+      prop_behavior.LazyBehavior(resolver),
+    ),
+  )
+}
+
+/// Mark a prop as optional - only included when explicitly requested in partial reloads
+pub fn optional(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+) -> InertiaResponseBuilder(props) {
+  InertiaResponseBuilder(
+    ..builder,
+    prop_behaviors: dict.insert(
+      builder.prop_behaviors,
+      field_name,
+      prop_behavior.OptionalBehavior,
+    ),
+  )
+}
+
+/// Mark a prop as always included, even in partial reloads
+pub fn always(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+) -> InertiaResponseBuilder(props) {
+  InertiaResponseBuilder(
+    ..builder,
+    prop_behaviors: dict.insert(
+      builder.prop_behaviors,
+      field_name,
+      prop_behavior.AlwaysBehavior,
+    ),
+  )
+}
+
+/// Configure a prop to be deferred - loaded in a separate request from the client
+pub fn defer(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  resolver: fn(props) -> Result(props, Dict(String, String)),
+) -> InertiaResponseBuilder(props) {
+  InertiaResponseBuilder(
+    ..builder,
+    prop_behaviors: dict.insert(
+      builder.prop_behaviors,
+      field_name,
+      prop_behavior.DeferBehavior(group: option.None, resolver: resolver),
+    ),
+  )
+}
+
+/// Configure a deferred prop with a specific group name
+/// Allows fetching multiple deferred props in one request
+pub fn defer_in_group(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  group: String,
+  resolver: fn(props) -> Result(props, Dict(String, String)),
+) -> InertiaResponseBuilder(props) {
+  InertiaResponseBuilder(
+    ..builder,
+    prop_behaviors: dict.insert(
+      builder.prop_behaviors,
+      field_name,
+      prop_behavior.DeferBehavior(group: option.Some(group), resolver: resolver),
+    ),
+  )
+}
+
+/// Configure client-side merging for a prop
+pub fn merge(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  match_on match_on: Option(List(String)),
+  deep deep: Bool,
+) -> InertiaResponseBuilder(props) {
+  InertiaResponseBuilder(
+    ..builder,
+    merge_metadata: dict.insert(
+      builder.merge_metadata,
+      field_name,
+      prop_behavior.MergeOptions(match_on: match_on, deep: deep),
+    ),
   )
 }
 
 /// Set validation errors for the response
 pub fn errors(
-  builder: InertiaResponseBuilder,
+  builder: InertiaResponseBuilder(props),
   errors: Dict(String, String),
-) -> InertiaResponseBuilder {
+) -> InertiaResponseBuilder(props) {
   InertiaResponseBuilder(..builder, errors: errors)
 }
 
 /// Set redirect URL and return redirect response immediately
-pub fn redirect(builder: InertiaResponseBuilder, url: String) -> Response {
+pub fn redirect(builder: InertiaResponseBuilder(props), url: String) -> Response {
   // Create HTTP redirect response with 303 status (Inertia.js standard)
   let redirect_response =
     wisp.response(303)
@@ -164,9 +205,9 @@ pub fn redirect(builder: InertiaResponseBuilder, url: String) -> Response {
 
 /// Set error component for prop resolution errors
 pub fn on_error(
-  builder: InertiaResponseBuilder,
+  builder: InertiaResponseBuilder(props),
   error_component: String,
-) -> InertiaResponseBuilder {
+) -> InertiaResponseBuilder(props) {
   InertiaResponseBuilder(
     ..builder,
     error_component: option.Some(error_component),
@@ -174,185 +215,108 @@ pub fn on_error(
 }
 
 /// Clear browser history for this response
-pub fn clear_history(builder: InertiaResponseBuilder) -> InertiaResponseBuilder {
+pub fn clear_history(
+  builder: InertiaResponseBuilder(props),
+) -> InertiaResponseBuilder(props) {
   InertiaResponseBuilder(..builder, clear_history: True)
 }
 
 /// Encrypt browser history for this response
 pub fn encrypt_history(
-  builder: InertiaResponseBuilder,
-) -> InertiaResponseBuilder {
+  builder: InertiaResponseBuilder(props),
+) -> InertiaResponseBuilder(props) {
   InertiaResponseBuilder(..builder, encrypt_history: True)
 }
 
 /// Set version for this response
 pub fn version(
-  builder: InertiaResponseBuilder,
+  builder: InertiaResponseBuilder(props),
   version: String,
-) -> InertiaResponseBuilder {
+) -> InertiaResponseBuilder(props) {
   InertiaResponseBuilder(..builder, version: option.Some(version))
 }
 
-/// Helper function to resolve Result-based prop resolvers
-/// Extract component name from builder
-fn get_component_name(builder: InertiaResponseBuilder) -> String {
-  case builder.component {
-    option.Some(name) -> name
-    option.None -> ""
-  }
-}
+/// Build the final Inertia response
+pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response {
+  // Resolve which errors to use (from builder or cookie)
+  let #(errors_to_use, retrieved_from_cookie) =
+    resolve_errors_for_response(builder)
 
-/// Extract version from builder
-fn get_version(builder: InertiaResponseBuilder) -> String {
-  case builder.version {
-    option.Some(v) -> v
-    option.None -> "1"
+  // Check for partial reload
+  let partial_component = get_partial_component(builder.request)
+  let partial_data = case partial_component {
+    option.Some(component) if component == builder.component ->
+      option.Some(get_partial_data(builder.request))
+    _ -> option.None
   }
-}
 
-/// Resolve which errors to use and whether they came from cookie
-fn resolve_errors_for_response(
-  builder: InertiaResponseBuilder,
-) -> #(Dict(String, String), Bool) {
-  case dict.is_empty(builder.errors) {
-    False -> #(builder.errors, False)
-    // Use request errors
-    True -> {
-      case retrieve_errors_from_cookie(builder.request) {
-        option.Some(errors) -> #(errors, True)
-        // Cookie was present
-        option.None -> #(dict.new(), False)
-        // No cookie present
-      }
-    }
+  // Step 1: Determine which fields to evaluate based on partial reload
+  let fields_to_evaluate =
+    determine_fields_to_evaluate(builder.prop_behaviors, partial_data)
+
+  // Step 2: Evaluate behaviors for the fields that need evaluation
+  let evaluated_props =
+    evaluate_behaviors(
+      builder.prop_data,
+      builder.prop_behaviors,
+      fields_to_evaluate,
+    )
+
+  // For now, ignore errors - we'll handle them properly later
+  let final_props = case evaluated_props {
+    Ok(props) -> props
+    Error(_) -> builder.prop_data
   }
-}
 
-/// Build props with errors included
-fn build_props_with_errors(
-  builder: InertiaResponseBuilder,
-  errors: Dict(String, String),
-) -> Dict(String, json.Json) {
-  case dict.is_empty(errors) {
+  // Step 3: Encode props to Dict and filter fields
+  let props_dict = builder.json_encoder(final_props)
+  let filtered_props_dict =
+    filter_fields(props_dict, builder.prop_behaviors, partial_data)
+
+  // Add errors to props
+  let props_with_errors = case dict.is_empty(errors_to_use) {
+    True -> filtered_props_dict
     False -> {
-      let errors_json = build_errors_json(builder.request, errors)
-      dict.insert(builder.props, "errors", errors_json)
+      let errors_json =
+        errors_to_use
+        |> dict.to_list()
+        |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
+        |> json.object()
+      dict.insert(filtered_props_dict, "errors", errors_json)
     }
-    True -> builder.props
   }
-}
 
-/// Build the complete response JSON structure
-fn build_response_json(
-  component_name: String,
-  props: Dict(String, json.Json),
-  url: String,
-  version: String,
-  builder: InertiaResponseBuilder,
-) -> List(#(String, json.Json)) {
-  let base_json = [
-    #("component", json.string(component_name)),
-    #("props", json.object(dict.to_list(props))),
+  let props_json = json.object(dict.to_list(props_with_errors))
+
+  // Step 4: Collect deferred props metadata
+  let deferred_props =
+    collect_deferred_props(builder.prop_behaviors, partial_data)
+
+  let url = build_url_from_request(builder.request)
+  let version_string = option.unwrap(builder.version, "1")
+
+  // Step 5: Build response JSON with metadata
+  let base_response = [
+    #("component", json.string(builder.component)),
+    #("props", props_json),
     #("url", json.string(url)),
-    #("version", json.string(version)),
+    #("version", json.string(version_string)),
     #("encryptHistory", json.bool(builder.encrypt_history)),
     #("clearHistory", json.bool(builder.clear_history)),
   ]
 
-  base_json
-  |> maybe_add_deferred_props(builder.deferred_props)
-  |> maybe_add_merge_props(builder.merge_props)
-  |> maybe_add_deep_merge_props(builder.deep_merge_props)
-  |> maybe_add_match_props_on(builder.match_props_on)
-}
+  let with_deferred = add_deferred_props_metadata(base_response, deferred_props)
+  let with_merge = add_merge_metadata(with_deferred, builder.merge_metadata)
 
-/// Choose between JSON and HTML response format
-fn choose_response_format(
-  request: wisp.Request,
-  final_json: List(#(String, json.Json)),
-  component_name: String,
-  status: Int,
-) -> wisp.Response {
-  case middleware.is_inertia_request(request) {
-    True -> build_json_response(final_json, status)
-    False -> build_html_response(final_json, component_name, status)
+  let response_json = json.object(with_merge)
+
+  // Choose response format based on request type
+  let final_response = case middleware.is_inertia_request(builder.request) {
+    True -> build_json_response(response_json, status)
+    False -> build_html_response(response_json, builder.component, status)
   }
-}
 
-/// Handle cookie cleanup after response is built
-fn handle_cookie_cleanup(
-  response: wisp.Response,
-  request: wisp.Request,
-  retrieved_from_cookie: Bool,
-  status: Int,
-) -> wisp.Response {
-  case retrieved_from_cookie && !is_redirect_or_conflict_status(status) {
-    True -> clear_errors_cookie(response, request)
-    False -> response
-  }
-}
-
-/// Check if status code is a redirect (301-308) or conflict (409)
-fn is_redirect_or_conflict_status(status: Int) -> Bool {
-  status >= 301 && status <= 308 || status == 409
-}
-
-/// Clear the inertia_errors cookie by setting it to expire immediately
-fn clear_errors_cookie(
-  response: wisp.Response,
-  request: wisp.Request,
-) -> wisp.Response {
-  wisp.set_cookie(
-    response,
-    request,
-    "inertia_errors",
-    "",
-    wisp.Signed,
-    0,
-    // Expire immediately
-  )
-}
-
-fn resolve_prop_result(
-  name: String,
-  resolver: fn() -> Result(p, Dict(String, String)),
-  encode_prop: fn(p) -> json.Json,
-) -> PropEval {
-  case resolver() {
-    Ok(value) -> {
-      let json_value = encode_prop(value)
-      Evaluated(name, json_value, NoMerge)
-    }
-    Error(error_dict) -> {
-      PropError(name, error_dict)
-    }
-  }
-}
-
-//
-// Core Response Building
-//
-
-/// Build the final Inertia response with optional status code
-pub fn response(builder: InertiaResponseBuilder, status: Int) -> Response {
-  let component_name = get_component_name(builder)
-  let url = build_url_from_request(builder.request)
-  let version = get_version(builder)
-
-  let #(errors_to_use, retrieved_from_cookie) =
-    resolve_errors_for_response(builder)
-  let props_with_errors = build_props_with_errors(builder, errors_to_use)
-  let final_json =
-    build_response_json(
-      component_name,
-      props_with_errors,
-      url,
-      version,
-      builder,
-    )
-
-  let final_response =
-    choose_response_format(builder.request, final_json, component_name, status)
+  // Clear cookie if we retrieved errors from it (unless redirect/409 status)
   handle_cookie_cleanup(
     final_response,
     builder.request,
@@ -361,25 +325,20 @@ pub fn response(builder: InertiaResponseBuilder, status: Int) -> Response {
   )
 }
 
-/// Build JSON response for Inertia requests
-fn build_json_response(
-  final_json: List(#(String, json.Json)),
-  status: Int,
-) -> Response {
-  let json_body = json.object(final_json) |> json.to_string()
-
-  json_body
+/// Build JSON response for Inertia XHR requests
+fn build_json_response(response_json: json.Json, status: Int) -> Response {
+  json.to_string(response_json)
   |> wisp.json_response(status)
   |> middleware.add_inertia_headers()
 }
 
-/// Build HTML response for initial page loads with embedded JSON data
+/// Build HTML response for initial page loads
 fn build_html_response(
-  final_json: List(#(String, json.Json)),
+  response_json: json.Json,
   component_name: String,
   status: Int,
 ) -> Response {
-  let json_string = json.object(final_json) |> json.to_string()
+  let json_string = json.to_string(response_json)
   let escaped_json = escape_html(json_string)
 
   let html_content = "<!DOCTYPE html>
@@ -399,225 +358,242 @@ fn build_html_response(
   wisp.html_response(html_content, status)
 }
 
-//
-// Props Processing
-//
+/// Escape HTML characters for safe insertion into attributes
+fn escape_html(text: String) -> String {
+  text
+  |> string.replace("&", "&amp;")
+  |> string.replace("<", "&lt;")
+  |> string.replace(">", "&gt;")
+  |> string.replace("\"", "&quot;")
+  |> string.replace("'", "&#x27;")
+}
 
-/// Process props and separate them into evaluated props, deferred props, and merge metadata
-fn process_props(
-  props: List(Prop(p)),
-  encode_prop: fn(p) -> json.Json,
-  partial_data: option.Option(List(String)),
-) -> #(
-  Dict(String, json.Json),
-  Dict(String, List(String)),
-  List(String),
-  List(String),
-  List(String),
-  Dict(String, String),
-) {
-  let #(
-    evaluated,
-    deferred_groups,
-    merge_props,
-    deep_merge_props,
-    match_props_on,
-    prop_errors,
-  ) =
-    props
-    |> list.fold(
-      #(dict.new(), dict.new(), [], [], [], dict.new()),
-      fn(acc, prop) {
-        let #(
-          eval_acc,
-          defer_acc,
-          merge_acc,
-          deep_merge_acc,
-          match_acc,
-          error_acc,
-        ) = acc
-        let prop_eval = process_single_prop(prop, encode_prop, partial_data)
+// Helper functions
 
-        case prop_eval {
-          Evaluated(name, value, merge_opts) -> {
-            let new_eval_acc = dict.insert(eval_acc, name, value)
-            case merge_opts {
-              NoMerge -> #(
-                new_eval_acc,
-                defer_acc,
-                merge_acc,
-                deep_merge_acc,
-                match_acc,
-                error_acc,
-              )
-              Merge(match_on, deep) -> {
-                let new_merge_acc = case deep {
-                  False -> [name, ..merge_acc]
-                  True -> merge_acc
-                }
-                let new_deep_merge_acc = case deep {
-                  True -> [name, ..deep_merge_acc]
-                  False -> deep_merge_acc
-                }
-                let new_match_acc = case match_on {
-                  option.Some(match_keys) -> {
-                    let match_entries =
-                      list.map(match_keys, fn(key) { name <> "." <> key })
-                    list.append(match_entries, match_acc)
-                  }
-                  option.None -> match_acc
-                }
-                #(
-                  new_eval_acc,
-                  defer_acc,
-                  new_merge_acc,
-                  new_deep_merge_acc,
-                  new_match_acc,
-                  error_acc,
-                )
-              }
-            }
-          }
-          Deferred(name, group) -> {
-            let current_props = dict.get(defer_acc, group) |> result.unwrap([])
-            let updated_props = [name, ..current_props]
-            let new_defer_acc = dict.insert(defer_acc, group, updated_props)
-            #(
-              eval_acc,
-              new_defer_acc,
-              merge_acc,
-              deep_merge_acc,
-              match_acc,
-              error_acc,
-            )
-          }
-          PropError(_name, error_dict) -> {
-            let new_error_acc = dict.merge(error_acc, error_dict)
-            #(
-              eval_acc,
-              defer_acc,
-              merge_acc,
-              deep_merge_acc,
-              match_acc,
-              new_error_acc,
-            )
-          }
+/// Get partial component from request headers
+fn get_partial_component(req: Request) -> Option(String) {
+  case request.get_header(req, "x-inertia-partial-component") {
+    Ok(component) -> option.Some(component)
+    _ -> option.None
+  }
+}
+
+/// Get partial data (requested prop names) from request headers
+fn get_partial_data(req: Request) -> List(String) {
+  case request.get_header(req, "x-inertia-partial-data") {
+    Ok(data) -> string.split(data, ",") |> list.map(string.trim)
+    _ -> []
+  }
+}
+
+/// Determine which fields should be evaluated based on request type and behaviors
+fn determine_fields_to_evaluate(
+  behaviors: Dict(String, PropBehavior(props)),
+  partial_data: Option(List(String)),
+) -> List(String) {
+  case partial_data {
+    // Partial reload: only evaluate requested fields + always fields
+    option.Some(requested) -> {
+      behaviors
+      |> dict.filter(fn(name, behavior) {
+        case behavior {
+          AlwaysBehavior -> True
+          LazyBehavior(_) -> list.contains(requested, name)
+          DeferBehavior(_, _) -> list.contains(requested, name)
+          _ -> list.contains(requested, name)
         }
-      },
-    )
+      })
+      |> dict.keys()
+    }
+    // Standard visit: evaluate all non-optional, non-deferred
+    option.None -> {
+      behaviors
+      |> dict.filter(fn(_name, behavior) {
+        case behavior {
+          OptionalBehavior | DeferBehavior(_, _) -> False
+          _ -> True
+        }
+      })
+      |> dict.keys()
+    }
+  }
+}
 
-  #(
-    evaluated,
-    deferred_groups,
-    merge_props,
-    deep_merge_props,
-    match_props_on,
-    prop_errors,
+/// Filter fields based on behaviors and partial reload
+fn filter_fields(
+  props_dict: Dict(String, json.Json),
+  behaviors: Dict(String, PropBehavior(props)),
+  partial_data: Option(List(String)),
+) -> Dict(String, json.Json) {
+  case partial_data {
+    // Partial reload: only include requested fields + always fields
+    option.Some(requested) -> {
+      dict.filter(props_dict, fn(key, _value) {
+        case dict.get(behaviors, key) {
+          Ok(AlwaysBehavior) -> True
+          _ -> list.contains(requested, key)
+        }
+      })
+    }
+    // Standard visit: exclude optional and deferred fields
+    option.None -> {
+      dict.filter(props_dict, fn(key, _value) {
+        case dict.get(behaviors, key) {
+          Ok(OptionalBehavior) -> False
+          Ok(DeferBehavior(_, _)) -> False
+          _ -> True
+        }
+      })
+    }
+  }
+}
+
+/// Evaluate all lazy and deferred behaviors for the specified fields
+fn evaluate_behaviors(
+  initial_props: props,
+  behaviors: Dict(String, PropBehavior(props)),
+  fields_to_evaluate: List(String),
+) -> Result(props, Dict(String, String)) {
+  // Filter to only fields that have resolvers (Lazy or Defer)
+  let fields_with_resolvers =
+    fields_to_evaluate
+    |> list.filter(fn(field_name) {
+      case dict.get(behaviors, field_name) {
+        Ok(LazyBehavior(_)) | Ok(DeferBehavior(_, _)) -> True
+        _ -> False
+      }
+    })
+
+  // Evaluate each resolver in sequence, threading props through
+  list.try_fold(
+    fields_with_resolvers,
+    initial_props,
+    fn(current_props, field_name) {
+      case dict.get(behaviors, field_name) {
+        Ok(LazyBehavior(resolver)) | Ok(DeferBehavior(_, resolver)) ->
+          resolver(current_props)
+        _ -> Ok(current_props)
+      }
+    },
   )
 }
 
-/// Process a single prop and return its evaluation result
-fn process_single_prop(
-  prop: Prop(p),
-  encode_prop: fn(p) -> json.Json,
-  partial_data: option.Option(List(String)),
-) -> PropEval {
-  case prop {
-    // Regular props - evaluate immediately
-    DefaultProp(name, value) -> {
-      let json_value = encode_prop(value)
-      Evaluated(name, json_value, NoMerge)
+/// Collect deferred props grouped by group name
+fn collect_deferred_props(
+  behaviors: Dict(String, PropBehavior(props)),
+  partial_data: Option(List(String)),
+) -> Dict(String, List(String)) {
+  behaviors
+  |> dict.filter(fn(_name, behavior) {
+    case behavior {
+      DeferBehavior(_, _) -> {
+        // Only advertise deferred props on initial page loads (no partial reload)
+        // On partial reloads, deferred props are not advertised again
+        case partial_data {
+          option.Some(_) -> False
+          option.None -> True
+        }
+      }
+      _ -> False
     }
-    LazyProp(name, resolver) -> {
-      resolve_prop_result(name, resolver, encode_prop)
+  })
+  |> dict.fold(dict.new(), fn(acc, name, behavior) {
+    case behavior {
+      DeferBehavior(group, _) -> {
+        let group_name = option.unwrap(group, "default")
+        let current_props = dict.get(acc, group_name) |> result.unwrap([])
+        dict.insert(acc, group_name, [name, ..current_props])
+      }
+      _ -> acc
     }
-    OptionalProp(name, resolver) ->
-      resolve_prop_result(name, resolver, encode_prop)
-    AlwaysProp(name, value) -> {
-      let json_value = encode_prop(value)
-      Evaluated(name, json_value, NoMerge)
-    }
+  })
+}
 
-    // Deferred props - evaluate if requested in partial reload, otherwise just track names
-    DeferProp(name, group, resolver) -> {
-      let group_name = option.unwrap(group, "default")
-      case partial_data {
-        option.Some(requested_props) -> {
-          case list.contains(requested_props, name) {
-            True -> {
-              // This deferred prop was requested in partial reload, so evaluate it
-              resolve_prop_result(name, resolver, encode_prop)
-            }
-            False -> {
-              // This deferred prop was not requested, so track it for later
-              Deferred(name, group_name)
-            }
+/// Add deferred props metadata to response JSON
+fn add_deferred_props_metadata(
+  response: List(#(String, json.Json)),
+  deferred_props: Dict(String, List(String)),
+) -> List(#(String, json.Json)) {
+  case dict.is_empty(deferred_props) {
+    True -> response
+    False -> {
+      let deferred_json =
+        deferred_props
+        |> dict.to_list()
+        |> list.map(fn(pair) {
+          #(pair.0, json.array(list.reverse(pair.1), json.string))
+        })
+        |> json.object()
+      [#("deferredProps", deferred_json), ..response]
+    }
+  }
+}
+
+/// Add merge metadata to response JSON
+fn add_merge_metadata(
+  response: List(#(String, json.Json)),
+  merge_metadata: Dict(String, MergeOptions),
+) -> List(#(String, json.Json)) {
+  case dict.is_empty(merge_metadata) {
+    True -> response
+    False -> {
+      // Collect merge props (non-deep merge)
+      let merge_props =
+        merge_metadata
+        |> dict.filter(fn(_name, opts) { !opts.deep })
+        |> dict.keys()
+
+      // Collect deep merge props
+      let deep_merge_props =
+        merge_metadata
+        |> dict.filter(fn(_name, opts) { opts.deep })
+        |> dict.keys()
+
+      // Collect match_on rules
+      let match_props_on =
+        merge_metadata
+        |> dict.to_list()
+        |> list.flat_map(fn(pair) {
+          let #(name, opts) = pair
+          case opts.match_on {
+            option.Some(keys) -> list.map(keys, fn(key) { name <> "." <> key })
+            option.None -> []
           }
-        }
-        option.None -> {
-          // Not a partial reload, so track it for later
-          Deferred(name, group_name)
-        }
+        })
+
+      let with_merge = case merge_props {
+        [] -> response
+        _ -> [
+          #("mergeProps", json.array(list.reverse(merge_props), json.string)),
+          ..response
+        ]
+      }
+
+      let with_deep_merge = case deep_merge_props {
+        [] -> with_merge
+        _ -> [
+          #(
+            "deepMergeProps",
+            json.array(list.reverse(deep_merge_props), json.string),
+          ),
+          ..with_merge
+        ]
+      }
+
+      case match_props_on {
+        [] -> with_deep_merge
+        _ -> [
+          #(
+            "matchPropsOn",
+            json.array(list.reverse(match_props_on), json.string),
+          ),
+          ..with_deep_merge
+        ]
       }
     }
-
-    // Merge props - process inner prop and add merge metadata
-    MergeProp(inner_prop, match_on, deep) -> {
-      let inner_eval =
-        process_single_prop(inner_prop, encode_prop, partial_data)
-      case inner_eval {
-        Evaluated(name, value, _) -> {
-          Evaluated(name, value, Merge(match_on, deep))
-        }
-        Deferred(name, group) -> {
-          Deferred(name, group)
-        }
-        PropError(name, errors) -> {
-          PropError(name, errors)
-        }
-      }
-    }
   }
 }
 
-/// Filter props based on request type and partial reload settings
-fn filter_props_for_request(
-  props: List(Prop(p)),
-  partial_data: option.Option(List(String)),
-) -> List(Prop(p)) {
-  case partial_data {
-    option.None -> props |> list.filter(is_non_partial_prop)
-    option.Some(requested_props) ->
-      props |> list.filter(is_partial_prop(_, requested_props))
-  }
-}
-
-/// Predicate for non-partial requests (initial page load and standard Inertia)
-/// Include all non-optional props
-/// OptionalProp: Excluded because they're only meant for partial reloads when explicitly requested
-/// DeferProp: Retained here so process_props can move them to the deferred_props list
-fn is_non_partial_prop(prop: Prop(p)) -> Bool {
-  case prop {
-    OptionalProp(_, _) -> False
-    MergeProp(inner_prop, _, _) -> is_non_partial_prop(inner_prop)
-    _ -> True
-  }
-}
-
-/// Predicate for partial reload requests
-/// Include only requested props plus always props
-fn is_partial_prop(prop: Prop(p), partial_data: List(String)) -> Bool {
-  case prop {
-    AlwaysProp(_, _) -> True
-    MergeProp(inner_prop, _, _) -> is_partial_prop(inner_prop, partial_data)
-    DefaultProp(name, _) -> list.contains(partial_data, name)
-    LazyProp(name, _) -> list.contains(partial_data, name)
-    OptionalProp(name, _) -> list.contains(partial_data, name)
-    DeferProp(name, _, _) -> list.contains(partial_data, name)
-  }
-}
-
-/// Build URL from request path segments
 fn build_url_from_request(req: Request) -> String {
   let path = wisp.path_segments(req) |> string.join("/")
   let base_url = "/" <> path
@@ -628,141 +604,28 @@ fn build_url_from_request(req: Request) -> String {
   }
 }
 
-//
-// JSON Metadata Helpers
-//
-
-/// Add deferred props metadata to JSON if not empty
-fn maybe_add_deferred_props(
-  json_list: List(#(String, json.Json)),
-  deferred_props: Dict(String, List(String)),
-) -> List(#(String, json.Json)) {
-  case dict.is_empty(deferred_props) {
-    True -> json_list
-    False -> {
-      let deferred_json =
-        deferred_props
-        |> dict.to_list()
-        |> list.map(fn(pair) {
-          #(pair.0, json.array(list.reverse(pair.1), json.string))
-        })
-        |> json.object()
-      [#("deferredProps", deferred_json), ..json_list]
+/// Resolve which errors to use and whether they came from cookie
+fn resolve_errors_for_response(
+  builder: InertiaResponseBuilder(props),
+) -> #(Dict(String, String), Bool) {
+  case dict.is_empty(builder.errors) {
+    False -> #(builder.errors, False)
+    // Use builder errors
+    True -> {
+      case retrieve_errors_from_cookie(builder.request) {
+        option.Some(errors) -> #(errors, True)
+        // Cookie was present
+        option.None -> #(dict.new(), False)
+        // No cookie present
+      }
     }
   }
 }
 
-/// Add merge props to JSON if not empty
-fn maybe_add_merge_props(
-  json_list: List(#(String, json.Json)),
-  merge_props: List(String),
-) -> List(#(String, json.Json)) {
-  case merge_props {
-    [] -> json_list
-    _ -> [
-      #("mergeProps", json.array(list.reverse(merge_props), json.string)),
-      ..json_list
-    ]
-  }
-}
-
-/// Add deep merge props to JSON if not empty
-fn maybe_add_deep_merge_props(
-  json_list: List(#(String, json.Json)),
-  deep_merge_props: List(String),
-) -> List(#(String, json.Json)) {
-  case deep_merge_props {
-    [] -> json_list
-    _ -> [
-      #(
-        "deepMergeProps",
-        json.array(list.reverse(deep_merge_props), json.string),
-      ),
-      ..json_list
-    ]
-  }
-}
-
-/// Escape HTML entities in JSON string for embedding in HTML
-fn escape_html(text: String) -> String {
-  text
-  |> string.replace("&", "&amp;")
-  |> string.replace("\"", "&quot;")
-  |> string.replace("'", "&#x27;")
-  |> string.replace("<", "&lt;")
-  |> string.replace(">", "&gt;")
-}
-
-/// Add match props on to JSON if not empty
-fn maybe_add_match_props_on(
-  json_list: List(#(String, json.Json)),
-  match_props_on: List(String),
-) -> List(#(String, json.Json)) {
-  case match_props_on {
-    [] -> json_list
-    _ -> [
-      #("matchPropsOn", json.array(list.reverse(match_props_on), json.string)),
-      ..json_list
-    ]
-  }
-}
-
-//
-// Error and Cookie Handling
-//
-
-/// Build errors JSON with optional error bag nesting
-fn build_errors_json(
-  request: wisp.Request,
-  errors: Dict(String, String),
-) -> json.Json {
-  let base_errors_json =
-    errors
-    |> dict.to_list()
-    |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
-    |> json.object()
-
-  // Check for X-Inertia-Error-Bag header
-  case list.key_find(request.headers, "x-inertia-error-bag") {
-    Ok(bag_name) -> {
-      // Nest errors under the bag name
-      json.object([#(bag_name, base_errors_json)])
-    }
-    Error(_) -> {
-      // Return errors directly
-      base_errors_json
-    }
-  }
-}
-
-/// Store validation errors in a cookie for later retrieval
-fn store_errors_in_cookie(
-  response: wisp.Response,
-  request: wisp.Request,
-  errors: Dict(String, String),
-) -> wisp.Response {
-  let errors_json =
-    errors
-    |> dict.to_list()
-    |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
-    |> json.object()
-    |> json.to_string()
-
-  wisp.set_cookie(
-    response,
-    request,
-    "inertia_errors",
-    errors_json,
-    wisp.Signed,
-    600,
-    // 10 minutes
-  )
-}
-
-/// Retrieve and clear validation errors from cookie
+/// Retrieve validation errors from cookie
 /// Returns Some(errors_dict) if cookie was present, None if no cookie
 fn retrieve_errors_from_cookie(
-  request: wisp.Request,
+  request: Request,
 ) -> option.Option(Dict(String, String)) {
   case wisp.get_cookie(request, "inertia_errors", wisp.Signed) {
     Ok(errors_json) -> {
@@ -780,4 +643,59 @@ fn retrieve_errors_from_cookie(
     Error(_) -> option.None
     // No cookie present
   }
+}
+
+/// Handle cookie cleanup after response is built
+fn handle_cookie_cleanup(
+  response: Response,
+  request: Request,
+  retrieved_from_cookie: Bool,
+  status: Int,
+) -> Response {
+  case retrieved_from_cookie && !is_redirect_or_conflict_status(status) {
+    True -> clear_errors_cookie(response, request)
+    False -> response
+  }
+}
+
+/// Check if status code is a redirect (301-308) or conflict (409)
+fn is_redirect_or_conflict_status(status: Int) -> Bool {
+  status >= 301 && status <= 308 || status == 409
+}
+
+/// Clear the inertia_errors cookie by setting it to expire immediately
+fn clear_errors_cookie(response: Response, request: Request) -> Response {
+  wisp.set_cookie(
+    response,
+    request,
+    "inertia_errors",
+    "",
+    wisp.Signed,
+    0,
+    // Expire immediately
+  )
+}
+
+/// Store validation errors in a cookie for later retrieval
+fn store_errors_in_cookie(
+  response: Response,
+  request: Request,
+  errors: Dict(String, String),
+) -> Response {
+  let errors_json =
+    errors
+    |> dict.to_list()
+    |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
+    |> json.object()
+    |> json.to_string()
+
+  wisp.set_cookie(
+    response,
+    request,
+    "inertia_errors",
+    errors_json,
+    wisp.Signed,
+    600,
+    // 10 minutes
+  )
 }
