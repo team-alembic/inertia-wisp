@@ -8,6 +8,7 @@ import gleam/erlang/process
 import gleam/http
 import handlers/forms
 import handlers/slides
+import handlers/stock_ticker
 import handlers/users_table
 import mist
 import wisp
@@ -53,6 +54,7 @@ fn route_request(req: wisp.Request) -> wisp.Response {
     ["forms", "contact"], http.Get -> forms.show_contact_form(req)
     ["forms", "contact"], http.Post -> forms.submit_contact_form(req)
     ["users", "table"], http.Get -> users_table.show_users_table(req)
+    ["stocks", "ticker"], http.Get -> stock_ticker.show_stock_ticker(req)
     _, _ -> wisp.not_found()
   }
 }

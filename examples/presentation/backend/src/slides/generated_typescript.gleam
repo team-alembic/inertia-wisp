@@ -1,6 +1,6 @@
-//// Slide 11: With Type-Safe Integration (Generated TypeScript)
+//// Slide 11: With Type-Safe Integration (Shared Validation)
 ////
-//// Shows the TypeScript types automatically generated from Gleam
+//// Shows how Gleam code compiles to JavaScript for shared validation
 
 import schemas/content_block.{CodeBlock, Heading, Spacer, Subheading}
 import schemas/slide.{type Slide, Slide}
@@ -8,27 +8,27 @@ import schemas/slide.{type Slide, Slide}
 pub fn slide(step: Int) -> Slide {
   // Determine which lines to highlight based on step
   let highlight_lines = case step {
-    1 -> [1, 2, 3, 4, 5]
-    // Class definition
-    2 -> [6, 7, 8, 9]
-    // Factory function
+    1 -> [1, 2, 3, 4]
+    // Validation logic
+    2 -> [5, 6, 7, 8, 9]
+    // TypeScript usage
     _ -> []
   }
 
   Slide(
     number: 0,
-    title: "With Type-Safe Integration",
+    title: "Type Safety Approach #1",
     content: [
-      Heading("With Type-Safe Integration"),
+      Heading("Type Safety Approach #1"),
       Spacer,
-      Subheading("Gleam Compiles to TypeScript Definitions:"),
+      Subheading("Compile Gleam → JavaScript for Shared Validation:"),
       CodeBlock(
-        "export class User$ extends _.CustomType {\n  constructor(name: string, email: string);\n  name: string;\n  email: string;\n}\nexport function User$User(\n  name: string,\n  email: string,\n): User$;",
-        "typescript",
+        "// Gleam validation function\npub fn validate_name(name: String) -> Result(String, String) {\n  case string.trim(name) {\n    \"\" -> Error(\"Name is required\")\n    trimmed -> {\n      case string.length(trimmed) < 2 {\n        True -> Error(\"Name must be at least 2 characters\")\n        False -> Ok(trimmed)\n      }\n    }\n  }\n}\n\n// Use directly from TypeScript!\nimport { validate_name } from \"@shared/forms.mjs\";\nconst result = validate_name(\"Alice\");",
+        "gleam",
         highlight_lines,
       ),
     ],
-    notes: "Gleam automatically generates TypeScript type definitions when compiling to JavaScript. These provide type information for the frontend.",
+    notes: "Compile Gleam code to JavaScript for shared validation logic. The same validation runs on both backend and frontend, eliminating duplication.",
     max_steps: 2,
   )
 }

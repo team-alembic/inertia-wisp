@@ -22,7 +22,7 @@ pub fn slide(step: Int) -> Slide {
       Heading("The Backend You'll Love"),
       Spacer,
       CodeBlock(
-        "pub fn show_user_handler(req: Request, id: String, db: Connection) -> Response {\n  use user_id <- try_parse_user_id(req, id)\n  use user <- try_get_user(req, user_id, db)\n\n  let props = [user_props.user_data(user)]\n\n  req\n  |> inertia.response_builder(\"Users/Show\")\n  |> inertia.props(props, user_props.user_prop_to_json)\n  |> inertia.response(200)\n}",
+        "pub fn show_user_handler(req: Request, id: String, db: Connection) -> Response {\n  use user_id <- try_parse_user_id(req, id)\n  use user <- try_get_user(req, user_id, db)\n\n  let props = UserProps(name: user.name, email: user.email, posts: None)\n\n  req\n  |> inertia.response_builder(\"Users/Show\")\n  |> inertia.props(props, user_props.encode)\n  |> inertia.lazy(\"posts\", fn(props) {\n    use posts <- result.try(db.get_user_posts(user_id))\n    Ok(UserProps(..props, posts: Some(posts)))\n  })\n  |> inertia.response(200)\n}",
         "gleam",
         highlight_lines,
       ),

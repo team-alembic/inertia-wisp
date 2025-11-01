@@ -7,6 +7,7 @@ target = "erlang"
 gleam_stdlib = ">= 0.60.0"
 gleam_http = ">= 4.0.0"
 gleam_json = ">= 3.0.0"
+gleam_time = ">= 0.1.0"
 wisp = ">= 2.0.0"
 inertia_wisp = { path = "../../../" }
 simplifile = ">= 2.2.1 and < 3.0.0"

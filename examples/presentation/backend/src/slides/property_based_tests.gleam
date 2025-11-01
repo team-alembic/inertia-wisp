@@ -1,38 +1,34 @@
-//// Slide 11: With Type-Safe Integration (Property-Based Tests)
+//// Slide 13: Two Type Safety Approaches Summary
 ////
-//// Shows property-based tests ensuring encoder/schema compatibility
+//// Summarizes the two complementary approaches to type safety
 
-import schemas/content_block.{CodeBlock, Heading, Spacer, Subheading}
+import schemas/content_block.{BulletList, Heading, Spacer, Subheading}
 import schemas/slide.{type Slide, Slide}
 
-pub fn slide(step: Int) -> Slide {
-  // Determine which lines to highlight based on step
-  let highlight_lines = case step {
-    1 -> [2, 3, 4, 5, 6]
-    // Arbitrary definition
-    2 -> [10]
-    // fc.property line
-    3 -> [12, 13, 14]
-    // Gleam encoding
-    4 -> [17, 18]
-    // Zod validation
-    _ -> []
-  }
-
+pub fn slide(_step: Int) -> Slide {
   Slide(
     number: 0,
-    title: "With Type-Safe Integration",
+    title: "Two Type Safety Approaches",
     content: [
-      Heading("With Type-Safe Integration"),
+      Heading("Two Type Safety Approaches"),
       Spacer,
-      Subheading("Property-Based Tests Ensure Compatibility:"),
-      CodeBlock(
-        "// Arbitrary generates Gleam types directly\nconst userArbitrary = fc\n  .record({ name: fc.string(), email: fc.string() })\n  .map(({ name, email }) => \n    Shared.User$User(name, email)\n  );\n\nit(\"User: Gleam encoder produces valid Zod JSON\", () => {\n  fc.assert(\n    fc.property(userArbitrary, (gleamUser) => {\n      // 1. Encode with Gleam\n      const json = Shared.user_to_json(gleamUser);\n      const jsonString = GleamJson.to_string(json);\n      const parsed = JSON.parse(jsonString);\n      \n      // 2. Validate with Zod (strict!)\n      const result = UserSchema.safeParse(parsed);\n      expect(result.success).toBe(true);\n    }),\n    { numRuns: 1000 }\n  );\n});",
-        "typescript",
-        highlight_lines,
-      ),
+      Subheading("Approach #1: Compile Gleam → JavaScript"),
+      BulletList([
+        "✅ Share validation logic between backend and frontend",
+        "✅ Same code runs in both environments",
+        "✅ Perfect for business logic like form validation",
+        "✅ Example: validate_name() used by both Gleam handlers and React forms",
+      ]),
+      Spacer,
+      Subheading("Approach #2: Generate Zod from Schemas"),
+      BulletList([
+        "✅ Define schemas once in Gleam, generate TypeScript/Zod automatically",
+        "✅ Bidirectional: encoding AND decoding from same schema",
+        "✅ Runtime type safety with Zod's .strict() validation",
+        "✅ Backend/frontend types stay in sync automatically",
+      ]),
     ],
-    notes: "Property-based tests generate 1000s of random Gleam values, encode them to JSON, and verify Zod validation passes. Catches mismatches immediately!",
-    max_steps: 4,
+    notes: "Both approaches work together! Use compiled Gleam for shared logic, and generated Zod schemas for data validation. No manual synchronization needed!",
+    max_steps: 1,
   )
 }

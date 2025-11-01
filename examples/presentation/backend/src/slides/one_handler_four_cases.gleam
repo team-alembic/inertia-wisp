@@ -15,7 +15,7 @@ pub fn slide() -> Slide {
       BulletList([
         "📄 Initial HTML load - Props embedded as JSON in server-rendered HTML",
         "🔄 Page navigation - Load all props as JSON when linked from another page",
-        "⏳ Deferred data - Separate request for DeferProp after initial render",
+        "⏳ Deferred data - Separate request for deferred props after initial render",
         "📊 Pagination - Partial reload with only necessary props",
       ]),
       Spacer,
@@ -24,19 +24,20 @@ pub fn slide() -> Slide {
   let page = parse_query_param(req, \"page\", int.parse, 1)
   let users = paginate(generate_users(100), page, 10)
 
-  let props = [
-    DefaultProp(\"users\", UsersProp(users)),
-    DefaultProp(\"page\", PageProp(page)),
-    DefaultProp(\"total_pages\", TotalPagesProp(10)),
-    DeferProp(\"demo_info\", option.None, fn() {
-      process.sleep(2000)  // Simulate expensive computation
-      Ok(DemoInfoProp(\"Loaded separately!\"))
-    }),
-  ]
+  let props = UsersTableProps(
+    users: users,
+    page: page,
+    total_pages: 10,
+    demo_info: option.None,
+  )
 
   req
   |> inertia.response_builder(\"UsersTable\")
-  |> inertia.props(props, users_prop_to_json)
+  |> inertia.props(props, encode_props)
+  |> inertia.defer(\"demo_info\", fn(props) {
+    process.sleep(2000)  // Simulate expensive computation
+    Ok(UsersTableProps(..props, demo_info: option.Some(\"Loaded!\")))
+  })
   |> inertia.response(200)
 }",
         "gleam",

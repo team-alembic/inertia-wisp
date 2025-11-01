@@ -1,6 +1,6 @@
 //// Slide 10: With Type-Safe Integration
 ////
-//// How Inertia.js bridges Gleam and TypeScript type-safely
+//// How Inertia.js bridges Gleam and TypeScript with Schemas
 
 import schemas/content_block.{CodeBlock, Heading, Spacer, Subheading}
 import schemas/slide.{type Slide, Slide}
@@ -10,8 +10,8 @@ pub fn slide(step: Int) -> Slide {
   let highlight_lines = case step {
     1 -> [1, 2, 3, 4]
     // Type definition
-    2 -> [6, 7, 8, 9, 10, 11, 12, 13]
-    // JSON encoder
+    2 -> [6, 7, 8, 9, 10, 11, 12]
+    // Schema definition
     _ -> []
   }
 
@@ -21,14 +21,14 @@ pub fn slide(step: Int) -> Slide {
     content: [
       Heading("With Type-Safe Integration"),
       Spacer,
-      Subheading("Gleam: Define Types & JSON Encoders"),
+      Subheading("Gleam: Define Types & Schemas"),
       CodeBlock(
-        "// Define the type\npub type User {\n  User(name: String, email: String)\n}\n\n// JSON encoder\npub fn user_to_json(user: User) -> json.Json {\n  let User(name:, email:) = user\n  json.object([\n    #(\"name\", json.string(name)),\n    #(\"email\", json.string(email)),\n  ])\n}",
+        "// Define the type\npub type User {\n  User(id: Int, name: String, email: String)\n}\n\n// Define the schema\npub fn user_schema() -> schema.RecordSchema(_) {\n  schema.record_schema(\"User\")\n  |> schema.int_field(\"id\")\n  |> schema.string_field(\"name\")\n  |> schema.string_field(\"email\")\n  |> schema.schema()\n}",
         "gleam",
         highlight_lines,
       ),
     ],
-    notes: "Define types and encoders in Gleam - encoders are tested with property-based tests to ensure they match the frontend Zod schemas.",
+    notes: "Define types and schemas in Gleam. Schemas provide bidirectional encoding/decoding and generate TypeScript/Zod schemas automatically.",
     max_steps: 2,
   )
 }
