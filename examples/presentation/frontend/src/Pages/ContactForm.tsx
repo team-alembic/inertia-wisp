@@ -116,4 +116,5 @@ function ContactForm({ name, email, message }: ContactFormPageProps) {
   );
 }
 
-export default validateProps(ContactForm, ContactFormPagePropsSchema);
+// export default validateProps(ContactForm, ContactFormPagePropsSchema);
+export default ContactForm;

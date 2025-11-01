@@ -1,28 +1,25 @@
 //// Forms handler for demonstration
 ////
 //// Handles contact form display and submission with validation
+//// Updated to use v2 API with generic props
 
 import gleam/dict.{type Dict}
 import gleam/result
 import gleam/string
-import inertia_wisp/inertia
-import props/contact_form_props
+import inertia_wisp/response_builder_v2
+import props/contact_form_props.{ContactFormProps}
 import schemas/contact_form.{type ContactFormData, ContactFormData}
 import shared/forms.{validate_name}
 import wisp.{type Request, type Response}
 
 /// Display the contact form page
 pub fn show_contact_form(req: Request) -> Response {
-  let props = [
-    contact_form_props.name(""),
-    contact_form_props.email(""),
-    contact_form_props.message(""),
-  ]
+  let props = ContactFormProps(name: "", email: "", message: "")
 
   req
-  |> inertia.response_builder("ContactForm")
-  |> inertia.props(props, contact_form_props.contact_form_prop_to_json)
-  |> inertia.response(200)
+  |> response_builder_v2.response_builder("ContactForm")
+  |> response_builder_v2.props(props, contact_form_props.encode)
+  |> response_builder_v2.response(200)
 }
 
 /// Handle contact form submission with validation
@@ -43,9 +40,9 @@ pub fn submit_contact_form(req: Request) -> Response {
     }
     Error(errors) -> {
       req
-      |> inertia.response_builder("ContactForm")
-      |> inertia.errors(errors)
-      |> inertia.redirect("/forms/contact")
+      |> response_builder_v2.response_builder("ContactForm")
+      |> response_builder_v2.errors(errors)
+      |> response_builder_v2.redirect("/forms/contact")
     }
   }
 }

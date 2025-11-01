@@ -5,9 +5,9 @@
 
 import gleam/int
 import gleam/result
-import inertia_wisp/inertia
 import inertia_wisp/query_params
-import props/slide_props.{SlideQueryParams}
+import inertia_wisp/response_builder_v2
+import props/slide_props.{SlideProps, SlideQueryParams}
 import schemas/slide
 import schemas/slide_navigation
 import slides/about_me
@@ -68,16 +68,18 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
   let nav =
     navigation_with_steps(slide_num, step, total_slides, slide.max_steps)
 
-  let props = [
-    slide_props.slide_content(slide),
-    slide_props.navigation(nav),
-    slide_props.presentation_title("Gleam + TypeScript"),
-  ]
+  let props =
+    SlideProps(
+      slide: slide,
+      navigation: nav,
+      presentation_title: "Gleam + TypeScript",
+    )
 
   req
-  |> inertia.response_builder("Slide")
-  |> inertia.props(props, slide_props.slide_prop_to_json)
-  |> inertia.response(200)
+  |> response_builder_v2.response_builder("Slide")
+  |> response_builder_v2.props(props, slide_props.encode)
+  |> response_builder_v2.always("presentation_title")
+  |> response_builder_v2.response(200)
 }
 
 /// Handle requests to the presentation home (redirect to first slide)

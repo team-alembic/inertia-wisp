@@ -5,10 +5,11 @@
 import gleam/erlang/process
 import gleam/int
 import gleam/list
+import gleam/option
 import gleam/result
-import inertia_wisp/inertia
 import inertia_wisp/query_params
-import props/users_table_props.{UsersTableQueryParams}
+import inertia_wisp/response_builder_v2
+import props/users_table_props.{UsersTableProps, UsersTableQueryParams}
 import schemas/user.{type User, User}
 import wisp.{type Request, type Response}
 
@@ -25,25 +26,33 @@ pub fn show_users_table(req: Request) -> Response {
   let per_page = 10
   let total_pages = { 100 + per_page - 1 } / per_page
 
-  // Compute paginated users (LazyProp means this only evaluates when needed)
+  // Compute paginated users
   let all_users = generate_users(100)
   let paginated_users = paginate(all_users, page, per_page)
 
-  let props = [
-    users_table_props.users(paginated_users),
-    users_table_props.page(page),
-    users_table_props.total_pages(total_pages),
-    users_table_props.demo_info(fn() {
-      // Artificial delay to demonstrate deferred loading
-      process.sleep(2000)
-      Ok("🎉 This DeferProp loaded after 2 seconds!")
-    }),
-  ]
+  // Build base props
+  let props =
+    UsersTableProps(
+      users: paginated_users,
+      page: page,
+      total_pages: total_pages,
+      demo_info: option.None,
+    )
 
   req
-  |> inertia.response_builder("UsersTable")
-  |> inertia.props(props, users_table_props.users_table_prop_to_json)
-  |> inertia.response(200)
+  |> response_builder_v2.response_builder("UsersTable")
+  |> response_builder_v2.props(props, users_table_props.encode)
+  |> response_builder_v2.defer("demo_info", fn(props) {
+    // Artificial delay to demonstrate deferred loading
+    process.sleep(2000)
+    Ok(
+      UsersTableProps(
+        ..props,
+        demo_info: option.Some("🎉 This DeferProp loaded after 2 seconds!"),
+      ),
+    )
+  })
+  |> response_builder_v2.response(200)
 }
 
 /// Generate sample users for demonstration

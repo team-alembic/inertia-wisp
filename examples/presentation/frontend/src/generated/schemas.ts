@@ -174,6 +174,7 @@ export const SlidePagePropsSchema = z.object({
   navigation: SlideNavigationSchema,
   presentation_title: z.string(),
   slide: SlideSchema,
+  errors: z.record(z.string(), z.string()).optional(),
 }).strict();
 
 export type SlidePageProps = z.infer<typeof SlidePagePropsSchema>;
@@ -182,6 +183,7 @@ export const ContactFormPagePropsSchema = z.object({
   email: z.string(),
   message: z.string(),
   name: z.string(),
+  errors: z.record(z.string(), z.string()).optional(),
 }).strict();
 
 export type ContactFormPageProps = z.infer<typeof ContactFormPagePropsSchema>;
@@ -191,6 +193,7 @@ export const UsersTablePagePropsSchema = z.object({
   page: z.number(),
   total_pages: z.number(),
   users: z.array(UserSchema),
+  errors: z.record(z.string(), z.string()).optional(),
 }).strict();
 
 export type UsersTablePageProps = z.infer<typeof UsersTablePagePropsSchema>;

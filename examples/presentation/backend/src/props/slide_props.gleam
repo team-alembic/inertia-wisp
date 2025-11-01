@@ -3,9 +3,9 @@
 //// This module defines props for rendering presentation slides and provides
 //// JSON serialization for all slide content.
 
+import gleam/dict
 import gleam/json
 import inertia_wisp/page_schema
-import inertia_wisp/prop
 import inertia_wisp/schema
 import schemas/slide.{type Slide}
 import schemas/slide_navigation.{type SlideNavigation}
@@ -22,11 +22,13 @@ pub fn slide_query_params_schema() -> schema.RecordSchema(_) {
   |> schema.schema()
 }
 
-/// Prop types for slide pages
-pub type SlideProp {
-  SlideContent(Slide)
-  Navigation(SlideNavigation)
-  PresentationTitle(String)
+/// Props for Slide page (v2 API - record-based)
+pub type SlideProps {
+  SlideProps(
+    slide: Slide,
+    navigation: SlideNavigation,
+    presentation_title: String,
+  )
 }
 
 /// Page schema for Slide pages
@@ -41,26 +43,11 @@ pub fn slide_page_schema() -> page_schema.PageSchema {
   |> page_schema.build()
 }
 
-/// Helper to create slide content prop
-pub fn slide_content(slide: Slide) -> prop.Prop(SlideProp) {
-  prop.DefaultProp("slide", SlideContent(slide))
-}
-
-/// Helper to create navigation prop
-pub fn navigation(nav: SlideNavigation) -> prop.Prop(SlideProp) {
-  prop.DefaultProp("navigation", Navigation(nav))
-}
-
-/// Helper to create presentation title prop
-pub fn presentation_title(title: String) -> prop.Prop(SlideProp) {
-  prop.AlwaysProp("presentation_title", PresentationTitle(title))
-}
-
-/// JSON encoder for slide props
-pub fn slide_prop_to_json(prop: SlideProp) -> json.Json {
-  case prop {
-    Navigation(nav) -> slide_navigation.to_json(nav)
-    PresentationTitle(title) -> json.string(title)
-    SlideContent(content) -> slide.to_json(content)
-  }
+/// Encoder for SlideProps (v2 API)
+pub fn encode(props: SlideProps) -> dict.Dict(String, json.Json) {
+  dict.from_list([
+    #("slide", slide.to_json(props.slide)),
+    #("navigation", slide_navigation.to_json(props.navigation)),
+    #("presentation_title", json.string(props.presentation_title)),
+  ])
 }

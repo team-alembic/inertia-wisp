@@ -483,12 +483,13 @@ fn collect_deferred_props(
   partial_data: Option(List(String)),
 ) -> Dict(String, List(String)) {
   behaviors
-  |> dict.filter(fn(name, behavior) {
+  |> dict.filter(fn(_name, behavior) {
     case behavior {
       DeferBehavior(_, _) -> {
-        // Include if not in partial reload, or not requested in partial reload
+        // Only advertise deferred props on initial page loads (no partial reload)
+        // On partial reloads, deferred props are not advertised again
         case partial_data {
-          option.Some(requested) -> !list.contains(requested, name)
+          option.Some(_) -> False
           option.None -> True
         }
       }

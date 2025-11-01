@@ -2,10 +2,8 @@
 
 import gleam/dict
 import gleam/json
-import gleam/option
-import gleam/result
+import gleam/option.{type Option}
 import inertia_wisp/page_schema
-import inertia_wisp/prop
 import inertia_wisp/schema
 import schemas/user.{type User}
 
@@ -21,12 +19,14 @@ pub fn users_table_query_params_schema() -> schema.RecordSchema(_) {
   |> schema.schema()
 }
 
-// Prop types
-pub type UsersTableProp {
-  UsersProp(List(User))
-  PageProp(Int)
-  TotalPagesProp(Int)
-  DemoInfoProp(String)
+/// Props for UsersTable page (v2 API - record-based)
+pub type UsersTableProps {
+  UsersTableProps(
+    users: List(User),
+    page: Int,
+    total_pages: Int,
+    demo_info: Option(String),
+  )
 }
 
 /// Page schema for UsersTable page
@@ -42,36 +42,18 @@ pub fn users_table_page_schema() -> page_schema.PageSchema {
   |> page_schema.build()
 }
 
-// Helper functions for creating props
-pub fn users(users: List(User)) -> prop.Prop(UsersTableProp) {
-  prop.LazyProp("users", fn() { Ok(UsersProp(users)) })
-}
+/// Encoder for UsersTableProps (v2 API)
+pub fn encode(props: UsersTableProps) -> dict.Dict(String, json.Json) {
+  let base = [
+    #("users", json.array(props.users, schema.to_json(user.user_schema(), _))),
+    #("page", json.int(props.page)),
+    #("total_pages", json.int(props.total_pages)),
+  ]
 
-pub fn page(value: Int) -> prop.Prop(UsersTableProp) {
-  prop.DefaultProp("page", PageProp(value))
-}
-
-pub fn total_pages(value: Int) -> prop.Prop(UsersTableProp) {
-  prop.DefaultProp("total_pages", TotalPagesProp(value))
-}
-
-pub fn demo_info(
-  resolver: fn() -> Result(String, dict.Dict(String, String)),
-) -> prop.Prop(UsersTableProp) {
-  prop.DeferProp("demo_info", option.None, fn() {
-    resolver()
-    |> result.map(DemoInfoProp)
-  })
-}
-
-// JSON encoder
-pub fn users_table_prop_to_json(prop: UsersTableProp) -> json.Json {
-  case prop {
-    UsersProp(users) -> {
-      json.array(users, schema.to_json(user.user_schema(), _))
-    }
-    PageProp(page_num) -> json.int(page_num)
-    TotalPagesProp(total) -> json.int(total)
-    DemoInfoProp(info) -> json.string(info)
+  // Add demo_info only if it's Some
+  case props.demo_info {
+    option.Some(info) ->
+      dict.from_list([#("demo_info", json.string(info)), ..base])
+    option.None -> dict.from_list(base)
   }
 }

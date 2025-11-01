@@ -749,3 +749,40 @@ pub fn errors_included_in_response_test() {
   assert body |> string.contains("is required")
   assert body |> string.contains("too short")
 }
+
+// Test: Deferred props NOT re-advertised on partial reload (e.g., pagination)
+pub fn deferred_props_not_readvertised_on_partial_reload_test() {
+  // Simulate pagination request - partial reload for only "message" and "count"
+  let req =
+    simulate.request(http.Get, "/dashboard?page=2")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "message,count")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  let response =
+    response_builder_v2.response_builder(req, "Dashboard")
+    |> response_builder_v2.props(initial_props, encode_lazy_props)
+    |> response_builder_v2.lazy("user", fn(props) {
+      Ok(LazyProps(..props, user: "Bob"))
+    })
+    |> response_builder_v2.defer("expensive_data", fn(props) {
+      Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
+    })
+    |> response_builder_v2.response(200)
+
+  let body = simulate.read_body(response)
+
+  // User should NOT be included (not requested in partial reload, even though lazy)
+  assert !string.contains(body, "Alice")
+  assert !string.contains(body, "Bob")
+
+  // Expensive data should NOT be included (it's deferred and not requested)
+  assert !string.contains(body, "deferred-value")
+
+  // CRITICAL: deferredProps metadata should NOT be included
+  // On partial reloads (pagination), we should NOT re-advertise deferred props
+  assert !string.contains(body, "deferredProps")
+  assert !string.contains(body, "expensive_data")
+}

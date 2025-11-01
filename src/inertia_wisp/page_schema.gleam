@@ -117,11 +117,15 @@ pub fn to_zod_schema(page_schema: PageSchema) -> String {
     })
     |> string.join("\n")
 
+  // Add errors as a standard optional prop on all pages (Inertia.js convention)
+  let fields_with_errors =
+    fields_code <> "\n  errors: z.record(z.string(), z.string()).optional(),"
+
   let schema_def =
     "export const "
     <> schema_name
     <> " = z.object({\n"
-    <> fields_code
+    <> fields_with_errors
     <> "\n"
     <> "}).strict();\n\n"
 
