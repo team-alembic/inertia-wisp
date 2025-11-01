@@ -10,11 +10,11 @@ import { FormCard } from "../components/FormCard";
 import { FormField } from "../components/FormField";
 import { SubmitButton } from "../components/SubmitButton";
 import { ValidationRulesTip } from "../components/ValidationRulesTip";
-import { validate_name } from "../../../shared/build/dev/javascript/shared/shared/forms.mjs";
+import { validate_name } from "@shared/forms.mjs";
 import {
-  Result$Error$0,
-  Result$isOk,
-} from "../../../shared/build/dev/javascript/prelude.mjs";
+  Result$Error$0 as unwrapError,
+  Result$isOk as isOk,
+} from "@gleam/prelude.mjs";
 
 function ContactForm({ name, email, message }: ContactFormPageProps) {
   const { data, setData, post, processing, setError, clearErrors, errors } =
@@ -33,10 +33,10 @@ function ContactForm({ name, email, message }: ContactFormPageProps) {
     setData("name", value);
     // Validate on change for instant feedback
     const validation = validate_name(value);
-    if (Result$isOk(validation)) {
+    if (isOk(validation)) {
       clearErrors("name");
     } else {
-      setError("name", Result$Error$0(validation)!);
+      setError("name", unwrapError(validation)!);
     }
   };
 
@@ -116,5 +116,4 @@ function ContactForm({ name, email, message }: ContactFormPageProps) {
   );
 }
 
-// export default validateProps(ContactForm, ContactFormPagePropsSchema);
-export default ContactForm;
+export default validateProps(ContactForm, ContactFormPagePropsSchema);

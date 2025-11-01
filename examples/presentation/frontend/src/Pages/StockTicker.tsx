@@ -13,10 +13,6 @@ import {
   StockTickerProps$StockTickerProps$info_message as getInfoMessage,
   Stock$,
 } from "@shared/stock.mjs";
-import {
-  Option$isSome,
-  Option$Some$0,
-} from "@gleam/gleam_stdlib/gleam/option.mjs";
 import { PageHeader, BackToPresentation } from "../components";
 import { decodeProps } from "../lib/decodeProps";
 
@@ -39,9 +35,8 @@ function StockTicker(props: StockTickerProps$) {
   const stocks = getStocks(props);
   const info_message = getInfoMessage(props);
 
-  // Extract the List from Some and convert to JavaScript array using spread operator
-  const stocksList = Option$Some$0(stocks);
-  const stocksArray = [...stocksList];
+  // Convert Gleam List to JavaScript array using spread operator
+  const stocksArray = [...stocks];
 
   // Accumulate price history in state
   const [stocksWithHistory, setStocksWithHistory] = useState<
@@ -90,8 +85,6 @@ function StockTicker(props: StockTickerProps$) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-teal-800 to-blue-900 p-8">
       <div className="max-w-5xl mx-auto">
-        <PageHeader />
-
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
           <h2 className="text-3xl font-bold text-white mb-2">
             Live Stock Ticker

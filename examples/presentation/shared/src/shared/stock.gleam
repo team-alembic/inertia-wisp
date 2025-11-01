@@ -6,8 +6,6 @@
 import gleam/dynamic/decode
 import gleam/int
 import gleam/json
-import gleam/list
-import gleam/option.{type Option, Some}
 
 /// Stock market data - only current price, frontend accumulates history
 pub type Stock {
@@ -53,31 +51,22 @@ pub fn encode_stock(stock: Stock) -> json.Json {
 
 /// Props for the stock ticker page
 pub type StockTickerProps {
-  StockTickerProps(stocks: Option(List(Stock)), info_message: String)
+  StockTickerProps(stocks: List(Stock), info_message: String)
 }
 
 /// Decode StockTickerProps from dynamic data (for use in TypeScript)
 pub fn decode_stock_ticker_props() -> decode.Decoder(StockTickerProps) {
-  use stocks <- decode.optional_field(
-    "stocks",
-    option.None,
-    decode.list(decode_stock()) |> decode.map(option.Some),
-  )
+  use stocks <- decode.field("stocks", decode.list(decode_stock()))
   use info_message <- decode.field("info_message", decode.string)
   decode.success(StockTickerProps(stocks:, info_message:))
 }
 
 /// Encode StockTickerProps to JSON
 pub fn encode_stock_ticker_props(props: StockTickerProps) -> json.Json {
-  json.object(
-    list.flatten([
-      case props.stocks {
-        Some(stocks) -> [#("stocks", json.array(stocks, encode_stock))]
-        _ -> []
-      },
-      [#("info_message", json.string(props.info_message))],
-    ]),
-  )
+  json.object([
+    #("stocks", json.array(props.stocks, encode_stock)),
+    #("info_message", json.string(props.info_message)),
+  ])
 }
 
 import gleam/float

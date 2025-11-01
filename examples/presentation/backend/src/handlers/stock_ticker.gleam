@@ -6,7 +6,6 @@
 import gleam/dict
 import gleam/json
 import gleam/list
-import gleam/option.{None, Some}
 import inertia_wisp/inertia
 import shared/stock
 import wisp.{type Request, type Response}
@@ -15,15 +14,10 @@ import wisp.{type Request, type Response}
 pub fn encode_props(
   props: stock.StockTickerProps,
 ) -> dict.Dict(String, json.Json) {
-  dict.from_list(
-    list.flatten([
-      case props.stocks {
-        Some(stocks) -> [#("stocks", json.array(stocks, stock.encode_stock))]
-        _ -> []
-      },
-      [#("info_message", json.string(props.info_message))],
-    ]),
-  )
+  dict.from_list([
+    #("stocks", json.array(props.stocks, stock.encode_stock)),
+    #("info_message", json.string(props.info_message)),
+  ])
 }
 
 /// Stock definitions with base prices
@@ -48,7 +42,6 @@ pub fn show_stock_ticker(req: Request) -> Response {
       let #(symbol, name, base_price) = def
       stock.generate_stock(symbol, name, base_price, timestamp)
     })
-    |> Some
 
   let props =
     stock.StockTickerProps(

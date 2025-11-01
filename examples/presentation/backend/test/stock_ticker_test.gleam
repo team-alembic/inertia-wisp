@@ -5,7 +5,6 @@
 import gleam/dict
 import gleam/json
 import gleam/list
-import gleam/option.{None, Some}
 import gleeunit
 import handlers/stock_ticker
 import shared/stock
@@ -16,7 +15,7 @@ pub fn main() {
 
 // StockTickerProps round-trip tests
 
-pub fn stock_ticker_props_with_stocks_round_trip_test() {
+pub fn stock_ticker_props_round_trip_test() {
   let stocks = [
     stock.Stock(
       symbol: "AAPL",
@@ -37,7 +36,7 @@ pub fn stock_ticker_props_with_stocks_round_trip_test() {
   ]
 
   let original =
-    stock.StockTickerProps(stocks: Some(stocks), info_message: "Test message")
+    stock.StockTickerProps(stocks: stocks, info_message: "Test message")
 
   // Encode to JSON dict, then to string
   let json_dict = stock_ticker.encode_props(original)
@@ -52,11 +51,10 @@ pub fn stock_ticker_props_with_stocks_round_trip_test() {
   assert decoded.info_message == original.info_message
 
   // Verify stocks list
-  let assert Some(decoded_stocks) = decoded.stocks
-  assert list.length(decoded_stocks) == 2
+  assert list.length(decoded.stocks) == 2
 
   // Verify first stock
-  let assert [first, second] = decoded_stocks
+  let assert [first, second] = decoded.stocks
   assert first.symbol == "AAPL"
   assert first.name == "Apple Inc."
   assert first.price == 150.25
@@ -65,25 +63,4 @@ pub fn stock_ticker_props_with_stocks_round_trip_test() {
   assert second.symbol == "GOOGL"
   assert second.name == "Alphabet Inc."
   assert second.price == 2800.75
-}
-
-pub fn stock_ticker_props_without_stocks_round_trip_test() {
-  let original =
-    stock.StockTickerProps(stocks: None, info_message: "Loading...")
-
-  // Encode to JSON dict, then to string
-  let json_dict = stock_ticker.encode_props(original)
-  let json_obj = json.object(dict.to_list(json_dict))
-  let json_string = json.to_string(json_obj)
-
-  // Parse JSON string back and decode
-  let assert Ok(decoded) =
-    json.parse(json_string, stock.decode_stock_ticker_props())
-
-  echo decoded
-  // Verify info_message
-  assert decoded.info_message == original.info_message
-
-  // Verify stocks is None
-  assert decoded.stocks == None
 }
