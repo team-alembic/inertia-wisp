@@ -2,94 +2,119 @@
 
 import gleam/dict
 import gleam/json
-
-import inertia_wisp/internal/html
-import inertia_wisp/internal/middleware
-import inertia_wisp/internal/types.{type Page}
-import inertia_wisp/prop.{type Prop}
-import inertia_wisp/response_builder
+import gleam/option.{type Option}
+import inertia_wisp/prop_behavior
+import inertia_wisp/response_builder_v2
 import wisp.{type Request, type Response}
 
-// Re-export Response Builder API
-pub type InertiaResponseBuilder =
-  response_builder.InertiaResponseBuilder
+// Re-export v2 Response Builder types
+pub type InertiaResponseBuilder(props) =
+  response_builder_v2.InertiaResponseBuilder(props)
 
-pub fn render(req: Request, page: Page(prop)) -> Response {
-  case middleware.is_inertia_request(req) {
-    True -> render_json_response(page)
-    False -> render_html_response(page)
-  }
-}
+pub type MergeOptions =
+  prop_behavior.MergeOptions
 
-fn render_json_response(page: Page(prop)) -> Response {
-  let json_body = types.encode_page(page) |> json.to_string()
-
-  json_body
-  |> wisp.json_response(200)
-  |> middleware.add_inertia_headers()
-}
-
-fn render_html_response(page: Page(prop)) -> Response {
-  let html_body = html.root_template(page, page.component)
-  wisp.html_response(html_body, 200)
-}
-
-pub fn external_redirect(url: String) -> Response {
-  wisp.response(409)
-  |> wisp.set_header("x-inertia-location", url)
-}
-
-// Response Builder API re-exports
+// Response Builder API - delegates to v2
 pub fn response_builder(
   req: Request,
   component: String,
-) -> InertiaResponseBuilder {
-  response_builder.response_builder(req, component)
+) -> InertiaResponseBuilder(Nil) {
+  response_builder_v2.response_builder(req, component)
 }
 
 pub fn props(
-  builder: InertiaResponseBuilder,
-  props: List(Prop(p)),
-  encode_prop: fn(p) -> json.Json,
-) -> InertiaResponseBuilder {
-  response_builder.props(builder, props, encode_prop)
+  builder: InertiaResponseBuilder(_),
+  props: props,
+  encode: fn(props) -> dict.Dict(String, json.Json),
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.props(builder, props, encode)
+}
+
+pub fn lazy(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  resolver: fn(props) -> Result(props, dict.Dict(String, String)),
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.lazy(builder, field_name, resolver)
+}
+
+pub fn optional(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.optional(builder, field_name)
+}
+
+pub fn always(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.always(builder, field_name)
+}
+
+pub fn defer(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  resolver: fn(props) -> Result(props, dict.Dict(String, String)),
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.defer(builder, field_name, resolver)
+}
+
+pub fn defer_in_group(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  group: String,
+  resolver: fn(props) -> Result(props, dict.Dict(String, String)),
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.defer_in_group(builder, field_name, group, resolver)
+}
+
+pub fn merge(
+  builder: InertiaResponseBuilder(props),
+  field_name: String,
+  match_on: Option(List(String)),
+  deep: Bool,
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.merge(builder, field_name, match_on, deep)
 }
 
 pub fn errors(
-  builder: InertiaResponseBuilder,
+  builder: InertiaResponseBuilder(props),
   errors: dict.Dict(String, String),
-) -> InertiaResponseBuilder {
-  response_builder.errors(builder, errors)
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.errors(builder, errors)
 }
 
-pub fn redirect(builder: InertiaResponseBuilder, url: String) -> Response {
-  response_builder.redirect(builder, url)
+pub fn redirect(builder: InertiaResponseBuilder(props), url: String) -> Response {
+  response_builder_v2.redirect(builder, url)
 }
 
 pub fn on_error(
-  builder: InertiaResponseBuilder,
+  builder: InertiaResponseBuilder(props),
   error_component: String,
-) -> InertiaResponseBuilder {
-  response_builder.on_error(builder, error_component)
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.on_error(builder, error_component)
 }
 
-pub fn clear_history(builder: InertiaResponseBuilder) -> InertiaResponseBuilder {
-  response_builder.clear_history(builder)
+pub fn clear_history(
+  builder: InertiaResponseBuilder(props),
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.clear_history(builder)
 }
 
 pub fn encrypt_history(
-  builder: InertiaResponseBuilder,
-) -> InertiaResponseBuilder {
-  response_builder.encrypt_history(builder)
+  builder: InertiaResponseBuilder(props),
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.encrypt_history(builder)
 }
 
 pub fn version(
-  builder: InertiaResponseBuilder,
+  builder: InertiaResponseBuilder(props),
   version: String,
-) -> InertiaResponseBuilder {
-  response_builder.version(builder, version)
+) -> InertiaResponseBuilder(props) {
+  response_builder_v2.version(builder, version)
 }
 
-pub fn response(builder: InertiaResponseBuilder, status: Int) -> Response {
-  response_builder.response(builder, status)
+pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response {
+  response_builder_v2.response(builder, status)
 }

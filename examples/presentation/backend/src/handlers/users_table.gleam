@@ -7,8 +7,8 @@ import gleam/int
 import gleam/list
 import gleam/option
 import gleam/result
+import inertia_wisp/inertia
 import inertia_wisp/query_params
-import inertia_wisp/response_builder_v2
 import props/users_table_props.{UsersTableProps, UsersTableQueryParams}
 import schemas/user.{type User, User}
 import wisp.{type Request, type Response}
@@ -40,9 +40,9 @@ pub fn show_users_table(req: Request) -> Response {
     )
 
   req
-  |> response_builder_v2.response_builder("UsersTable")
-  |> response_builder_v2.props(props, users_table_props.encode)
-  |> response_builder_v2.defer("demo_info", fn(props) {
+  |> inertia.response_builder("UsersTable")
+  |> inertia.props(props, users_table_props.encode)
+  |> inertia.defer("demo_info", fn(props) {
     // Artificial delay to demonstrate deferred loading
     process.sleep(2000)
     Ok(
@@ -52,7 +52,7 @@ pub fn show_users_table(req: Request) -> Response {
       ),
     )
   })
-  |> response_builder_v2.response(200)
+  |> inertia.response(200)
 }
 
 /// Generate sample users for demonstration

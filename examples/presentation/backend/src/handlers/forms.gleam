@@ -6,7 +6,7 @@
 import gleam/dict.{type Dict}
 import gleam/result
 import gleam/string
-import inertia_wisp/response_builder_v2
+import inertia_wisp/inertia
 import props/contact_form_props.{ContactFormProps}
 import schemas/contact_form.{type ContactFormData, ContactFormData}
 import shared/forms.{validate_name}
@@ -17,9 +17,9 @@ pub fn show_contact_form(req: Request) -> Response {
   let props = ContactFormProps(name: "", email: "", message: "")
 
   req
-  |> response_builder_v2.response_builder("ContactForm")
-  |> response_builder_v2.props(props, contact_form_props.encode)
-  |> response_builder_v2.response(200)
+  |> inertia.response_builder("ContactForm")
+  |> inertia.props(props, contact_form_props.encode)
+  |> inertia.response(200)
 }
 
 /// Handle contact form submission with validation
@@ -40,9 +40,9 @@ pub fn submit_contact_form(req: Request) -> Response {
     }
     Error(errors) -> {
       req
-      |> response_builder_v2.response_builder("ContactForm")
-      |> response_builder_v2.errors(errors)
-      |> response_builder_v2.redirect("/forms/contact")
+      |> inertia.response_builder("ContactForm")
+      |> inertia.errors(errors)
+      |> inertia.redirect("/forms/contact")
     }
   }
 }

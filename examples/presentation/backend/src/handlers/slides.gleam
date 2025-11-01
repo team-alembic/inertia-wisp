@@ -5,8 +5,8 @@
 
 import gleam/int
 import gleam/result
+import inertia_wisp/inertia
 import inertia_wisp/query_params
-import inertia_wisp/response_builder_v2
 import props/slide_props.{SlideProps, SlideQueryParams}
 import schemas/slide
 import schemas/slide_navigation
@@ -76,10 +76,10 @@ pub fn view_slide(req: Request, slide_num_str: String) -> Response {
     )
 
   req
-  |> response_builder_v2.response_builder("Slide")
-  |> response_builder_v2.props(props, slide_props.encode)
-  |> response_builder_v2.always("presentation_title")
-  |> response_builder_v2.response(200)
+  |> inertia.response_builder("Slide")
+  |> inertia.props(props, slide_props.encode)
+  |> inertia.always("presentation_title")
+  |> inertia.response(200)
 }
 
 /// Handle requests to the presentation home (redirect to first slide)
