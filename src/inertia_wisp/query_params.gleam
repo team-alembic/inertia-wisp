@@ -13,7 +13,7 @@ import gleam/string
 import gleam/uri
 import inertia_wisp/schema.{
   type FieldType, type RecordSchema, BoolType, FloatType, IntType, StringType,
-  unsafe_cast,
+  to_dynamic,
 }
 import wisp.{type Request}
 
@@ -34,10 +34,11 @@ fn setelement(index: Int, record: a, value: dynamic.Dynamic) -> a
 /// }
 ///
 /// pub fn query_params_schema() -> RecordSchema {
-///   schema.record_schema("QueryParams", QueryParams(page: 1, per_page: 10))
+///   schema.record_schema("QueryParams")
 ///   |> schema.int_field("page")
 ///   |> schema.int_field("per_page")
 ///   |> schema.schema()
+///   |> schema.decode_into(QueryParams(page: 1, per_page: 10))
 /// }
 ///
 /// pub fn handler(req: Request) -> Response {
@@ -64,6 +65,34 @@ pub fn decode_from_request(
   decode_from_dict(schema, query_dict)
 }
 
+/// Decode query parameters from a request, using the schema's default value on error
+///
+/// This is a convenience function that decodes query parameters and falls back to
+/// the schema's default value if decoding fails. The schema must have a default value
+/// (set via `decode_into`), otherwise this will panic.
+///
+/// ## Example
+///
+/// ```gleam
+/// pub fn handler(req: Request) -> Response {
+///   let QueryParams(page:, per_page:) =
+///     query_params.decode_or_default(query_params_schema(), req)
+///
+///   // page and per_page will use defaults if not in query string
+/// }
+/// ```
+pub fn decode_or_default(schema: RecordSchema(t), req: Request) -> t {
+  case decode_from_request(schema, req) {
+    Ok(params) -> params
+    Error(_) ->
+      case schema.default {
+        Some(default) -> default
+        None ->
+          panic as "decode_or_default requires a schema with a default value"
+      }
+  }
+}
+
 /// Decode query parameters from a dictionary
 ///
 /// Useful for testing or when you already have a parsed query dict.
@@ -71,35 +100,46 @@ pub fn decode_from_dict(
   schema: RecordSchema(t),
   query_dict: Dict(String, String),
 ) -> Result(t, String) {
-  // Start with default value from schema
-  let result = schema.default
+  // Check if we have a default value for decoding
+  case schema.default {
+    None ->
+      Error(
+        "Cannot decode query params for schema '"
+        <> schema.name
+        <> "' - no default value provided. Query param schemas require a default value.",
+      )
+    Some(default_value) -> {
+      // Start with default value from schema
+      let result = default_value
 
-  // For each field in the schema, try to decode from query params
-  schema.fields
-  |> dict.to_list()
-  |> list.try_fold(result, fn(acc, entry) {
-    let #(field_name, field) = entry
+      // For each field in the schema, try to decode from query params
+      schema.fields
+      |> dict.to_list()
+      |> list.try_fold(result, fn(acc, entry) {
+        let #(field_name, field) = entry
 
-    // Get the query param value as a string
-    case dict.get(query_dict, field_name) {
-      Ok(value_str) -> {
-        // Decode the string value to the expected type
-        use decoded_value <- result.try(decode_field_from_string(
-          field.field_type,
-          field_name,
-          value_str,
-        ))
+        // Get the query param value as a string
+        case dict.get(query_dict, field_name) {
+          Ok(value_str) -> {
+            // Decode the string value to the expected type
+            use decoded_value <- result.try(decode_field_from_string(
+              field.field_type,
+              field_name,
+              value_str,
+            ))
 
-        // Set the field value using the field index
-        Ok(setelement(field.index, unsafe_cast(acc), decoded_value))
-      }
+            // Set the field value using the field index
+            Ok(setelement(field.index, acc, decoded_value))
+          }
 
-      Error(_) -> {
-        // Field not in query params - keep default value
-        Ok(acc)
-      }
+          Error(_) -> {
+            // Field not in query params - keep default value
+            Ok(acc)
+          }
+        }
+      })
     }
-  })
+  }
 }
 
 /// Decode a field value from a string based on its type
@@ -109,28 +149,33 @@ fn decode_field_from_string(
   value: String,
 ) -> Result(dynamic.Dynamic, String) {
   case field_type {
-    StringType -> Ok(unsafe_cast(value))
+    StringType -> Ok(dynamic.string(value))
 
     IntType ->
       int.parse(value)
-      |> result.map(unsafe_cast)
+      |> result.map(dynamic.int)
       |> result.replace_error(
         "Field '" <> field_name <> "': expected integer, got '" <> value <> "'",
       )
 
     FloatType ->
       float.parse(value)
-      |> result.map(unsafe_cast)
+      |> result.map(dynamic.float)
       |> result.replace_error(
         "Field '" <> field_name <> "': expected float, got '" <> value <> "'",
       )
 
     BoolType ->
       parse_bool(value)
-      |> result.map(unsafe_cast)
+      |> result.map(dynamic.bool)
       |> result.replace_error(
         "Field '" <> field_name <> "': expected boolean, got '" <> value <> "'",
       )
+
+    schema.OptionalType(inner) ->
+      // Decode the inner type and wrap in Some
+      decode_field_from_string(inner, field_name, value)
+      |> result.map(fn(decoded) { to_dynamic(option.Some(decoded)) })
 
     schema.ListType(_) ->
       Error(
