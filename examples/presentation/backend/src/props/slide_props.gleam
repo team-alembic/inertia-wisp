@@ -10,6 +10,18 @@ import inertia_wisp/schema
 import schemas/slide.{type Slide}
 import schemas/slide_navigation.{type SlideNavigation}
 
+/// Query parameter types for Slide pages
+pub type SlideQueryParams {
+  SlideQueryParams(step: Int)
+}
+
+/// Schema for Slide query parameters
+pub fn slide_query_params_schema() -> schema.RecordSchema(_) {
+  schema.record_schema("SlideQueryParams", SlideQueryParams(step: 1))
+  |> schema.int_field("step")
+  |> schema.schema()
+}
+
 /// Prop types for slide pages
 pub type SlideProp {
   SlideContent(Slide)

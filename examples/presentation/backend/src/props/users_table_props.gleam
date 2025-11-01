@@ -68,7 +68,7 @@ pub fn demo_info(
 pub fn users_table_prop_to_json(prop: UsersTableProp) -> json.Json {
   case prop {
     UsersProp(users) -> {
-      json.array(users, fn(user) { schema.to_json(user.user_schema(), user) })
+      json.array(users, schema.to_json(user.user_schema(), _))
     }
     PageProp(page_num) -> json.int(page_num)
     TotalPagesProp(total) -> json.int(total)
