@@ -14,10 +14,7 @@ pub type Slide {
 
 /// Schema for Slide type
 pub fn slide_schema() -> schema.RecordSchema(_) {
-  schema.record_schema(
-    "Slide",
-    Slide(number: 0, title: "", content: [], notes: "", max_steps: 1),
-  )
+  schema.record_schema("Slide")
   |> schema.int_field("number")
   |> schema.string_field("title")
   |> schema.list_field(

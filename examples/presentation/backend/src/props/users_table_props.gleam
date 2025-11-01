@@ -3,7 +3,6 @@
 import gleam/dict
 import gleam/json
 import gleam/option.{type Option}
-import inertia_wisp/page_schema
 import inertia_wisp/schema
 import schemas/user.{type User}
 
@@ -14,7 +13,8 @@ pub type UsersTableQueryParams {
 
 /// Schema for UsersTable query parameters
 pub fn users_table_query_params_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("UsersTableQueryParams", UsersTableQueryParams(page: 1))
+  schema.record_schema("UsersTableQueryParams")
+  |> schema.decode_into(UsersTableQueryParams(page: 1))
   |> schema.int_field("page")
   |> schema.schema()
 }
@@ -29,31 +29,17 @@ pub type UsersTableProps {
   )
 }
 
-/// Page schema for UsersTable page
-pub fn users_table_page_schema() -> page_schema.PageSchema {
-  page_schema.page_schema("UsersTable")
-  |> page_schema.prop(
-    "users",
-    schema.ListType(schema.RecordType(user.user_schema)),
-  )
-  |> page_schema.prop("page", schema.IntType)
-  |> page_schema.prop("total_pages", schema.IntType)
-  |> page_schema.deferred_prop("demo_info", schema.StringType)
-  |> page_schema.build()
+/// Record schema for UsersTable props
+pub fn users_table_props_schema() -> schema.RecordSchema(UsersTableProps) {
+  schema.record_schema("UsersTablePageProps")
+  |> schema.list_field("users", schema.RecordType(user.user_schema))
+  |> schema.int_field("page")
+  |> schema.int_field("total_pages")
+  |> schema.field("demo_info", schema.OptionalType(schema.StringType))
+  |> schema.schema()
 }
 
 /// Encoder for UsersTableProps (v2 API)
 pub fn encode(props: UsersTableProps) -> dict.Dict(String, json.Json) {
-  let base = [
-    #("users", json.array(props.users, schema.to_json(user.user_schema(), _))),
-    #("page", json.int(props.page)),
-    #("total_pages", json.int(props.total_pages)),
-  ]
-
-  // Add demo_info only if it's Some
-  case props.demo_info {
-    option.Some(info) ->
-      dict.from_list([#("demo_info", json.string(info)), ..base])
-    option.None -> dict.from_list(base)
-  }
+  schema.to_json_dict(users_table_props_schema(), props)
 }

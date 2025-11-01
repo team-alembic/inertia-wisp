@@ -42,28 +42,25 @@ fn content_block_tagger(block: ContentBlock) -> String {
 
 /// Helper schemas for each ContentBlock variant case
 fn heading_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Heading", Heading(text: ""))
+  schema.record_schema("Heading")
   |> schema.string_field("text")
   |> schema.schema()
 }
 
 fn subheading_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Subheading", Subheading(text: ""))
+  schema.record_schema("Subheading")
   |> schema.string_field("text")
   |> schema.schema()
 }
 
 fn paragraph_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Paragraph", Paragraph(text: ""))
+  schema.record_schema("Paragraph")
   |> schema.string_field("text")
   |> schema.schema()
 }
 
 fn code_block_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema(
-    "CodeBlock",
-    CodeBlock(code: "", language: "", highlight_lines: []),
-  )
+  schema.record_schema("CodeBlock")
   |> schema.string_field("code")
   |> schema.string_field("language")
   |> schema.list_field("highlight_lines", schema.IntType)
@@ -71,26 +68,26 @@ fn code_block_record_schema() -> schema.RecordSchema(_) {
 }
 
 fn bullet_list_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("BulletList", BulletList(items: []))
+  schema.record_schema("BulletList")
   |> schema.list_field("items", schema.StringType)
   |> schema.schema()
 }
 
 fn numbered_list_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("NumberedList", NumberedList(items: []))
+  schema.record_schema("NumberedList")
   |> schema.list_field("items", schema.StringType)
   |> schema.schema()
 }
 
 fn quote_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Quote", Quote(text: "", author: ""))
+  schema.record_schema("Quote")
   |> schema.string_field("text")
   |> schema.string_field("author")
   |> schema.schema()
 }
 
 fn image_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Image", Image(url: "", alt: "", width: 0))
+  schema.record_schema("Image")
   |> schema.string_field("url")
   |> schema.string_field("alt")
   |> schema.int_field("width")
@@ -98,7 +95,7 @@ fn image_record_schema() -> schema.RecordSchema(_) {
 }
 
 fn image_row_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("ImageRow", ImageRow(images: []))
+  schema.record_schema("ImageRow")
   |> schema.list_field(
     "images",
     schema.RecordType(image_data.image_data_schema),
@@ -107,21 +104,21 @@ fn image_row_record_schema() -> schema.RecordSchema(_) {
 }
 
 fn columns_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Columns", Columns(left: [], right: []))
+  schema.record_schema("Columns")
   |> schema.list_field("left", schema.VariantType(content_block_schema))
   |> schema.list_field("right", schema.VariantType(content_block_schema))
   |> schema.schema()
 }
 
 fn link_button_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("LinkButton", LinkButton(text: "", href: ""))
+  schema.record_schema("LinkButton")
   |> schema.string_field("text")
   |> schema.string_field("href")
   |> schema.schema()
 }
 
 fn spacer_record_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("Spacer", Spacer)
+  schema.record_schema("Spacer")
   |> schema.schema()
 }
 

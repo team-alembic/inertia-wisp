@@ -12,7 +12,7 @@ pub type User {
 
 /// Schema for User type
 pub fn user_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("User", User(id: 0, name: "", email: ""))
+  schema.record_schema("User")
   |> schema.int_field("id")
   |> schema.string_field("name")
   |> schema.string_field("email")

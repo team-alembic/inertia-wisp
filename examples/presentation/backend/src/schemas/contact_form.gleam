@@ -13,10 +13,8 @@ pub type ContactFormData {
 
 /// Schema for ContactFormData type
 pub fn contact_form_data_schema() -> schema.RecordSchema(ContactFormData) {
-  schema.record_schema(
-    "ContactFormData",
-    ContactFormData(name: "", email: "", message: ""),
-  )
+  schema.record_schema("ContactFormData")
+  |> schema.decode_into(ContactFormData(name: "", email: "", message: ""))
   |> schema.string_field("name")
   |> schema.string_field("email")
   |> schema.string_field("message")

@@ -4,7 +4,6 @@
 
 import gleam/io
 import gleam/string
-import inertia_wisp/page_schema
 import inertia_wisp/schema
 import props/contact_form_props
 import props/slide_props
@@ -35,11 +34,15 @@ pub fn main() {
     <> "\n\n"
     <> schema.to_zod_schema(slide.slide_schema())
     <> "\n\n"
-    <> page_schema.to_zod_schema(slide_props.slide_page_schema())
+    <> schema.to_page_props_zod_schema(slide_props.slide_props_schema())
     <> "\n\n"
-    <> page_schema.to_zod_schema(contact_form_props.contact_form_page_schema())
+    <> schema.to_page_props_zod_schema(
+      contact_form_props.contact_form_props_schema(),
+    )
     <> "\n\n"
-    <> page_schema.to_zod_schema(users_table_props.users_table_page_schema())
+    <> schema.to_page_props_zod_schema(
+      users_table_props.users_table_props_schema(),
+    )
     <> "\n\n"
     <> schema.to_zod_schema(users_table_props.users_table_query_params_schema())
     <> "\n"

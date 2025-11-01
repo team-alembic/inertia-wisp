@@ -38,17 +38,7 @@ pub fn navigation(current: Int, total: Int) -> SlideNavigation {
 
 /// Schema for SlideNavigation type
 pub fn slide_navigation_schema() -> schema.RecordSchema(_) {
-  schema.record_schema(
-    "SlideNavigation",
-    SlideNavigation(
-      current: 0,
-      total: 0,
-      has_previous: False,
-      has_next: False,
-      previous_url: "",
-      next_url: "",
-    ),
-  )
+  schema.record_schema("SlideNavigation")
   |> schema.int_field("current")
   |> schema.int_field("total")
   |> schema.bool_field("has_previous")

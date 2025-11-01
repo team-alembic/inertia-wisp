@@ -4,7 +4,6 @@
 //// navigation information.
 
 import gleam/int
-import gleam/result
 import inertia_wisp/inertia
 import inertia_wisp/query_params
 import props/slide_props.{SlideProps, SlideQueryParams}
@@ -49,11 +48,10 @@ fn parse_slide_params(
     Ok(slide_num) if slide_num >= 1 && slide_num <= total_slides -> {
       // Decode step from query parameters using schema
       let SlideQueryParams(step:) =
-        query_params.decode_from_request(
+        query_params.decode_or_default(
           slide_props.slide_query_params_schema(),
           req,
         )
-        |> result.unwrap(SlideQueryParams(step: 1))
 
       next(slide_num, step)
     }

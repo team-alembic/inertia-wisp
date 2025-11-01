@@ -5,7 +5,6 @@
 
 import gleam/dict
 import gleam/json
-import inertia_wisp/page_schema
 import inertia_wisp/schema
 import schemas/slide.{type Slide}
 import schemas/slide_navigation.{type SlideNavigation}
@@ -17,7 +16,8 @@ pub type SlideQueryParams {
 
 /// Schema for Slide query parameters
 pub fn slide_query_params_schema() -> schema.RecordSchema(_) {
-  schema.record_schema("SlideQueryParams", SlideQueryParams(step: 1))
+  schema.record_schema("SlideQueryParams")
+  |> schema.decode_into(SlideQueryParams(step: 1))
   |> schema.int_field("step")
   |> schema.schema()
 }
@@ -31,23 +31,16 @@ pub type SlideProps {
   )
 }
 
-/// Page schema for Slide pages
-pub fn slide_page_schema() -> page_schema.PageSchema {
-  page_schema.page_schema("Slide")
-  |> page_schema.prop("slide", schema.RecordType(slide.slide_schema))
-  |> page_schema.prop(
-    "navigation",
-    schema.RecordType(slide_navigation.slide_navigation_schema),
-  )
-  |> page_schema.prop("presentation_title", schema.StringType)
-  |> page_schema.build()
+/// Record schema for Slide props
+pub fn slide_props_schema() -> schema.RecordSchema(SlideProps) {
+  schema.record_schema("SlidePageProps")
+  |> schema.record_field("slide", slide.slide_schema)
+  |> schema.record_field("navigation", slide_navigation.slide_navigation_schema)
+  |> schema.string_field("presentation_title")
+  |> schema.schema()
 }
 
 /// Encoder for SlideProps (v2 API)
 pub fn encode(props: SlideProps) -> dict.Dict(String, json.Json) {
-  dict.from_list([
-    #("slide", slide.to_json(props.slide)),
-    #("navigation", slide_navigation.to_json(props.navigation)),
-    #("presentation_title", json.string(props.presentation_title)),
-  ])
+  schema.to_json_dict(slide_props_schema(), props)
 }

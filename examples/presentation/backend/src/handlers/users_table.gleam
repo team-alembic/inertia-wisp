@@ -6,7 +6,6 @@ import gleam/erlang/process
 import gleam/int
 import gleam/list
 import gleam/option
-import gleam/result
 import inertia_wisp/inertia
 import inertia_wisp/query_params
 import props/users_table_props.{UsersTableProps, UsersTableQueryParams}
@@ -17,11 +16,10 @@ import wisp.{type Request, type Response}
 pub fn show_users_table(req: Request) -> Response {
   // Decode query parameters using schema
   let UsersTableQueryParams(page:) =
-    query_params.decode_from_request(
+    query_params.decode_or_default(
       users_table_props.users_table_query_params_schema(),
       req,
     )
-    |> result.unwrap(UsersTableQueryParams(page: 1))
 
   let per_page = 10
   let total_pages = { 100 + per_page - 1 } / per_page
