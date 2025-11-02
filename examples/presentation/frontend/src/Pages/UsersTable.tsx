@@ -46,7 +46,7 @@ function UsersTable({
           onPrevious={handlePrevious}
           onNext={handleNext}
         />
-        <BackToPresentation />
+        <BackToPresentation slideNumber={19} />
       </div>
     </div>
   );

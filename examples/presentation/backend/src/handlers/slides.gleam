@@ -29,13 +29,14 @@ import slides/stock_ticker_demo
 import slides/title
 import slides/tradeoffs_abstractions
 import slides/tradeoffs_dsls
+import slides/travel_booking_demo
 import slides/type_safe_integration
 import slides/typescript_zod_schema
 import slides/why_now
 import wisp.{type Request, type Response}
 
 /// Total number of slides in the presentation
-const total_slides = 23
+const total_slides = 24
 
 /// Parse slide number and step from request parameters
 /// Step defaults to 1 if not provided or invalid
@@ -106,16 +107,17 @@ fn get_slide(number: Int, step: Int) -> slide.Slide {
     11 -> generated_typescript.slide(step)
     12 -> typescript_zod_schema.slide(step)
     13 -> property_based_tests.slide(step)
-    14 -> stock_ticker_demo.slide()
-    15 -> react_component.slide(step)
-    16 -> forms_validation.slide()
-    17 -> form_success.slide()
-    18 -> pagination.slide()
-    19 -> one_handler_four_cases.slide()
-    20 -> gleam_simplicity.slide()
-    21 -> why_now.slide()
-    22 -> tradeoffs_dsls.slide()
-    23 -> tradeoffs_abstractions.slide()
+    14 -> travel_booking_demo.slide()
+    15 -> stock_ticker_demo.slide()
+    16 -> react_component.slide(step)
+    17 -> forms_validation.slide()
+    18 -> form_success.slide()
+    19 -> pagination.slide()
+    20 -> one_handler_four_cases.slide()
+    21 -> gleam_simplicity.slide()
+    22 -> why_now.slide()
+    23 -> tradeoffs_dsls.slide()
+    24 -> tradeoffs_abstractions.slide()
     _ -> panic as "Invalid slide number - should be caught by validation"
   }
 

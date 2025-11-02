@@ -9,6 +9,7 @@ import gleam/http
 import handlers/forms
 import handlers/slides
 import handlers/stock_ticker
+import handlers/travel
 import handlers/users_table
 import mist
 import wisp
@@ -55,6 +56,10 @@ fn route_request(req: wisp.Request) -> wisp.Response {
     ["forms", "contact"], http.Post -> forms.submit_contact_form(req)
     ["users", "table"], http.Get -> users_table.show_users_table(req)
     ["stocks", "ticker"], http.Get -> stock_ticker.show_stock_ticker(req)
+    ["travel", "booking"], http.Get -> travel.show_travel_booking(req)
+    ["travel", "booking"], http.Post -> travel.submit_booking(req)
+    ["travel", "booking", ref], http.Get ->
+      travel.show_booking_results(req, ref)
     _, _ -> wisp.not_found()
   }
 }

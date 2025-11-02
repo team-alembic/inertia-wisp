@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { usePoll } from "@inertiajs/react";
 import {
-  decode_stock_ticker_props,
-  type StockTickerProps$,
-  Stock$Stock$symbol as getSymbol,
-  Stock$Stock$name as getName,
-  Stock$Stock$price as getPrice,
-  Stock$Stock$change as getChange,
-  Stock$Stock$percent_change as getPercentChange,
-  Stock$Stock$last_update as getLastUpdate,
-  StockTickerProps$StockTickerProps$stocks as getStocks,
-  StockTickerProps$StockTickerProps$info_message as getInfoMessage,
-  Stock$,
-} from "@shared/stock.mjs";
+  type StockTickerProps,
+  type Stock,
+  decodeStockTickerProps,
+  getStocks,
+  getInfoMessage,
+  getSymbol,
+  getName,
+  getPrice,
+  getChange,
+  getPercentChange,
+  getLastUpdate,
+} from "../lib/stock";
 import { PageHeader, BackToPresentation } from "../components";
 import { decodeProps } from "../lib/decodeProps";
 
@@ -22,11 +22,11 @@ type PricePoint = {
 };
 
 type StockWithHistory = {
-  stock: Stock$;
+  stock: Stock;
   price_history: PricePoint[];
 };
 
-function StockTicker(props: StockTickerProps$) {
+function StockTicker(props: StockTickerProps) {
   // Use Inertia's polling hook - polls every 2 seconds
   // Only fetch stocks, not the info_message which doesn't change
   usePoll(1000, { only: ["stocks"] });
@@ -128,7 +128,9 @@ function StockTicker(props: StockTickerProps$) {
           </ul>
         </div>
 
-        <BackToPresentation />
+        <div className="mt-8">
+          <BackToPresentation slideNumber={15} />
+        </div>
       </div>
     </div>
   );
@@ -236,4 +238,4 @@ function StockCard({ entry }: { entry: StockWithHistory }) {
 }
 
 // Use the Gleam decoder directly instead of Zod!
-export default decodeProps(StockTicker, decode_stock_ticker_props());
+export default decodeProps(StockTicker, decodeStockTickerProps());
