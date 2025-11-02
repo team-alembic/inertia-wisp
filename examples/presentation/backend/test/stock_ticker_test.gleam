@@ -35,8 +35,17 @@ pub fn stock_ticker_props_round_trip_test() {
     ),
   ]
 
+  let price_points = [
+    stock.PricePoint(symbol: "AAPL", timestamp: 1_730_491_200, price: 150.25),
+    stock.PricePoint(symbol: "GOOGL", timestamp: 1_730_491_200, price: 2800.75),
+  ]
+
   let original =
-    stock.StockTickerProps(stocks: stocks, info_message: "Test message")
+    stock.StockTickerProps(
+      stocks: stocks,
+      price_points: price_points,
+      info_message: "Test message",
+    )
 
   // Encode to JSON dict, then to string
   let json_dict = stock_ticker.encode_props(original)

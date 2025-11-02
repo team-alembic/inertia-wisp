@@ -6,6 +6,7 @@
 import gleam/dict
 import gleam/json
 import gleam/list
+import gleam/option
 import inertia_wisp/inertia
 import shared/stock
 import wisp.{type Request, type Response}
@@ -16,6 +17,7 @@ pub fn encode_props(
 ) -> dict.Dict(String, json.Json) {
   dict.from_list([
     #("stocks", json.array(props.stocks, stock.encode_stock)),
+    #("price_points", json.array(props.price_points, stock.encode_price_point)),
     #("info_message", json.string(props.info_message)),
   ])
 }
@@ -36,21 +38,32 @@ pub fn show_stock_ticker(req: Request) -> Response {
   let timestamp = stock.current_timestamp()
 
   // Generate stock data with simulated price changes
-  // Frontend accumulates history from these snapshots!
   let stocks =
     list.map(stock_definitions, fn(def) {
       let #(symbol, name, base_price) = def
       stock.generate_stock(symbol, name, base_price, timestamp)
     })
 
+  // Generate price points (one per stock) - these will accumulate via merge
+  let price_points =
+    list.map(stocks, fn(s) {
+      stock.PricePoint(
+        symbol: s.symbol,
+        timestamp: s.last_update,
+        price: s.price,
+      )
+    })
+
   let props =
     stock.StockTickerProps(
       stocks: stocks,
-      info_message: "📊 React accumulates price history from polling updates! Watch the sparklines grow.",
+      price_points: price_points,
+      info_message: "📊 Inertia.js accumulates price_points via mergeProps! Watch the sparklines grow.",
     )
 
   req
   |> inertia.response_builder("StockTicker")
   |> inertia.props(props, encode_props)
+  |> inertia.merge("price_points", option.None, False)
   |> inertia.response(200)
 }

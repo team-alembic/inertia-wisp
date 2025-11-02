@@ -5,6 +5,7 @@ export { FormField } from "./FormField";
 export { PageHeader } from "./PageHeader";
 export { PaginationControls } from "./PaginationControls";
 export { SlideNavigation } from "./SlideNavigation";
+export { Sparkline } from "./Sparkline";
 export { SubmitButton } from "./SubmitButton";
 export { UsersDataTable } from "./UsersDataTable";
 export { ValidationRulesTip } from "./ValidationRulesTip";

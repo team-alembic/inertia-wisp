@@ -786,3 +786,170 @@ pub fn deferred_props_not_readvertised_on_partial_reload_test() {
   assert !string.contains(body, "deferredProps")
   assert !string.contains(body, "expensive_data")
 }
+
+// Props type with multiple deferred fields for group testing
+type MultiDeferredProps {
+  MultiDeferredProps(
+    page: String,
+    default_prop: option.Option(String),
+    quick_prop: option.Option(String),
+    slow_prop1: option.Option(String),
+    slow_prop2: option.Option(String),
+  )
+}
+
+fn encode_multi_deferred_props(
+  props: MultiDeferredProps,
+) -> dict.Dict(String, json.Json) {
+  let base = dict.from_list([#("page", json.string(props.page))])
+
+  let with_default = case props.default_prop {
+    option.Some(value) -> dict.insert(base, "default_prop", json.string(value))
+    option.None -> base
+  }
+
+  let with_quick = case props.quick_prop {
+    option.Some(value) ->
+      dict.insert(with_default, "quick_prop", json.string(value))
+    option.None -> with_default
+  }
+
+  let with_slow1 = case props.slow_prop1 {
+    option.Some(value) ->
+      dict.insert(with_quick, "slow_prop1", json.string(value))
+    option.None -> with_quick
+  }
+
+  case props.slow_prop2 {
+    option.Some(value) ->
+      dict.insert(with_slow1, "slow_prop2", json.string(value))
+    option.None -> with_slow1
+  }
+}
+
+// Test: Multiple deferred prop groups generate correct metadata
+pub fn multiple_deferred_prop_groups_test() {
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+
+  let initial_props =
+    MultiDeferredProps(
+      page: "Dashboard",
+      default_prop: option.None,
+      quick_prop: option.None,
+      slow_prop1: option.None,
+      slow_prop2: option.None,
+    )
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_multi_deferred_props)
+    // One prop in default group
+    |> response_builder.defer("default_prop", fn(props) {
+      Ok(
+        MultiDeferredProps(..props, default_prop: option.Some("default-value")),
+      )
+    })
+    // One prop in "quick" group
+    |> response_builder.defer_in_group("quick_prop", "quick", fn(props) {
+      Ok(MultiDeferredProps(..props, quick_prop: option.Some("quick-value")))
+    })
+    // Two props in "slow" group
+    |> response_builder.defer_in_group("slow_prop1", "slow", fn(props) {
+      Ok(MultiDeferredProps(..props, slow_prop1: option.Some("slow-value-1")))
+    })
+    |> response_builder.defer_in_group("slow_prop2", "slow", fn(props) {
+      Ok(MultiDeferredProps(..props, slow_prop2: option.Some("slow-value-2")))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Page should be included (not deferred)
+  assert body |> string.contains("Dashboard")
+
+  // None of the deferred values should be included
+  assert !string.contains(body, "default-value")
+  assert !string.contains(body, "quick-value")
+  assert !string.contains(body, "slow-value-1")
+  assert !string.contains(body, "slow-value-2")
+
+  // Response should contain deferredProps metadata
+  assert body |> string.contains("deferredProps")
+
+  // Should contain all three groups: "default", "quick", "slow"
+  assert body |> string.contains("\"default\"")
+  assert body |> string.contains("\"quick\"")
+  assert body |> string.contains("\"slow\"")
+
+  // Verify group memberships
+  // default_prop should be in "default" group
+  assert body |> string.contains("default_prop")
+
+  // quick_prop should be in "quick" group
+  assert body |> string.contains("quick_prop")
+
+  // Both slow props should be in "slow" group
+  assert body |> string.contains("slow_prop1")
+  assert body |> string.contains("slow_prop2")
+}
+
+// Test: Partial reload for deferred group does NOT re-advertise deferred props
+pub fn deferred_group_partial_reload_no_readvertise_test() {
+  // Simulate a request for the "slow" deferred group
+  let req =
+    simulate.request(http.Get, "/dashboard")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("x-inertia-partial-component", "Dashboard")
+    |> simulate.header("x-inertia-partial-data", "slow_prop1,slow_prop2")
+
+  let initial_props =
+    MultiDeferredProps(
+      page: "Dashboard",
+      default_prop: option.None,
+      quick_prop: option.None,
+      slow_prop1: option.None,
+      slow_prop2: option.None,
+    )
+
+  let response =
+    response_builder.response_builder(req, "Dashboard")
+    |> response_builder.props(initial_props, encode_multi_deferred_props)
+    |> response_builder.defer("default_prop", fn(props) {
+      Ok(
+        MultiDeferredProps(..props, default_prop: option.Some("default-value")),
+      )
+    })
+    |> response_builder.defer_in_group("quick_prop", "quick", fn(props) {
+      Ok(MultiDeferredProps(..props, quick_prop: option.Some("quick-value")))
+    })
+    |> response_builder.defer_in_group("slow_prop1", "slow", fn(props) {
+      Ok(MultiDeferredProps(..props, slow_prop1: option.Some("slow-value-1")))
+    })
+    |> response_builder.defer_in_group("slow_prop2", "slow", fn(props) {
+      Ok(MultiDeferredProps(..props, slow_prop2: option.Some("slow-value-2")))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // The "page" prop should NOT be included (not requested in partial reload)
+  // Note: Don't check for "Dashboard" as it appears as the component name in metadata
+  assert !string.contains(body, "\"page\"")
+
+  // The requested slow props SHOULD be evaluated and included
+  assert body |> string.contains("slow-value-1")
+  assert body |> string.contains("slow-value-2")
+
+  // Other deferred values should NOT be included
+  assert !string.contains(body, "default-value")
+  assert !string.contains(body, "quick-value")
+
+  // CRITICAL: deferredProps metadata should NOT be included
+  // When resolving a deferred group, we should NOT re-advertise deferred props
+  assert !string.contains(body, "deferredProps")
+  assert !string.contains(body, "\"default\"")
+  assert !string.contains(body, "\"quick\"")
+  assert !string.contains(body, "\"slow\"")
+}
