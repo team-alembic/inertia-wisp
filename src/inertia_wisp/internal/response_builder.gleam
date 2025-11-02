@@ -12,7 +12,7 @@ import gleam/option.{type Option}
 import gleam/result
 import gleam/string
 import inertia_wisp/internal/middleware
-import inertia_wisp/prop_behavior.{
+import inertia_wisp/internal/prop_behavior.{
   type MergeOptions, type PropBehavior, AlwaysBehavior, DeferBehavior,
   LazyBehavior, OptionalBehavior,
 }

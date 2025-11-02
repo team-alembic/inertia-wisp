@@ -7,7 +7,7 @@ import gleam/option
 import gleam/result
 import gleam/string
 import gleeunit
-import inertia_wisp/response_builder
+import inertia_wisp/internal/response_builder
 import wisp/simulate
 
 pub fn main() {

@@ -38,8 +38,8 @@
 import gleam/dict
 import gleam/json
 import gleam/option.{type Option}
-import inertia_wisp/prop_behavior
-import inertia_wisp/response_builder
+import inertia_wisp/internal/prop_behavior
+import inertia_wisp/internal/response_builder
 import wisp.{type Request, type Response}
 
 pub type InertiaResponseBuilder(props) =
