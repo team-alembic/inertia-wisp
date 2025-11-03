@@ -23,7 +23,7 @@ export function decodeProps<P extends object>(
         return <Component {...decodedProps} />;
       } else {
         // Decoding failed - show error
-        const errors = Result$Error$0(result); // Error value from Gleam Result
+        const errors = Array.from(Result$Error$0(result)!); // Error value from Gleam Result
         console.error("❌ Gleam decoder validation failed:", errors);
         return (
           <div className="min-h-screen bg-red-900 p-8">

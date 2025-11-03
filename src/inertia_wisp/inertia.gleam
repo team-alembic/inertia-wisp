@@ -196,8 +196,8 @@ pub fn defer_in_group(
 pub fn merge(
   builder: InertiaResponseBuilder(props),
   field_name: String,
-  match_on: Option(List(String)),
-  deep: Bool,
+  match_on match_on: Option(List(String)),
+  deep deep: Bool,
 ) -> InertiaResponseBuilder(props) {
   response_builder.merge(builder, field_name, match_on, deep)
 }

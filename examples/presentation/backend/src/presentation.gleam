@@ -9,6 +9,7 @@ import gleam/http
 import handlers/forms
 import handlers/slides
 import handlers/stock_ticker
+import handlers/todo_list
 import handlers/travel
 import handlers/users_table
 import mist
@@ -56,6 +57,9 @@ fn route_request(req: wisp.Request) -> wisp.Response {
     ["forms", "contact"], http.Post -> forms.submit_contact_form(req)
     ["users", "table"], http.Get -> users_table.show_users_table(req)
     ["stocks", "ticker"], http.Get -> stock_ticker.show_stock_ticker(req)
+    ["todo"], http.Get -> todo_list.show_todo_list(req)
+    ["todo", "add"], http.Post -> todo_list.add_todo(req)
+    ["todo", "toggle"], http.Post -> todo_list.toggle_todo(req)
     ["travel", "booking"], http.Get -> travel.show_travel_booking(req)
     ["travel", "booking"], http.Post -> travel.submit_booking(req)
     ["travel", "booking", ref], http.Get ->

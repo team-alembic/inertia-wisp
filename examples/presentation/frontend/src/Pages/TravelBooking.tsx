@@ -44,6 +44,15 @@ function TravelBooking(props: Travel.TravelBookingProps) {
     Travel.encodeBookingRequest,
   );
 
+  const handleSubmit = () => {
+    setCurrentStep(null); // Clear step to show results
+    post("/travel/booking");
+  };
+
+  const handleStartNewBooking = () => {
+    router.get("/travel/booking");
+  };
+
   const handleChangeDetails = () => {
     if (isSome(booking)) {
       const bookingData = unwrapSome(booking);
@@ -51,16 +60,6 @@ function TravelBooking(props: Travel.TravelBookingProps) {
       setData(bookingData);
       setCurrentStep(Step.DepartureDetails);
     }
-  };
-
-  const handleSubmit = () => {
-    setCurrentStep(null); // Clear step to show results
-    post("/travel/booking");
-  };
-
-  const handleStartNewBooking = () => {
-    // Navigate to clean URL, which will reset server-side state
-    router.get("/travel/booking");
   };
 
   const canProceed = (step: Step): boolean => {

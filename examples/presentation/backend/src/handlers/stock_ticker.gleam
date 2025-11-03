@@ -34,7 +34,6 @@ const stock_definitions = [
 
 /// Display the stock ticker page with live updating stock prices
 pub fn show_stock_ticker(req: Request) -> Response {
-  // Get current timestamp
   let timestamp = stock.current_timestamp()
 
   // Generate stock data with simulated price changes
@@ -64,6 +63,6 @@ pub fn show_stock_ticker(req: Request) -> Response {
   req
   |> inertia.response_builder("StockTicker")
   |> inertia.props(props, encode_props)
-  |> inertia.merge("price_points", option.None, False)
+  |> inertia.merge("price_points", match_on: option.None, deep: False)
   |> inertia.response(200)
 }

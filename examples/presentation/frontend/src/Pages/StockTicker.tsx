@@ -4,16 +4,11 @@ import { BackToPresentation, Sparkline } from "../components";
 import { decodeProps } from "../lib/decodeProps";
 
 function StockTicker(props: Stock.StockTickerProps) {
-  // Use Inertia's polling hook - only poll for price_points (they accumulate)
-  // Stocks data stays static after initial load
   usePoll(1000, { only: ["price_points"] });
 
-  // Extract props using accessor functions
   const stocks = Stock.getStocks(props);
   const price_points = Stock.getPricePoints(props);
   const info_message = Stock.getInfoMessage(props);
-
-  // Combine stocks with their accumulated price history using Gleam function!
   const stocksWithHistory = Stock.combineStocksWithHistory(
     stocks,
     price_points,

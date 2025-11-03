@@ -21,25 +21,11 @@ import wisp.{type Request, type Response}
 pub fn encode_props(
   props: travel.TravelBookingProps,
 ) -> dict.Dict(String, json.Json) {
-  let base_props = [#("info_message", json.string(props.info_message))]
-
-  let with_booking = case props.booking {
-    option.Some(booking) -> [
-      #("booking", travel.encode_booking_request(booking)),
-      ..base_props
-    ]
-    option.None -> base_props
-  }
-
-  let with_deals = case props.deals {
-    option.Some(deals) -> [
-      #("deals", json.array(deals, travel.encode_deal)),
-      ..with_booking
-    ]
-    option.None -> with_booking
-  }
-
-  dict.from_list(with_deals)
+  dict.from_list([
+    #("info_message", json.string(props.info_message)),
+    #("booking", json.nullable(props.booking, travel.encode_booking_request)),
+    #("deals", json.nullable(props.deals, json.array(_, travel.encode_deal))),
+  ])
 }
 
 /// Show the travel booking form (initial load)
@@ -48,7 +34,7 @@ pub fn show_travel_booking(req: Request) -> Response {
     travel.TravelBookingProps(
       booking: option.None,
       deals: option.None,
-      info_message: "✈️ Multi-step form with client-side state! The server only receives the final submission.",
+      info_message: "✈️ Multi-step form with client-side state!",
     )
 
   req
@@ -92,15 +78,10 @@ pub fn show_booking_results(req: Request, booking_ref: String) -> Response {
   req
   |> inertia.response_builder("TravelBooking")
   |> inertia.props(props, encode_props)
-  // Defer the deals loading to simulate external API call
   |> inertia.defer("deals", fn(props) {
-    // Simulate delay for fetching deals
     process.sleep(5000)
     let deals = travel.generate_deals(booking)
-    echo deals
-    let updated_props =
-      travel.TravelBookingProps(..props, deals: option.Some(deals))
-    Ok(updated_props)
+    Ok(travel.TravelBookingProps(..props, deals: option.Some(deals)))
   })
   |> inertia.response(200)
 }

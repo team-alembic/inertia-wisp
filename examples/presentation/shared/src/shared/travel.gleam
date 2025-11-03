@@ -160,15 +160,14 @@ pub type TravelBookingProps {
 
 /// Decode TravelBookingProps from dynamic data
 pub fn decode_travel_booking_props() -> decode.Decoder(TravelBookingProps) {
-  use booking <- decode.optional_field(
+  use booking <- decode.field(
     "booking",
-    option.None,
-    decode_booking_request() |> decode.map(option.Some),
+    decode.optional(decode_booking_request()),
   )
   use deals <- decode.optional_field(
     "deals",
     option.None,
-    decode.list(decode_deal()) |> decode.map(option.Some),
+    decode.optional(decode.list(decode_deal())),
   )
   use info_message <- decode.field("info_message", decode.string)
   decode.success(TravelBookingProps(booking:, deals:, info_message:))
