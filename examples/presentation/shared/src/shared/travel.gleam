@@ -74,6 +74,49 @@ pub fn decode_booking_request() -> decode.Decoder(BookingRequest) {
   ))
 }
 
+/// Convert TravelClass to a display string
+pub fn travel_class_to_string(travel_class: TravelClass) -> String {
+  case travel_class {
+    Economy -> "Economy"
+    Business -> "Business"
+    FirstClass -> "First Class"
+  }
+}
+
+/// Update functions for BookingRequest fields
+/// These use the spread operator for concise, type-safe updates
+pub fn set_departure_date(
+  booking: BookingRequest,
+  departure_date: String,
+) -> BookingRequest {
+  BookingRequest(..booking, departure_date:)
+}
+
+pub fn set_origin(booking: BookingRequest, origin: String) -> BookingRequest {
+  BookingRequest(..booking, origin:)
+}
+
+pub fn set_destination(
+  booking: BookingRequest,
+  destination: String,
+) -> BookingRequest {
+  BookingRequest(..booking, destination:)
+}
+
+pub fn set_passengers(
+  booking: BookingRequest,
+  passengers: Int,
+) -> BookingRequest {
+  BookingRequest(..booking, passengers:)
+}
+
+pub fn set_travel_class(
+  booking: BookingRequest,
+  travel_class: TravelClass,
+) -> BookingRequest {
+  BookingRequest(..booking, travel_class:)
+}
+
 /// A travel deal offer
 pub type Deal {
   Deal(
