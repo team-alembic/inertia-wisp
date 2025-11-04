@@ -2,7 +2,6 @@
 
 import gleam/dict
 import gleam/json
-import gleam/option.{type Option}
 import inertia_wisp/schema
 import schemas/user.{type User}
 
@@ -21,12 +20,7 @@ pub fn users_table_query_params_schema() -> schema.RecordSchema(_) {
 
 /// Props for UsersTable page (v2 API - record-based)
 pub type UsersTableProps {
-  UsersTableProps(
-    users: List(User),
-    page: Int,
-    total_pages: Int,
-    demo_info: Option(String),
-  )
+  UsersTableProps(users: List(User), page: Int, total_pages: Int)
 }
 
 /// Record schema for UsersTable props
@@ -35,7 +29,6 @@ pub fn users_table_props_schema() -> schema.RecordSchema(UsersTableProps) {
   |> schema.list_field("users", schema.RecordType(user.user_schema))
   |> schema.int_field("page")
   |> schema.int_field("total_pages")
-  |> schema.field("demo_info", schema.OptionalType(schema.StringType))
   |> schema.schema()
 }
 

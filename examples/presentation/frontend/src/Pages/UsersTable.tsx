@@ -13,12 +13,7 @@ import {
   BackToPresentation,
 } from "../components";
 
-function UsersTable({
-  users,
-  page,
-  total_pages,
-  demo_info,
-}: UsersTablePageProps) {
+function UsersTable({ users, page, total_pages }: UsersTablePageProps) {
   const router = useTypedRouter<UsersTablePageProps, UsersTableQueryParams>();
 
   const handlePrevious = () => {
@@ -38,7 +33,6 @@ function UsersTable({
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-8">
       <div className="max-w-4xl mx-auto">
         <PageHeader />
-        <DeferredInfoBadge demo_info={demo_info} />
         <UsersDataTable users={users} />
         <PaginationControls
           page={page}

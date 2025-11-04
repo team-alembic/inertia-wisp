@@ -262,10 +262,15 @@ pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response
       fields_to_evaluate,
     )
 
-  // For now, ignore errors - we'll handle them properly later
-  let final_props = case evaluated_props {
-    Ok(props) -> props
-    Error(_) -> builder.prop_data
+  // Extract evaluation errors and merge with existing errors
+  let #(final_props, all_errors) = case evaluated_props {
+    Ok(props) -> #(props, errors_to_use)
+    Error(eval_errors) -> {
+      // Merge evaluation errors with existing errors
+      // Precedence: builder/cookie errors override evaluation errors
+      let merged_errors = dict.merge(eval_errors, errors_to_use)
+      #(builder.prop_data, merged_errors)
+    }
   }
 
   // Step 3: Encode props to Dict and filter fields
@@ -274,11 +279,11 @@ pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response
     filter_fields(props_dict, builder.prop_behaviors, partial_data)
 
   // Add errors to props
-  let props_with_errors = case dict.is_empty(errors_to_use) {
+  let props_with_errors = case dict.is_empty(all_errors) {
     True -> filtered_props_dict
     False -> {
       let errors_json =
-        errors_to_use
+        all_errors
         |> dict.to_list()
         |> list.map(fn(pair) { #(pair.0, json.string(pair.1)) })
         |> json.object()

@@ -189,7 +189,6 @@ export const ContactFormPagePropsSchema = z.object({
 export type ContactFormPageProps = z.infer<typeof ContactFormPagePropsSchema>;
 
 export const UsersTablePagePropsSchema = z.object({
-  demo_info: z.string().optional(),
   page: z.number(),
   total_pages: z.number(),
   users: z.array(UserSchema),

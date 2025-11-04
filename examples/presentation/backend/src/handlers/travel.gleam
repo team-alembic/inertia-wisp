@@ -55,17 +55,15 @@ pub fn submit_booking(req: Request) -> Response {
     Ok(booking) -> {
       // Generate a simple booking reference (in real app, would store in DB)
       let booking_ref = generate_booking_ref(booking)
-
-      // Redirect to the results page
-      wisp.redirect("/travel/booking/" <> booking_ref)
+      req
+      |> inertia.response_builder("TravelBooking")
+      |> inertia.redirect("/travel/booking/" <> booking_ref)
     }
   }
 }
 
 /// Show booking results with deals (deferred)
 pub fn show_booking_results(req: Request, booking_ref: String) -> Response {
-  // In a real app, would fetch booking from DB using booking_ref
-  // For demo, we'll reconstruct from the ref
   let booking = parse_booking_ref(booking_ref)
 
   let props =

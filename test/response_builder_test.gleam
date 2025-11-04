@@ -397,9 +397,9 @@ pub fn lazy_prop_error_handling_test() {
   // User should still be included
   assert body |> string.contains("Alice")
 
-  // When resolver fails, the prop remains as its initial value (None)
-  // So expensive_data won't be in the response
-  assert !string.contains(body, "expensive_data")
+  // Prop evaluation error should be included in errors
+  assert body |> string.contains("\"errors\"")
+  assert body |> string.contains("Failed to load data")
 }
 
 // Test: Deferred prop resolver error handling
@@ -425,9 +425,126 @@ pub fn deferred_prop_error_handling_test() {
 
   let body = simulate.read_body(response)
 
-  // When deferred prop is explicitly requested but resolver fails,
-  // the prop remains as its initial value (None) so won't be in response
-  assert !string.contains(body, "expensive_data")
+  // Prop evaluation error should be included in errors
+  assert body |> string.contains("\"errors\"")
+  assert body |> string.contains("Failed to load deferred data")
+}
+
+// Test: Prop evaluation errors are merged with builder errors
+pub fn prop_evaluation_errors_merged_with_builder_errors_test() {
+  let req =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  // Explicitly set validation errors
+  let validation_errors =
+    dict.from_list([
+      #("email", "Email is required"),
+      #("name", "Name too short"),
+    ])
+
+  let response =
+    response_builder.response_builder(req, "Form")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.errors(validation_errors)
+    |> response_builder.lazy("expensive_data", fn(_props) {
+      // Resolver returns an error
+      Error(dict.from_list([#("expensive_data", "Database connection failed")]))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Should include validation errors from builder
+  assert body |> string.contains("\"errors\"")
+  assert body |> string.contains("Email is required")
+  assert body |> string.contains("Name too short")
+
+  // Should also include prop evaluation error
+  assert body |> string.contains("Database connection failed")
+}
+
+// Test: Builder errors take precedence over prop evaluation errors
+pub fn builder_errors_override_prop_evaluation_errors_test() {
+  let req =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  // Explicitly set error for "data" field
+  let validation_errors =
+    dict.from_list([#("expensive_data", "Validation failed")])
+
+  let response =
+    response_builder.response_builder(req, "Form")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.errors(validation_errors)
+    |> response_builder.lazy("expensive_data", fn(_props) {
+      // Resolver also returns error for same field
+      Error(dict.from_list([#("expensive_data", "Evaluation failed")]))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Should include the builder error (not the evaluation error)
+  assert body |> string.contains("\"errors\"")
+  assert body |> string.contains("Validation failed")
+
+  // Should NOT include the evaluation error (overridden by builder error)
+  assert !string.contains(body, "Evaluation failed")
+}
+
+// Test: Cookie errors take precedence over prop evaluation errors
+pub fn cookie_errors_override_prop_evaluation_errors_test() {
+  // Step 1: Create redirect with errors to get signed cookie
+  let req1 =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+
+  let redirect_response =
+    response_builder.response_builder(req1, "Form")
+    |> response_builder.errors(
+      dict.from_list([#("expensive_data", "Cookie error message")]),
+    )
+    |> response_builder.redirect("/form")
+
+  let assert Ok(cookie_header) =
+    response.get_header(redirect_response, "set-cookie")
+  let cookie_value =
+    string.replace(cookie_header, "inertia_errors=", "")
+    |> string.split(";")
+    |> list.first()
+    |> result.unwrap("")
+
+  // Step 2: Create request with cookie and prop evaluation error
+  let req2 =
+    simulate.request(http.Get, "/form")
+    |> simulate.header("x-inertia", "true")
+    |> simulate.header("cookie", "inertia_errors=" <> cookie_value)
+
+  let initial_props = LazyProps(user: "Alice", expensive_data: option.None)
+
+  let response =
+    response_builder.response_builder(req2, "Form")
+    |> response_builder.props(initial_props, encode_lazy_props)
+    |> response_builder.lazy("expensive_data", fn(_props) {
+      // Resolver returns error for same field
+      Error(dict.from_list([#("expensive_data", "Evaluation failed")]))
+    })
+    |> response_builder.response(200)
+
+  let body = simulate.read_body(response)
+
+  // Should include the cookie error (not the evaluation error)
+  assert body |> string.contains("\"errors\"")
+  assert body |> string.contains("Cookie error message")
+
+  // Should NOT include the evaluation error (overridden by cookie error)
+  assert !string.contains(body, "Evaluation failed")
 }
 
 // Test: clear_history flag appears in response

@@ -2,10 +2,8 @@
 ////
 //// Demonstrates Inertia's partial reload with `only` parameter
 
-import gleam/erlang/process
 import gleam/int
 import gleam/list
-import gleam/option
 import inertia_wisp/inertia
 import inertia_wisp/query_params
 import props/users_table_props.{UsersTableProps, UsersTableQueryParams}
@@ -34,22 +32,11 @@ pub fn show_users_table(req: Request) -> Response {
       users: paginated_users,
       page: page,
       total_pages: total_pages,
-      demo_info: option.None,
     )
 
   req
   |> inertia.response_builder("UsersTable")
   |> inertia.props(props, users_table_props.encode)
-  |> inertia.defer("demo_info", fn(props) {
-    // Artificial delay to demonstrate deferred loading
-    process.sleep(2000)
-    Ok(
-      UsersTableProps(
-        ..props,
-        demo_info: option.Some("🎉 This DeferProp loaded after 2 seconds!"),
-      ),
-    )
-  })
   |> inertia.response(200)
 }
 

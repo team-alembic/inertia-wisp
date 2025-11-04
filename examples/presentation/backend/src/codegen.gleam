@@ -51,18 +51,7 @@ pub fn main() {
 
   case simplifile.write(to: output_path, contents: output) {
     Ok(_) -> {
-      io.println("✓ Generated " <> output_path)
-      io.println("\nGenerated schemas:")
-      io.println("  - User")
-      io.println("  - ContactFormData")
-      io.println("  - ImageData")
-      io.println("  - SlideNavigation")
-      io.println("  - ContentBlock (variant)")
-      io.println("  - Slide")
-      io.println("  - SlidePageProps")
-      io.println("  - ContactFormPageProps")
-      io.println("  - UsersTablePageProps")
-      io.println("  - UsersTableQueryParams")
+      io.println("✓ Generated schemas")
     }
     Error(err) -> {
       io.println("✗ Failed to write file: " <> string.inspect(err))
