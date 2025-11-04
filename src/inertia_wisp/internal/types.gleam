@@ -86,7 +86,6 @@ pub fn encode_page(page: Page(prop)) -> json.Json {
   |> json.object
 }
 
-
 /// Configuration for the Inertia adapter
 pub type ConfigOpt {
   Version(String)
