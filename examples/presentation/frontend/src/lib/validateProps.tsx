@@ -14,14 +14,14 @@ import { z } from "zod";
  * export default validateProps(MyComponent, MyPropsSchema);
  * ```
  */
-export function validateProps<T extends z.ZodType>(
-  Component: React.ComponentType<z.infer<T>>,
-  schema: T,
-): React.ComponentType<unknown> {
+export function validateProps<P extends Record<string, unknown>>(
+  Component: React.ComponentType<P>,
+  schema: z.ZodType<P>,
+) {
   return function ValidatedComponent(props: unknown) {
     try {
-      const validatedProps = schema.parse(props) as z.infer<T>;
-      return <Component {...(validatedProps as any)} />;
+      const validatedProps: P = schema.parse(props);
+      return <Component {...validatedProps} />;
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error("Props validation failed:", error.issues);

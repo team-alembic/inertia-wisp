@@ -5,6 +5,7 @@ import {
   Result$isOk as isOk,
   Result$Ok$0 as unwrapOk,
 } from "@gleam/prelude.mjs";
+import { Dynamic$ } from "@gleam/gleam_stdlib/gleam/dynamic.mjs";
 
 /**
  * HOC that validates Inertia props using a Gleam decoder
@@ -14,16 +15,13 @@ import {
  */
 export function decodeProps<P extends object>(
   Component: ComponentType<P>,
-  decoder: Decode.Decoder$<P>, // Gleam decoder function factory
+  decoder: Decode.Decoder$<P>,
 ) {
-  return function ValidatedComponent(props: P) {
+  return function ValidatedComponent(props: Dynamic$) {
     try {
       const result = Decode.run(props, decoder);
-
-      // Check if decoding succeeded using Gleam Result helper
       if (isOk(result)) {
-        // Props are valid! Extract the decoded value and render the component
-        const decodedProps = unwrapOk(result) as P;
+        const decodedProps = unwrapOk(result)!;
         return <Component {...decodedProps} />;
       } else {
         // Decoding failed - process DecodeError list

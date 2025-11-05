@@ -7,7 +7,6 @@ import gleam/dict
 import gleam/json
 import inertia_wisp/schema
 
-/// Props structure for contact form page (v2 API)
 pub type ContactFormProps {
   ContactFormProps(name: String, email: String, message: String)
 }
