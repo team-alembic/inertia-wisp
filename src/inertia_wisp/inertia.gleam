@@ -242,17 +242,6 @@ pub fn redirect(builder: InertiaResponseBuilder(props), url: String) -> Response
   response_builder.redirect(builder, url)
 }
 
-/// Set a custom error component to render on error.
-///
-/// By default, Inertia renders the component specified in the response builder.
-/// This allows you to specify a different component for error cases.
-pub fn on_error(
-  builder: InertiaResponseBuilder(props),
-  error_component: String,
-) -> InertiaResponseBuilder(props) {
-  response_builder.on_error(builder, error_component)
-}
-
 /// Clear the browser history state after this response.
 ///
 /// Useful for preventing authenticated responses from being seen after logout.

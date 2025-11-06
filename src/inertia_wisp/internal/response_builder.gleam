@@ -13,9 +13,9 @@ import gleam/result
 import gleam/string
 import inertia_wisp/internal/middleware
 import inertia_wisp/internal/prop_behavior.{
-  type MergeOptions, type PropBehavior, AlwaysBehavior, DeferBehavior,
-  LazyBehavior, OptionalBehavior,
+  type MergeOptions, type PropBehavior, DeferBehavior,
 }
+import inertia_wisp/internal/props
 import wisp.{type Request, type Response}
 
 /// Generic builder for constructing Inertia responses
@@ -33,7 +33,6 @@ pub opaque type InertiaResponseBuilder(props) {
     clear_history: Bool,
     encrypt_history: Bool,
     version: Option(String),
-    error_component: Option(String),
   )
 }
 
@@ -55,7 +54,6 @@ pub fn response_builder(
     clear_history: False,
     encrypt_history: False,
     version: option.None,
-    error_component: option.None,
   )
 }
 
@@ -78,7 +76,6 @@ pub fn props(
     clear_history: builder.clear_history,
     encrypt_history: builder.encrypt_history,
     version: builder.version,
-    error_component: builder.error_component,
   )
 }
 
@@ -203,17 +200,6 @@ pub fn redirect(builder: InertiaResponseBuilder(props), url: String) -> Response
   }
 }
 
-/// Set error component for prop resolution errors
-pub fn on_error(
-  builder: InertiaResponseBuilder(props),
-  error_component: String,
-) -> InertiaResponseBuilder(props) {
-  InertiaResponseBuilder(
-    ..builder,
-    error_component: option.Some(error_component),
-  )
-}
-
 /// Clear browser history for this response
 pub fn clear_history(
   builder: InertiaResponseBuilder(props),
@@ -250,17 +236,12 @@ pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response
     _ -> option.None
   }
 
-  // Step 1: Determine which fields to evaluate based on partial reload
-  let fields_to_evaluate =
-    determine_fields_to_evaluate(builder.prop_behaviors, partial_data)
+  // Step 1: Determine which props to include based on partial reload
+  let props_to_include = props.to_include(builder.prop_behaviors, partial_data)
 
-  // Step 2: Evaluate behaviors for the fields that need evaluation
+  // Step 2: Evaluate behaviors for the props that need evaluation
   let evaluated_props =
-    evaluate_behaviors(
-      builder.prop_data,
-      builder.prop_behaviors,
-      fields_to_evaluate,
-    )
+    props.resolve(builder.prop_data, builder.prop_behaviors, props_to_include)
 
   // Extract evaluation errors and merge with existing errors
   let #(final_props, all_errors) = case evaluated_props {
@@ -273,10 +254,10 @@ pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response
     }
   }
 
-  // Step 3: Encode props to Dict and filter fields
+  // Step 3: Encode props to Dict and filter based on behaviors
   let props_dict = builder.json_encoder(final_props)
   let filtered_props_dict =
-    filter_fields(props_dict, builder.prop_behaviors, partial_data)
+    props.filter(props_dict, builder.prop_behaviors, partial_data)
 
   // Add errors to props
   let props_with_errors = case dict.is_empty(all_errors) {
@@ -389,98 +370,6 @@ fn get_partial_data(req: Request) -> List(String) {
     Ok(data) -> string.split(data, ",") |> list.map(string.trim)
     _ -> []
   }
-}
-
-/// Determine which fields should be evaluated based on request type and behaviors
-fn determine_fields_to_evaluate(
-  behaviors: Dict(String, PropBehavior(props)),
-  partial_data: Option(List(String)),
-) -> List(String) {
-  case partial_data {
-    // Partial reload: only evaluate requested fields + always fields
-    option.Some(requested) -> {
-      behaviors
-      |> dict.filter(fn(name, behavior) {
-        case behavior {
-          AlwaysBehavior -> True
-          LazyBehavior(_) -> list.contains(requested, name)
-          DeferBehavior(_, _) -> list.contains(requested, name)
-          _ -> list.contains(requested, name)
-        }
-      })
-      |> dict.keys()
-    }
-    // Standard visit: evaluate all non-optional, non-deferred
-    option.None -> {
-      behaviors
-      |> dict.filter(fn(_name, behavior) {
-        case behavior {
-          OptionalBehavior | DeferBehavior(_, _) -> False
-          _ -> True
-        }
-      })
-      |> dict.keys()
-    }
-  }
-}
-
-/// Filter fields based on behaviors and partial reload
-fn filter_fields(
-  props_dict: Dict(String, json.Json),
-  behaviors: Dict(String, PropBehavior(props)),
-  partial_data: Option(List(String)),
-) -> Dict(String, json.Json) {
-  case partial_data {
-    // Partial reload: only include requested fields + always fields
-    option.Some(requested) -> {
-      dict.filter(props_dict, fn(key, _value) {
-        case dict.get(behaviors, key) {
-          Ok(AlwaysBehavior) -> True
-          _ -> list.contains(requested, key)
-        }
-      })
-    }
-    // Standard visit: exclude optional and deferred fields
-    option.None -> {
-      dict.filter(props_dict, fn(key, _value) {
-        case dict.get(behaviors, key) {
-          Ok(OptionalBehavior) -> False
-          Ok(DeferBehavior(_, _)) -> False
-          _ -> True
-        }
-      })
-    }
-  }
-}
-
-/// Evaluate all lazy and deferred behaviors for the specified fields
-fn evaluate_behaviors(
-  initial_props: props,
-  behaviors: Dict(String, PropBehavior(props)),
-  fields_to_evaluate: List(String),
-) -> Result(props, Dict(String, String)) {
-  // Filter to only fields that have resolvers (Lazy or Defer)
-  let fields_with_resolvers =
-    fields_to_evaluate
-    |> list.filter(fn(field_name) {
-      case dict.get(behaviors, field_name) {
-        Ok(LazyBehavior(_)) | Ok(DeferBehavior(_, _)) -> True
-        _ -> False
-      }
-    })
-
-  // Evaluate each resolver in sequence, threading props through
-  list.try_fold(
-    fields_with_resolvers,
-    initial_props,
-    fn(current_props, field_name) {
-      case dict.get(behaviors, field_name) {
-        Ok(LazyBehavior(resolver)) | Ok(DeferBehavior(_, resolver)) ->
-          resolver(current_props)
-        _ -> Ok(current_props)
-      }
-    },
-  )
 }
 
 /// Collect deferred props grouped by group name
