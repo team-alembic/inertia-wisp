@@ -218,7 +218,11 @@ pub fn version(
 }
 
 /// Build the final Inertia response
-pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response {
+pub fn response(
+  builder: InertiaResponseBuilder(props),
+  status: Int,
+  layout: fn(String, json.Json) -> String,
+) -> Response {
   // Resolve which errors to use (from builder or cookie)
   let #(errors_to_use, retrieved_from_cookie) =
     resolve_errors_for_response(builder)
@@ -277,26 +281,23 @@ pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response
   let version_string = option.unwrap(builder.version, "1")
 
   // Step 5: Build response JSON with metadata
-  let base_response = [
-    #("component", json.string(builder.component)),
-    #("props", props_json),
-    #("url", json.string(url)),
-    #("version", json.string(version_string)),
-    #("encryptHistory", json.bool(builder.encrypt_history)),
-    #("clearHistory", json.bool(builder.clear_history)),
-  ]
-
-  let with_deferred =
-    protocol.add_deferred_metadata(base_response, deferred_props)
-  let with_merge =
-    protocol.add_merge_metadata(with_deferred, builder.merge_metadata)
-
-  let response_json = json.object(with_merge)
+  let response_json =
+    [
+      #("component", json.string(builder.component)),
+      #("props", props_json),
+      #("url", json.string(url)),
+      #("version", json.string(version_string)),
+      #("encryptHistory", json.bool(builder.encrypt_history)),
+      #("clearHistory", json.bool(builder.clear_history)),
+    ]
+    |> protocol.add_deferred_metadata(deferred_props)
+    |> protocol.add_merge_metadata(builder.merge_metadata)
+    |> json.object()
 
   // Choose response format based on request type
   let final_response = case protocol.is_inertia_request(builder.request) {
     True -> render.json(response_json, status)
-    False -> render.html(response_json, builder.component, status)
+    False -> render.html(response_json, builder.component, status, layout)
   }
 
   // Clear cookie if we retrieved errors from it (unless redirect/409 status)

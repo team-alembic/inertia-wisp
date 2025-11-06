@@ -7,6 +7,7 @@ import gleam/option
 import gleam/result
 import gleam/string
 import gleeunit
+import inertia_wisp/html
 import inertia_wisp/internal/response_builder
 import wisp/simulate
 
@@ -37,7 +38,7 @@ pub fn builder_produces_response_with_props_test() {
   let response =
     response_builder.response_builder(req, "TestComponent")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   // Response should be 200 OK
   assert response.status == 200
@@ -80,7 +81,7 @@ pub fn lazy_prop_is_evaluated_test() {
       // Resolver receives current props and returns updated props
       Ok(LazyProps(..props, expensive_data: option.Some("computed-value")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   // Response should contain the user prop
   let body = simulate.read_body(response)
@@ -102,7 +103,7 @@ pub fn optional_prop_excluded_from_standard_visit_test() {
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
     |> response_builder.optional("count")
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -126,7 +127,7 @@ pub fn partial_reload_filters_to_requested_fields_test() {
   let response =
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -151,7 +152,7 @@ pub fn always_fields_included_in_partial_reload_test() {
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
     |> response_builder.always("count")
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -176,7 +177,7 @@ pub fn deferred_props_generate_metadata_test() {
     |> response_builder.defer("expensive_data", fn(props) {
       Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -204,7 +205,7 @@ pub fn merge_props_generate_metadata_test() {
     |> response_builder.props(props, encode_simple_props)
     |> response_builder.merge("message", match_on: option.None, deep: False)
     |> response_builder.merge("count", match_on: option.None, deep: True)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -237,7 +238,7 @@ pub fn merge_props_with_match_on_test() {
       match_on: option.Some(["id", "slug"]),
       deep: False,
     )
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -304,7 +305,7 @@ pub fn partial_reload_component_match_filters_test() {
   let response =
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -328,7 +329,7 @@ pub fn partial_reload_component_mismatch_no_filter_test() {
   let response =
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -348,7 +349,7 @@ pub fn url_includes_query_parameters_test() {
   let response =
     response_builder.response_builder(req, "Users/Index")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -367,7 +368,7 @@ pub fn url_without_query_parameters_test() {
   let response =
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -390,7 +391,7 @@ pub fn lazy_prop_error_handling_test() {
       // Resolver returns an error
       Error(dict.from_list([#("expensive_data", "Failed to load data")]))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -421,7 +422,7 @@ pub fn deferred_prop_error_handling_test() {
         dict.from_list([#("expensive_data", "Failed to load deferred data")]),
       )
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -453,7 +454,7 @@ pub fn prop_evaluation_errors_merged_with_builder_errors_test() {
       // Resolver returns an error
       Error(dict.from_list([#("expensive_data", "Database connection failed")]))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -486,7 +487,7 @@ pub fn builder_errors_override_prop_evaluation_errors_test() {
       // Resolver also returns error for same field
       Error(dict.from_list([#("expensive_data", "Evaluation failed")]))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -535,7 +536,7 @@ pub fn cookie_errors_override_prop_evaluation_errors_test() {
       // Resolver returns error for same field
       Error(dict.from_list([#("expensive_data", "Evaluation failed")]))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -559,7 +560,7 @@ pub fn clear_history_flag_in_response_test() {
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
     |> response_builder.clear_history()
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -579,7 +580,7 @@ pub fn encrypt_history_flag_in_response_test() {
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
     |> response_builder.encrypt_history()
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -599,7 +600,7 @@ pub fn version_string_in_response_test() {
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
     |> response_builder.version("abc123")
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -623,7 +624,7 @@ pub fn partial_reload_evaluates_deferred_props_test() {
     |> response_builder.defer("expensive_data", fn(props) {
       Ok(LazyProps(..props, expensive_data: option.Some("deferred-computed")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -647,7 +648,7 @@ pub fn initial_page_load_returns_html_test() {
   let response =
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   // Should return 200 status
   assert response.status == 200
@@ -680,7 +681,7 @@ pub fn initial_page_load_with_deferred_props_test() {
     |> response_builder.defer("expensive_data", fn(props) {
       Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -709,7 +710,7 @@ pub fn inertia_request_returns_json_test() {
   let response =
     response_builder.response_builder(req, "Dashboard")
     |> response_builder.props(props, encode_simple_props)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   // Should have JSON content-type
   let assert Ok(content_type) = response.get_header(response, "content-type")
@@ -765,7 +766,7 @@ pub fn session_error_flow_complete_test() {
       SimpleProps(message: "Form", count: 1),
       encode_simple_props,
     )
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(form_response)
 
@@ -814,7 +815,7 @@ pub fn cookie_cleared_after_consuming_errors_test() {
       SimpleProps(message: "Hi", count: 1),
       encode_simple_props,
     )
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   // Should have set-cookie header that clears the cookie
   let assert Ok(clear_cookie_header) =
@@ -835,7 +836,7 @@ pub fn no_cookie_clearing_when_no_cookie_present_test() {
       SimpleProps(message: "Hi", count: 1),
       encode_simple_props,
     )
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   // Should not have any set-cookie header
   let assert Error(_) = response.get_header(response, "set-cookie")
@@ -857,7 +858,7 @@ pub fn errors_included_in_response_test() {
       encode_simple_props,
     )
     |> response_builder.errors(validation_errors)
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -887,7 +888,7 @@ pub fn deferred_props_not_readvertised_on_partial_reload_test() {
     |> response_builder.defer("expensive_data", fn(props) {
       Ok(LazyProps(..props, expensive_data: option.Some("deferred-value")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -979,7 +980,7 @@ pub fn multiple_deferred_prop_groups_test() {
     |> response_builder.defer_in_group("slow_prop2", "slow", fn(props) {
       Ok(MultiDeferredProps(..props, slow_prop2: option.Some("slow-value-2")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 
@@ -1047,7 +1048,7 @@ pub fn deferred_group_partial_reload_no_readvertise_test() {
     |> response_builder.defer_in_group("slow_prop2", "slow", fn(props) {
       Ok(MultiDeferredProps(..props, slow_prop2: option.Some("slow-value-2")))
     })
-    |> response_builder.response(200)
+    |> response_builder.response(200, html.default_layout)
 
   let body = simulate.read_body(response)
 

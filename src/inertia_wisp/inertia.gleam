@@ -277,18 +277,24 @@ pub fn version(
   response_builder.version(builder, version)
 }
 
-/// Build the final HTTP response with the given status code.
+/// Build the final HTTP response with the given status code and HTML layout.
 ///
 /// This evaluates all prop resolvers, applies filtering based on the request
 /// type, and generates either a JSON response (for Inertia requests) or an
 /// HTML response with embedded JSON (for initial page loads).
 ///
+/// The layout function is used to generate the HTML document for initial page loads.
+/// It receives the component name and the Inertia page data as JSON.
+///
 /// ## Example
 ///
 /// ```gleam
-/// |> inertia.response(200)  // OK
-/// |> inertia.response(201)  // Created
+/// |> inertia.response(200, my_html_layout)  // OK
 /// ```
-pub fn response(builder: InertiaResponseBuilder(props), status: Int) -> Response {
-  response_builder.response(builder, status)
+pub fn response(
+  builder: InertiaResponseBuilder(props),
+  status: Int,
+  layout: fn(String, json.Json) -> String,
+) -> Response {
+  response_builder.response(builder, status, layout)
 }
