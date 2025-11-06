@@ -1,19 +1,3 @@
-//// @internal
-////
-//// Middleware and utility functions for detecting and handling Inertia.js requests.
-////
-//// This module provides:
-//// - Middleware for handling typed Inertia contexts with version checking
-//// - Utility functions for detecting Inertia requests and extracting data
-//// - Managing Inertia-specific HTTP headers
-////
-//// ## Request Detection
-////
-//// The utilities identify Inertia requests by checking for:
-//// - `X-Inertia: true` header for XHR requests
-//// - `X-Inertia-Partial-Data` for partial reloads
-//// - `X-Inertia-Partial-Component` for component-specific reloads
-
 import gleam/http/request
 import gleam/list
 import gleam/option.{type Option}

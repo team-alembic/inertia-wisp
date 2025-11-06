@@ -293,23 +293,6 @@ fn users_list(req: wisp.Request, page: Int) -> wisp.Response {
 }
 ```
 
-## Examples
-
-Check out the [`examples/presentation/`](examples/presentation/) directory for a complete working example:
-
-- **Contact Form**: Form validation with error handling
-- **Paginated Table**: Partial reloads for efficient pagination
-- **Presentation Slides**: Complex navigation with multi-step content
-- **Deferred Props**: Background data loading demonstration
-
-The examples demonstrate:
-- Record-based props with type-safe encoders
-- Lazy and deferred prop evaluation
-- Form validation and error handling
-- Partial reloads for performance
-- Always props for shared data
-- Merge props for efficient data updates
-
 ## Documentation
 
 - **[API Documentation](https://hexdocs.pm/inertia_wisp)** - Complete API reference
