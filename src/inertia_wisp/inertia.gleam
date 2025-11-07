@@ -1,6 +1,7 @@
 //// Inertia.js adapter for the Gleam Wisp web framework.
 ////
 //// This module provides a type-safe API for building Inertia.js responses.
+//// See the [inertiajs docs](https://inertiajs.com) for more details on the inertiajs protocol and usage patterns.
 ////
 //// ## Quick Example
 ////
@@ -40,16 +41,11 @@
 import gleam/dict
 import gleam/json
 import gleam/option.{type Option}
-import inertia_wisp/internal/prop_behavior
 import inertia_wisp/internal/response_builder
 import wisp.{type Request, type Response}
 
 pub type InertiaResponseBuilder(props) =
   response_builder.InertiaResponseBuilder(props)
-
-/// Options for merge prop behavior, controlling how data is merged on the client.
-pub type MergeOptions =
-  prop_behavior.MergeOptions
 
 /// Create a new Inertia response builder.
 ///

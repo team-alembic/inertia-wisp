@@ -1,21 +1,9 @@
-//// Testing utilities for Inertia.js applications built with Gleam and Wisp.
+//// Testing utilities for exercising wisp handlers returning inertia responses.
 ////
-//// This module provides a comprehensive set of testing utilities specifically
-//// designed for testing Inertia.js applications. It handles the complexities
-//// of testing both XHR requests (JSON responses) and initial page loads
-//// (HTML responses with embedded JSON data).
+//// This module augments the [wisp/simulate](https://hexdocs.pm/wisp/2.1.0/wisp/simulate.html) module with helpers to create inertia requests and
+//// extract props and metadata from inertia responses.
 ////
-//// ## Core Testing Features
-////
-//// - **Mock Request Creation**: Generate properly formatted Inertia requests
-//// - **Response Parsing**: Extract data from both JSON and HTML responses
-//// - **Prop Testing**: Type-safe extraction and validation of component props
-//// - **Partial Reload Testing**: Test selective prop loading for performance
-//// - **Header Management**: Automatic handling of Inertia-specific headers
-////
-//// ## Usage Patterns
-////
-//// ### Basic Response Testing
+//// ## Example
 ////
 //// ```gleam
 //// import inertia_wisp/testing
@@ -28,51 +16,6 @@
 ////   assert testing.prop(response, "title", decode.string) == Ok("Welcome")
 //// }
 //// ```
-////
-//// ### Partial Reload Testing
-////
-//// ```gleam
-//// pub fn test_partial_reload() {
-////   let req = testing.inertia_request()
-////     |> testing.partial_data(["posts", "comments"])
-////   let response = my_handler(req)
-////
-////   // Only specified props should be present
-////   case testing.prop(response, "posts", decode.list(decode.string)) {
-////     Ok(_) -> Nil
-////     Error(_) -> panic as "Expected posts prop to be present"
-////   }
-//// }
-//// ```
-////
-//// ### Complex Prop Testing
-////
-//// ```gleam
-//// pub fn test_user_data() {
-////   let req = testing.inertia_request()
-////   let response = user_profile_handler(req)
-////
-////   // Test nested object props
-////   assert testing.prop(response, "user", decode.field("name", decode.string)) == Ok("John Doe")
-////
-////   // Test array props
-////   assert testing.prop(response, "items", decode.list(decode.int)) == Ok([1, 2, 3])
-//// }
-//// ```
-////
-//// ## Response Format Handling
-////
-//// This module automatically handles both response formats:
-////
-//// 1. **JSON Responses**: Direct JSON parsing for XHR requests
-//// 2. **HTML Responses**: Extraction of JSON data from `data-page` attributes
-////    in initial page loads, with proper HTML entity unescaping
-////
-//// ## Type Safety
-////
-//// All prop extraction functions use Gleam's dynamic decoders, ensuring
-//// type-safe testing of response data. This catches both missing props
-//// and type mismatches at test time.
 
 import gleam/dynamic
 import gleam/dynamic/decode

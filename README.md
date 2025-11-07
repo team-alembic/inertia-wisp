@@ -3,7 +3,7 @@
 [![Package Version](https://img.shields.io/hexpm/v/inertia_wisp)](https://hex.pm/packages/inertia_wisp)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/inertia_wisp/)
 
-A modern server-side adapter for [Inertia.js](https://inertiajs.com/) built for Gleam and the [Wisp](https://github.com/gleam-wisp/wisp) web framework.
+An [Inertia.js](https://inertiajs.com/) adapter for Gleam and the [Wisp](https://github.com/gleam-wisp/wisp) web framework.
 
 ## Installation
 
@@ -136,7 +136,7 @@ fn home_page(req: wisp.Request) -> wisp.Response {
   req
   |> inertia.response_builder("Home")
   |> inertia.props(props, encode_home_page_props)
-  |> inertia.response(200, layout.html_layout)  // Pass your layout function
+  |> inertia.response(200, layout.html_layout)
 }
 
 fn about_page(req: wisp.Request) -> wisp.Response {
@@ -145,19 +145,83 @@ fn about_page(req: wisp.Request) -> wisp.Response {
   req
   |> inertia.response_builder("About")
   |> inertia.props(props, encode_about_page_props)
-  |> inertia.response(200, layout.html_layout)  // Pass your layout function
+  |> inertia.response(200, layout.html_layout)
 }
 ```
 
-### 4. Frontend Setup (React)
+### 4. Frontend Setup
 
-Create your React components that correspond to your Gleam page components:
+#### Install Dependencies
 
-```jsx
-// Home.jsx
+Create a `frontend/` directory and add a `package.json`. You can use your preferred JavaScript build tools; this example uses ESBuild with code splitting enabled:
+
+```json
+{
+  "name": "my-app-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.tsx --bundle --outdir=../priv/static/js --format=esm --splitting --jsx=automatic --minify",
+    "watch": "esbuild src/main.tsx --bundle --outdir=../priv/static/js --format=esm --splitting --jsx=automatic --watch"
+  },
+  "dependencies": {
+    "@inertiajs/react": "^2.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+#### Create Entry Point
+
+Create `src/main.tsx`:
+
+```typescript
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { createInertiaApp } from "@inertiajs/react";
+
+createInertiaApp({
+  title: (title) => `${title} - My App`,
+  resolve: async (name) => {
+    const module = await import(`./Pages/${name}.tsx`);
+    return module.default;
+  },
+  setup({ el, App, props }) {
+    const root = createRoot(el);
+    root.render(<App {...props} />);
+  },
+  progress: {
+    color: "#9333ea",
+  },
+});
+```
+
+#### Create React Components
+
+Create your React components in `src/Pages/` that correspond to your Gleam page components:
+
+```tsx
+// src/Pages/Home.tsx
 import { Link } from '@inertiajs/react'
 
-export default function Home({ message, user, count }) {
+export default function Home({ message, user, count }: {
+  message: string;
+  user: string;
+  count: number;
+}) {
   return (
     <div>
       <h1>Welcome {user}!</h1>
@@ -168,10 +232,10 @@ export default function Home({ message, user, count }) {
   );
 }
 
-// About.jsx
+// src/Pages/About.tsx
 import { Link } from '@inertiajs/react'
 
-export default function About({ title }) {
+export default function About({ title }: { title: string }) {
   return (
     <div>
       <h1>{title}</h1>
@@ -180,6 +244,22 @@ export default function About({ title }) {
   );
 }
 ```
+
+#### Build Your Frontend
+
+From the `frontend/` directory, build for production:
+
+```bash
+npm run build
+```
+
+Or watch for changes during development:
+
+```bash
+npm run watch
+```
+
+This will output your bundled JavaScript to `../priv/static/js/`, which your Gleam server will serve.
 
 ## Advanced Usage
 
