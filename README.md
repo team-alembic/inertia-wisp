@@ -420,6 +420,350 @@ fn users_list(req: wisp.Request, page: Int) -> wisp.Response {
 }
 ```
 
+## Sharing Types Between Frontend and Backend
+
+For larger applications, you can share types, encoders, decoders, and validation logic between your Gleam backend and TypeScript frontend by creating a separate `shared` package.
+
+### Repository Structure
+
+Organize your project with three packages:
+
+```
+my-app/
+├── backend/           # Gleam backend (target: erlang)
+│   ├── src/
+│   ├── gleam.toml
+│   └── priv/static/   # Compiled frontend assets
+├── frontend/          # TypeScript/React frontend
+│   ├── src/
+│   ├── package.json
+│   └── tsconfig.json
+└── shared/            # Shared Gleam code (target: javascript)
+    ├── src/shared/
+    ├── gleam.toml
+    └── manifest.toml
+```
+
+### Setting Up the Shared Package
+
+Create `shared/gleam.toml`:
+
+```toml
+name = "shared"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+gleam_stdlib = ">= 0.60.0"
+gleam_json = ">= 3.0.0"
+
+[javascript]
+typescript_declarations = true
+```
+
+### Define Shared Types and Codecs
+
+Create `shared/src/shared/todo_item.gleam`:
+
+```gleam
+import gleam/dict
+import gleam/dynamic/decode
+import gleam/json.{type Json}
+
+// Types
+pub type Todo {
+  Todo(id: Int, text: String, completed: Bool)
+}
+
+pub type TodoProps {
+  TodoProps(todos: List(Todo))
+}
+
+pub type AddTodoRequest {
+  AddTodoRequest(text: String)
+}
+
+// Encoders (Gleam → JSON)
+pub fn encode_todo(item: Todo) -> Json {
+  json.object([
+    #("id", json.int(item.id)),
+    #("text", json.string(item.text)),
+    #("completed", json.bool(item.completed)),
+  ])
+}
+
+pub fn encode_todo_props(props: TodoProps) -> dict.Dict(String, json.Json) {
+  dict.from_list([
+    #("todos", json.array(props.todos, encode_todo)),
+  ])
+}
+
+pub fn encode_add_todo_request(request: AddTodoRequest) -> Json {
+  json.object([#("text", json.string(request.text))])
+}
+
+// Decoders (JSON → Gleam)
+pub fn decode_todo() -> decode.Decoder(Todo) {
+  use id <- decode.field("id", decode.int)
+  use text <- decode.field("text", decode.string)
+  use completed <- decode.field("completed", decode.bool)
+  decode.success(Todo(id:, text:, completed:))
+}
+
+pub fn decode_todo_props() -> decode.Decoder(TodoProps) {
+  use todos <- decode.field("todos", decode.list(decode_todo()))
+  decode.success(TodoProps(todos:))
+}
+
+pub fn decode_add_todo_request() -> decode.Decoder(AddTodoRequest) {
+  use text <- decode.field("text", decode.string)
+  decode.success(AddTodoRequest(text:))
+}
+```
+
+### Using Shared Types in Backend
+
+Add the shared package to `backend/gleam.toml`:
+
+```toml
+[dependencies]
+shared = { path = "../shared" }
+```
+
+Use the shared types in your handlers:
+
+```gleam
+import shared/todo_item.{Todo, TodoProps, AddTodoRequest}
+import gleam/dynamic/decode
+
+pub fn show_todos(req: Request) -> Response {
+  let props = TodoProps(todos: [])
+
+  req
+  |> inertia.response_builder("TodoList")
+  |> inertia.props(props, todo_item.encode_todo_props)
+  |> inertia.response(200, layout.html_layout)
+}
+
+pub fn add_todo_item(req: Request) -> Response {
+  use json_body <- wisp.require_json(req)
+  let assert Ok(add_request) = decode.run(json_body, todo_item.decode_add_todo_request())
+
+  let new_item = Todo(id: generate_id(), text: add_request.text, completed: False)
+  let props = TodoProps(todos: [new_item])
+
+  req
+  |> inertia.response_builder("TodoList")
+  |> inertia.props(props, todo_item.encode_todo_props)
+  |> inertia.merge("todos", match_on: option.Some(["id"]), deep: False)
+  |> inertia.response(200, layout.html_layout)
+}
+```
+
+### Using Shared Types in Frontend
+
+Configure TypeScript to find the compiled Gleam code. Update `frontend/tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@gleam/*": ["../shared/build/dev/javascript/*"]
+      "@shared/*": ["../shared/build/dev/javascript/shared/shared/*"]
+    }
+  }
+}
+```
+
+Gleam 1.13 and later compiles to JavaScript with verbose accessor names. Create a wrapper file to re-export with cleaner names:
+
+```typescript
+// frontend/src/lib/todo_item.ts
+export {
+  // Types
+  type Todo$,
+  type TodoProps$,
+  type AddTodoRequest$,
+  // Constructors
+  Todo$Todo as createTodo,
+  AddTodoRequest$AddTodoRequest as createAddTodoRequest,
+  // Accessors
+  TodoProps$TodoProps$todos as getTodos,
+  Todo$Todo$id as getId,
+  Todo$Todo$text as getText,
+  Todo$Todo$completed as getCompleted,
+  // Codecs
+  decode_todo_props,
+  encode_add_todo_request,
+} from "@shared/todo_item.mjs";
+```
+
+Use the shared types in your React components:
+
+```tsx
+// frontend/src/Pages/TodoList.tsx
+import { router } from "@inertiajs/react";
+import * as TodoItem from "../lib/todo_item";
+
+function TodoList(props: TodoItem.TodoProps$) {
+  const todos = Array.from(TodoItem.getTodos(props));
+
+  const handleAddTodo = (text: string) => {
+    const request = TodoItem.createAddTodoRequest(text);
+    router.post("/todo/add", TodoItem.encode_add_todo_request(request), {
+      preserveScroll: true,
+      only: ["todos"],
+    });
+  };
+
+  return (
+    <div>
+      {todos.map((item) => (
+        <div key={TodoItem.getId(item)}>
+          <span>{TodoItem.getText(item)}</span>
+          <input
+            type="checkbox"
+            checked={TodoItem.getCompleted(item)}
+            onChange={() => handleToggle(item)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default TodoList;
+```
+
+### Runtime Props Validation with decodeProps
+
+To ensure type safety at runtime, you can create a higher-order component that validates props using Gleam decoders before rendering:
+
+```typescript
+// frontend/src/lib/decodeProps.tsx
+import { ComponentType } from "react";
+import * as Decode from "@gleam/gleam_stdlib/gleam/dynamic/decode.mjs";
+import {
+  Result$Error$0 as unwrapError,
+  Result$isOk as isOk,
+  Result$Ok$0 as unwrapOk,
+} from "@gleam/prelude.mjs";
+import { Dynamic$ } from "@gleam/gleam_stdlib/gleam/dynamic.mjs";
+
+export function decodeProps<P extends object>(
+  Component: ComponentType<P>,
+  decoder: Decode.Decoder$<P>,
+) {
+  return function ValidatedComponent(props: Dynamic$) {
+    const result = Decode.run(props, decoder);
+
+    if (isOk(result)) {
+      const decodedProps = unwrapOk(result)!;
+      return <Component {...decodedProps} />;
+    } else {
+      // Decoding failed - show error UI
+      const errorsList = unwrapError(result)!;
+      const errors = Array.from(errorsList);
+
+      console.error("Props validation failed:", errors);
+
+      return (
+        <div className="error-container">
+          <h1>Props Validation Failed</h1>
+          <pre>{JSON.stringify(errors, null, 2)}</pre>
+        </div>
+      );
+    }
+  };
+}
+```
+
+Wrap your component exports with `decodeProps`:
+
+```tsx
+// frontend/src/Pages/TodoList.tsx
+import { router } from "@inertiajs/react";
+import * as TodoItem from "../lib/todo_item";
+import { decodeProps } from "../lib/decodeProps";
+
+function TodoList(props: TodoItem.TodoProps$) {
+  const todos = Array.from(TodoItem.getTodos(props));
+  // ... component implementation
+}
+
+// Validate props at runtime using the same Gleam decoder
+export default decodeProps(TodoList, TodoItem.decode_todo_props());
+```
+
+This approach provides:
+- **Runtime Type Safety**: Props are validated before reaching your component
+- **Same Validation**: Uses the identical decoder from your backend
+- **Helpful Errors**: Shows detailed validation errors during development
+- **Production Safety**: Catches type mismatches between backend and frontend
+
+### Sharing Validation Logic
+
+You can also share validation functions that compile to both Erlang and JavaScript:
+
+```gleam
+// shared/src/shared/validation.gleam
+import gleam/string
+import gleam/list
+
+pub fn validate_name(name: String) -> Result(String, String) {
+  case string.trim(name) {
+    "" -> Error("Name is required")
+    trimmed -> {
+      case string.length(trimmed) < 2 {
+        True -> Error("Name must be at least 2 characters")
+        False -> Ok(trimmed)
+      }
+    }
+  }
+}
+```
+
+Use the same validation on both backend and frontend:
+
+```gleam
+// Backend
+import shared/validation
+
+pub fn submit_form(req: Request) -> Response {
+  case validation.validate_name(form.name) {
+    Ok(valid_name) -> // Process form
+    Error(msg) -> // Return error
+  }
+}
+```
+
+```typescript
+// Frontend
+import { validate_name } from "@shared/validation.mjs";
+
+const handleSubmit = (name: string) => {
+  const result = validate_name(name);
+  if (result.isOk()) {
+    // Submit form
+  } else {
+    // Show error: result[0]
+  }
+};
+```
+
+### Build Process
+
+Build the shared package with the javascript target before building frontend:
+
+```bash
+# Build shared package
+cd shared && gleam build --target javascript
+
+# Build frontend
+cd frontend && npm run build
+```
+
 ## Documentation
 
 - **[API Documentation](https://hexdocs.pm/inertia_wisp)** - Complete API reference
