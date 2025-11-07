@@ -13,7 +13,59 @@ gleam add inertia_wisp
 
 ## Quick Start
 
-### 1. Basic Setup
+### 1. Define Your HTML Layout
+
+First, create a layout function that generates your HTML document structure. You can use Lustre's HTML builder or the built-in default layout:
+
+```gleam
+// src/layout.gleam
+import gleam/json
+import lustre/attribute
+import lustre/element
+import lustre/element/html
+
+/// Custom HTML layout built with Lustre
+pub fn html_layout(component_name: String, app_data: json.Json) -> String {
+  html.html([attribute.attribute("lang", "en")], [
+    html.head([], [
+      html.meta([attribute.attribute("charset", "utf-8")]),
+      html.meta([
+        attribute.name("viewport"),
+        attribute.attribute("content", "width=device-width, initial-scale=1"),
+      ]),
+      html.title([], component_name),
+      html.link([
+        attribute.rel("stylesheet"),
+        attribute.href("/static/css/styles.css"),
+      ]),
+    ]),
+    html.body([], [
+      html.div(
+        [
+          attribute.id("app"),
+          attribute.attribute("data-page", json.to_string(app_data)),
+        ],
+        [],
+      ),
+      html.script(
+        [attribute.type_("module"), attribute.src("/static/js/main.js")],
+        "",
+      ),
+    ]),
+  ])
+  |> element.to_document_string()
+}
+```
+
+Alternatively, use the built-in default layout:
+
+```gleam
+import inertia_wisp/html
+
+// Use html.default_layout for a simple starting point
+```
+
+### 2. Basic Server Setup
 
 ```gleam
 import gleam/erlang/process
@@ -21,6 +73,7 @@ import mist
 import wisp
 import wisp/wisp_mist
 import inertia_wisp/inertia
+import layout  // Your custom layout module
 
 pub fn main() {
   wisp.configure_logger()
@@ -46,7 +99,7 @@ fn handle_request(req: wisp.Request) -> wisp.Response {
 }
 ```
 
-### 2. Create Your Pages
+### 3. Create Your Pages
 
 Define your page props type and create pages:
 
@@ -83,7 +136,7 @@ fn home_page(req: wisp.Request) -> wisp.Response {
   req
   |> inertia.response_builder("Home")
   |> inertia.props(props, encode_home_page_props)
-  |> inertia.response(200)
+  |> inertia.response(200, layout.html_layout)  // Pass your layout function
 }
 
 fn about_page(req: wisp.Request) -> wisp.Response {
@@ -92,11 +145,11 @@ fn about_page(req: wisp.Request) -> wisp.Response {
   req
   |> inertia.response_builder("About")
   |> inertia.props(props, encode_about_page_props)
-  |> inertia.response(200)
+  |> inertia.response(200, layout.html_layout)  // Pass your layout function
 }
 ```
 
-### 3. Frontend Setup (React)
+### 4. Frontend Setup (React)
 
 Create your React components that correspond to your Gleam page components:
 
@@ -161,7 +214,7 @@ fn dashboard_page(req: wisp.Request) -> wisp.Response {
         notifications: option.Some(get_notifications()),
       ))
     })
-  |> inertia.response(200)
+  |> inertia.response(200, layout.html_layout)
 }
 ```
 
@@ -197,7 +250,7 @@ fn analytics_page(req: wisp.Request) -> wisp.Response {
         heavy_report: Some(generate_heavy_report()),
       ))
     })
-  |> inertia.response(200)
+  |> inertia.response(200, layout.html_layout)
 }
 ```
 
@@ -220,7 +273,7 @@ pub fn show_contact_form(req: wisp.Request) -> wisp.Response {
   req
   |> inertia.response_builder("ContactForm")
   |> inertia.props(props, encode_contact_form_props)
-  |> inertia.response(200)
+  |> inertia.response(200, layout.html_layout)
 }
 
 pub fn submit_contact_form(req: wisp.Request) -> wisp.Response {
@@ -283,7 +336,7 @@ fn users_list(req: wisp.Request, page: Int) -> wisp.Response {
   |> inertia.response_builder("UsersList")
   |> inertia.props(props, encode_users_list_props)
   |> inertia.merge("users", match_on: option.Some(["id"]), deep: False)
-  |> inertia.response(200)
+  |> inertia.response(200, layout.html_layout)
 }
 ```
 

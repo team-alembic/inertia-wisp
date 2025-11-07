@@ -45,6 +45,14 @@ pub fn partial_component(req: Request) -> Option(String) {
   }
 }
 
+/// Get the asset version from request headers
+pub fn get_request_version(req: Request) -> Option(String) {
+  case request.get_header(req, "x-inertia-version") {
+    Ok(version) -> option.Some(version)
+    _ -> option.None
+  }
+}
+
 /// Build URL string from request path and query
 pub fn url_from_request(req: Request) -> String {
   let path = wisp.path_segments(req) |> string.join("/")

@@ -223,6 +223,36 @@ pub fn response(
   status: Int,
   layout: fn(String, json.Json) -> String,
 ) -> Response {
+  // Check for version mismatch first (only for Inertia requests with explicit version)
+  let version_mismatch = case
+    protocol.is_inertia_request(builder.request),
+    builder.version,
+    protocol.get_request_version(builder.request)
+  {
+    // Only check version if server has explicitly set a version
+    True, option.Some(current_version), option.Some(request_version)
+      if request_version != current_version
+    -> True
+    _, _, _ -> False
+  }
+
+  case version_mismatch {
+    True -> {
+      // Version mismatch - return 409 Conflict with location header
+      let url = protocol.url_from_request(builder.request)
+      wisp.response(409)
+      |> wisp.set_header("x-inertia-location", url)
+    }
+    False -> build_normal_response(builder, status, layout)
+  }
+}
+
+/// Build the normal Inertia response (non-409)
+fn build_normal_response(
+  builder: InertiaResponseBuilder(props),
+  status: Int,
+  layout: fn(String, json.Json) -> String,
+) -> Response {
   // Resolve which errors to use (from builder or cookie)
   let #(errors_to_use, retrieved_from_cookie) =
     resolve_errors_for_response(builder)

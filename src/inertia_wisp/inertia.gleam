@@ -5,6 +5,8 @@
 //// ## Quick Example
 ////
 //// ```gleam
+//// import inertia_wisp/html
+////
 //// type UserProps {
 ////   UserProps(name: String, email: String, posts: Option(List(Post)))
 //// }
@@ -22,7 +24,7 @@
 ////   |> inertia.lazy("posts", fn(props) {
 ////       Ok(UserProps(..props, posts: Some(load_posts(user_id))))
 ////     })
-////   |> inertia.response(200)
+////   |> inertia.response(200, html.default_layout)
 //// }
 //// ```
 ////
@@ -60,7 +62,7 @@ pub type MergeOptions =
 /// req
 /// |> inertia.response_builder("Dashboard")
 /// |> inertia.props(dashboard_props, encode_dashboard_props)
-/// |> inertia.response(200)
+/// |> inertia.response(200, html.default_layout)
 /// ```
 pub fn response_builder(
   req: Request,
@@ -70,9 +72,6 @@ pub fn response_builder(
 }
 
 /// Set the props data and encoder for this response.
-///
-/// This changes the type parameter from `_` (typically `Nil`) to your specific
-/// props type, enabling type-safe configuration of prop behaviors.
 ///
 /// The encoder function should return a `Dict(String, Json)` containing all
 /// fields that should be sent to the frontend.
@@ -260,16 +259,25 @@ pub fn encrypt_history(
   response_builder.encrypt_history(builder)
 }
 
-/// Set an asset version for cache busting.
+/// Set an asset version for automatic cache busting.
 ///
-/// When the version changes, Inertia will automatically force a full page
-/// reload to ensure users get the latest assets.
+/// When set, the server will check incoming Inertia requests for version mismatches.
+/// If the client's version (from the `X-Inertia-Version` header) doesn't match the
+/// server's version, a 409 Conflict response is returned with the `X-Inertia-Location`
+/// header, causing the client to perform a full page reload to get fresh assets.
+///
+/// If no version is set, version checking is disabled and all requests proceed normally.
 ///
 /// ## Example
 ///
 /// ```gleam
 /// |> inertia.version("abc123")
 /// ```
+///
+/// Common patterns include using a build hash or timestamp:
+/// - Git commit hash: `"a1b2c3d"`
+/// - Build timestamp: `"20250107120000"`
+/// - Version number: `"1.2.3"`
 pub fn version(
   builder: InertiaResponseBuilder(props),
   version: String,
@@ -289,7 +297,9 @@ pub fn version(
 /// ## Example
 ///
 /// ```gleam
-/// |> inertia.response(200, my_html_layout)  // OK
+/// import inertia_wisp/html
+///
+/// |> inertia.response(200, html.default_layout)
 /// ```
 pub fn response(
   builder: InertiaResponseBuilder(props),
