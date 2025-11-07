@@ -696,61 +696,8 @@ function TodoList(props: TodoItem.TodoProps$) {
 export default decodeProps(TodoList, TodoItem.decode_todo_props());
 ```
 
-This approach provides:
-- **Runtime Type Safety**: Props are validated before reaching your component
-- **Same Validation**: Uses the identical decoder from your backend
-- **Helpful Errors**: Shows detailed validation errors during development
-- **Production Safety**: Catches type mismatches between backend and frontend
+This approach provides ensures your frontend component only ever renders with valid props explicitly decoded for type safety.
 
-### Sharing Validation Logic
-
-You can also share validation functions that compile to both Erlang and JavaScript:
-
-```gleam
-// shared/src/shared/validation.gleam
-import gleam/string
-import gleam/list
-
-pub fn validate_name(name: String) -> Result(String, String) {
-  case string.trim(name) {
-    "" -> Error("Name is required")
-    trimmed -> {
-      case string.length(trimmed) < 2 {
-        True -> Error("Name must be at least 2 characters")
-        False -> Ok(trimmed)
-      }
-    }
-  }
-}
-```
-
-Use the same validation on both backend and frontend:
-
-```gleam
-// Backend
-import shared/validation
-
-pub fn submit_form(req: Request) -> Response {
-  case validation.validate_name(form.name) {
-    Ok(valid_name) -> // Process form
-    Error(msg) -> // Return error
-  }
-}
-```
-
-```typescript
-// Frontend
-import { validate_name } from "@shared/validation.mjs";
-
-const handleSubmit = (name: string) => {
-  const result = validate_name(name);
-  if (result.isOk()) {
-    // Submit form
-  } else {
-    // Show error: result[0]
-  }
-};
-```
 
 ### Build Process
 
