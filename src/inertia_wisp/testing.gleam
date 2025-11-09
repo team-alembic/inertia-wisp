@@ -182,6 +182,38 @@ pub fn inertia_post(path: String, data: json.Json) -> Request {
   |> simulate.json_body(data)
 }
 
+/// Create a test Inertia PUT request with JSON body.
+///
+/// Useful for testing update endpoints.
+pub fn inertia_put(path: String, data: json.Json) -> Request {
+  simulate.request(http.Put, path)
+  |> simulate.header("accept", "application/json")
+  |> simulate.header("x-inertia", "true")
+  |> simulate.header("x-inertia-version", "1")
+  |> simulate.json_body(data)
+}
+
+/// Create a test Inertia PATCH request with JSON body.
+///
+/// Useful for testing partial update endpoints.
+pub fn inertia_patch(path: String, data: json.Json) -> Request {
+  simulate.request(http.Patch, path)
+  |> simulate.header("accept", "application/json")
+  |> simulate.header("x-inertia", "true")
+  |> simulate.header("x-inertia-version", "1")
+  |> simulate.json_body(data)
+}
+
+/// Create a test Inertia DELETE request.
+///
+/// Useful for testing delete endpoints.
+pub fn inertia_delete(path: String) -> Request {
+  simulate.request(http.Delete, path)
+  |> simulate.header("accept", "application/json")
+  |> simulate.header("x-inertia", "true")
+  |> simulate.header("x-inertia-version", "1")
+}
+
 /// Extract the component name from an Inertia response.
 ///
 /// This works for both JSON responses (XHR requests) and HTML responses

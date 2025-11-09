@@ -358,3 +358,97 @@ pub fn version_match_returns_normal_response_test() {
   assert 200 == response.status
   assert Ok("Home") == testing.component(response)
 }
+
+pub fn version_mismatch_on_post_returns_normal_response_test() {
+  // Per Inertia protocol: "409 Conflict responses are only sent for GET requests,
+  // and not for POST/PUT/PATCH/DELETE requests"
+  let props = HomeProps(title: "Test", message: "Version test")
+
+  let versioned_handler = fn(req: Request) -> Response {
+    req
+    |> inertia.response_builder("Home")
+    |> inertia.props(props, encode_home_props)
+    |> inertia.version("v2")
+    |> inertia.response(200, html.default_layout)
+  }
+
+  // Client sends POST request with old version "v1"
+  let req =
+    testing.inertia_post("/", json.null())
+    |> simulate.header("x-inertia-version", "v1")
+
+  let response = versioned_handler(req)
+
+  // Should return normal 200 response, NOT 409
+  assert 200 == response.status
+  assert Ok("Home") == testing.component(response)
+}
+
+pub fn version_mismatch_on_put_returns_normal_response_test() {
+  let props = HomeProps(title: "Test", message: "Version test")
+
+  let versioned_handler = fn(req: Request) -> Response {
+    req
+    |> inertia.response_builder("Home")
+    |> inertia.props(props, encode_home_props)
+    |> inertia.version("v2")
+    |> inertia.response(200, html.default_layout)
+  }
+
+  // Client sends PUT request with old version "v1"
+  let req =
+    testing.inertia_put("/", json.null())
+    |> simulate.header("x-inertia-version", "v1")
+
+  let response = versioned_handler(req)
+
+  // Should return normal 200 response, NOT 409
+  assert 200 == response.status
+  assert Ok("Home") == testing.component(response)
+}
+
+pub fn version_mismatch_on_patch_returns_normal_response_test() {
+  let props = HomeProps(title: "Test", message: "Version test")
+
+  let versioned_handler = fn(req: Request) -> Response {
+    req
+    |> inertia.response_builder("Home")
+    |> inertia.props(props, encode_home_props)
+    |> inertia.version("v2")
+    |> inertia.response(200, html.default_layout)
+  }
+
+  // Client sends PATCH request with old version "v1"
+  let req =
+    testing.inertia_patch("/", json.null())
+    |> simulate.header("x-inertia-version", "v1")
+
+  let response = versioned_handler(req)
+
+  // Should return normal 200 response, NOT 409
+  assert 200 == response.status
+  assert Ok("Home") == testing.component(response)
+}
+
+pub fn version_mismatch_on_delete_returns_normal_response_test() {
+  let props = HomeProps(title: "Test", message: "Version test")
+
+  let versioned_handler = fn(req: Request) -> Response {
+    req
+    |> inertia.response_builder("Home")
+    |> inertia.props(props, encode_home_props)
+    |> inertia.version("v2")
+    |> inertia.response(200, html.default_layout)
+  }
+
+  // Client sends DELETE request with old version "v1"
+  let req =
+    testing.inertia_delete("/")
+    |> simulate.header("x-inertia-version", "v1")
+
+  let response = versioned_handler(req)
+
+  // Should return normal 200 response, NOT 409
+  assert 200 == response.status
+  assert Ok("Home") == testing.component(response)
+}

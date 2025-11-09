@@ -8,6 +8,7 @@
 
 import gleam/dict.{type Dict}
 import gleam/dynamic/decode
+import gleam/http
 import gleam/http/request
 import gleam/json
 import gleam/list
@@ -61,6 +62,49 @@ pub fn url_from_request(req: Request) -> String {
   case req.query {
     option.Some(query) if query != "" -> base_url <> "?" <> query
     _ -> base_url
+  }
+}
+
+/// Check for version mismatch and return 409 if needed, otherwise continue
+///
+/// Per Inertia protocol: "409 Conflict responses are only sent for GET requests,
+/// and not for POST/PUT/PATCH/DELETE requests"
+///
+/// This function uses continuation-passing style for use with the `use <-` syntax.
+///
+/// ## Example
+///
+/// ```gleam
+/// pub fn response(builder, status, layout) {
+///   use <- protocol.check_version(builder.request, builder.version)
+///   // ... continue building response
+/// }
+/// ```
+pub fn check_version(
+  request: Request,
+  version: Option(String),
+  next: fn() -> Response,
+) -> Response {
+  case
+    is_inertia_request(request),
+    request.method,
+    version,
+    get_request_version(request)
+  {
+    // Only check version if:
+    // 1. It's an Inertia request
+    // 2. It's a GET request (per protocol spec)
+    // 3. Server has explicitly set a version
+    // 4. Versions don't match
+    True, http.Get, option.Some(current_version), option.Some(request_version)
+      if request_version != current_version
+    -> {
+      // Version mismatch - return 409 Conflict with location header
+      let url = url_from_request(request)
+      wisp.response(409)
+      |> wisp.set_header("x-inertia-location", url)
+    }
+    _, _, _, _ -> next()
   }
 }
 
