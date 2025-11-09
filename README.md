@@ -420,6 +420,71 @@ fn users_list(req: wisp.Request, page: Int) -> wisp.Response {
 }
 ```
 
+
+### Asset Versioning
+
+Inertia.js supports asset versioning to track when your frontend assets change. When the client's asset version doesn't match the server's version, Inertia forces a full page reload to fetch fresh assets.
+
+The recommended approach is to create an application context that holds shared configuration like the asset version and layout function, then pass this context through to your handlers.
+
+#### Context module
+
+Define a context type that holds shared configuration:
+
+```gleam
+// src/app_context.gleam
+import gleam/erlang/atom.{type Atom}
+import gleam/erlang/charlist.{type Charlist}
+import gleam/json
+import layout
+
+/// Application context containing shared configuration and functions
+pub type Context {
+  Context(
+    /// The application version from gleam.toml
+    version: String,
+    /// HTML layout function for rendering Inertia responses
+    layout: fn(String, json.Json) -> String,
+  )
+}
+
+/// Create a new application context, initializing all shared values
+pub fn new() -> Context {
+  Context(version: app_version(), layout: layout.html_layout)
+}
+
+@external(erlang, "application", "get_key")
+fn get_application_key(app: Atom, key: Atom) -> Result(Charlist, Atom)
+
+/// Get the application version from the compiled .app file.
+/// Returns the version string from gleam.toml, or "1.0.0" as a fallback.
+fn app_version() -> String {
+  let app_name = atom.create("my_app")  // Replace with your app name
+  let vsn_key = atom.create("vsn")
+
+  case get_application_key(app_name, vsn_key) {
+    Ok(version_charlist) -> charlist.to_string(version_charlist)
+    Error(_) -> "1.0.0"
+  }
+}
+```
+
+Initialize the context in your applications main function and use from handlers:
+```gleam
+fn home_page(req: wisp.Request, ctx: Context) -> wisp.Response {
+  let props = HomePageProps(
+    message: "Hello from Gleam!",
+    user: "Alice",
+  )
+
+  req
+  |> inertia.response_builder("Home")
+  |> inertia.props(props, encode_home_page_props)
+  |> inertia.version(ctx.version)  // Use version from context
+  |> inertia.response(200, ctx.layout)  // Use layout from context
+}
+```
+
 ## Sharing Types Between Frontend and Backend
 
 For larger applications, you can share types, encoders, decoders, and validation logic between your Gleam backend and TypeScript frontend by creating a separate `shared` package.
